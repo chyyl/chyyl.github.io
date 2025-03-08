@@ -1,0 +1,93 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="沧海云渊, chyyl, chyyl.netlify.app">
+    <title>沧海云渊の空间</title>
+    <link rel="icon" href="https://chyyl.netlify.app/simple/me.jpg">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: white;
+            background: linear-gradient(to bottom, #ADD8E6, #0000FF);
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+       .header {
+            padding: 100px 0;
+        }
+       .avatar {
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+       .subtitle {
+            font-size: 24px;
+            overflow: hidden;
+            white-space: nowrap;
+            margin: 0 auto;
+            animation: typing 10s steps(40, end) infinite, blink-caret .75s step-end infinite;
+        }
+        @keyframes typing {
+            0%, 100% { width: 0; }
+            50% { width: 100%; }
+        }
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: white; }
+        }
+       .links {
+            padding: 50px 0;
+        }
+       .card {
+            margin: 30px auto;
+            width: 80%;
+            max-width: 800px;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+        }
+       .card img {
+            width: 100%;
+            height: auto;
+            cursor: pointer;
+            border-radius: 10px;
+        }
+       .footer {
+            background: black;
+            padding: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img class="avatar" src="https://chyyl.netlify.app/simple/me.jpg" alt="沧海云渊">
+        <h1>沧海云渊</h1>
+        <p class="subtitle">人生还有很长的路需要我们去探索...</p>
+    </div>
+    <div class="links">
+        
+        <div class="card">
+            <a href="https://chyyl.netlify.app/fast">
+                <img src="https://chyyl.netlify.app/fast.png" alt="沧海云渊の博客（快速的）">
+            </a>
+            <h2>沧海云渊の博客（快速的）</h2>
+        </div>
+    
+        <div class="card">
+            <a href="https://chyyl.netlify.app/simple">
+                <img src="https://chyyl.netlify.app/simple.png" alt="沧海云渊の博客（简单的）">
+            </a>
+            <h2>沧海云渊の博客（简单的）</h2>
+        </div>
+    
+    </div>
+    <div class="footer">
+        <p>© 2024 - 2025 | 沧海云渊</p>
+    </div>
+</body>
+</html>
