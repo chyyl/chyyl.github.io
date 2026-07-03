@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="Hexo">
+<meta property="og:url" content="https://chyyl.netlify.app/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:locale" content="en_US">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+  
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fork-awesome@1.2.0/css/fork-awesome.min.css">
+
+<meta name="generator" content="Hexo 8.1.2"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"><span class="fa fa-bars"></span></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+        
+          <a class="nav-icon" href="/atom.xml" title="RSS Feed"><span class="fa fa-rss"></span></a>
+        
+        <a class="nav-icon nav-search-btn" title="Search"><span class="fa fa-search"></span></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://chyyl.netlify.app"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main">
+  
+    <article id="post-free-ollama-chatbox-guide" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2026/07/03/00/00/00/" class="article-date">
+  <time class="dt-published" datetime="2026-07-02T16:00:00.000Z" itemprop="datePublished">2026-07-03</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E6%8A%80%E6%9C%AF%E5%AE%9E%E6%93%8D/">技术实操</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2026/07/03/00/00/00/">白嫖指南：免费 Ollama 云模型 + Chatbox AI 的正确打开方式</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <blockquote>
+<p>如果你跟我一样，是个不想花钱但又想用大模型的开发者，这篇文章给你一套完整的白嫖方案。核心思路：<strong>用 Ollama 跑免费本地模型做重活，用 Chatbox AI 的免费额度做云端补充，用自带 API Key 打通所有通道。</strong> 以下是实操指南。</p>
+</blockquote>
+<h2 id="先搞清楚：你手上有哪些免费资源"><a href="#先搞清楚：你手上有哪些免费资源" class="headerlink" title="先搞清楚：你手上有哪些免费资源"></a>先搞清楚：你手上有哪些免费资源</h2><h3 id="Ollama-生态"><a href="#Ollama-生态" class="headerlink" title="Ollama 生态"></a>Ollama 生态</h3><p>Ollama 本身是开源的，跑在你自己的机器上，不花钱。关键是你选什么模型：</p>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>参数量</th>
+<th>显存需求</th>
+<th>适合场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>qwen3:4b</td>
+<td>4B</td>
+<td>4GB+</td>
+<td>日常对话、轻量代码</td>
+</tr>
+<tr>
+<td>qwen3:8b</td>
+<td>8B</td>
+<td>8GB+</td>
+<td>代码生成、长文本</td>
+</tr>
+<tr>
+<td>llama3.2:3b</td>
+<td>3B</td>
+<td>3GB+</td>
+<td>快速响应、简单任务</td>
+</tr>
+<tr>
+<td>deepseek-r1:7b</td>
+<td>7B</td>
+<td>8GB+</td>
+<td>推理、数学</td>
+</tr>
+<tr>
+<td>gemma3:4b</td>
+<td>4B</td>
+<td>4GB+</td>
+<td>多语言、通用</td>
+</tr>
+</tbody></table>
+<p><strong>第一原则：能用小模型就别用大模型。</strong> 3B 模型的速度是 8B 的 3-5 倍，对大多数日常任务够用了。</p>
+<h3 id="Chatbox-AI-免费额度"><a href="#Chatbox-AI-免费额度" class="headerlink" title="Chatbox AI 免费额度"></a>Chatbox AI 免费额度</h3><p>Chatbox AI（<a target="_blank" rel="noopener" href="https://chatboxai.app/zh">chatboxai.app</a>）是一个全平台 AI 客户端，它的免费策略是这样的：</p>
+<ul>
+<li><strong>Chatbox 应用本身完全免费</strong>——Windows&#x2F;Mac&#x2F;Linux&#x2F;iOS&#x2F;Android&#x2F;Web 全平台覆盖，所有功能开放</li>
+<li><strong>Chatbox AI 云服务免费试用</strong>——新用户无需购买任何计划即可使用，每日配额每日刷新</li>
+<li><strong>支持自带 API Key</strong>——你可以把自己的 Ollama、OpenAI、Claude 等 API Key 填进去，走自己的额度</li>
+</ul>
+<p>这意味着什么？<strong>你可以把 Chatbox 当作 Ollama 的免费前端</strong>，本地模型无限用，云服务每天还有免费额度补充。</p>
+<h2 id="策略一：Ollama-本地模型最大化利用"><a href="#策略一：Ollama-本地模型最大化利用" class="headerlink" title="策略一：Ollama 本地模型最大化利用"></a>策略一：Ollama 本地模型最大化利用</h2><h3 id="1-模型分级调用"><a href="#1-模型分级调用" class="headerlink" title="1. 模型分级调用"></a>1. 模型分级调用</h3><p>不是所有任务都需要最大的模型。我在 OpenCloud Agent 项目里做了这样的分级：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">简单问答 / 翻译 / 摘要  → qwen3:4b   （快、省）</span><br><span class="line">代码生成 / 长文分析      → qwen3:8b   （慢、准）</span><br><span class="line">复杂推理 / 数学          → deepseek-r1:7b（带思维链）</span><br></pre></td></tr></table></figure>
+
+<p>如果你的显存只够跑一个模型，选 <code>qwen3:4b</code>。它是性价比之王——4B 参数但中文能力很强，代码也不差。</p>
+<h3 id="2-上下文窗口管理"><a href="#2-上下文窗口管理" class="headerlink" title="2. 上下文窗口管理"></a>2. 上下文窗口管理</h3><p>免费模型最大的浪费来源是<strong>上下文太长</strong>。每次请求都把整个对话历史发过去，token 翻倍涨。</p>
+<p>实操建议：</p>
+<ul>
+<li><strong>定期总结对话</strong>：每 10 轮对话让模型生成一次摘要，之后只带摘要 + 最近 3 轮</li>
+<li><strong>系统提示词精简</strong>：别写 2000 字的 system prompt，300 字以内说清楚角色和规则</li>
+<li><strong>思维链单独剥离</strong>：用 <code>&lt;think&gt;</code> 标签的思维链模型（如 deepseek-r1），思维链不回传给用户、不进入下一轮上下文</li>
+</ul>
+<h3 id="3-流式输出-早期截断"><a href="#3-流式输出-早期截断" class="headerlink" title="3. 流式输出 + 早期截断"></a>3. 流式输出 + 早期截断</h3><p>Ollama 支持流式输出（<code>stream: true</code>），这不仅是体验优化，更是<strong>省钱手段</strong>：</p>
+<ul>
+<li>你可以在收到足够内容后主动断开连接（<code>response.done = true</code>）</li>
+<li>模型开始废话时直接 <code>Ctrl+C</code>，省掉后面的 token</li>
+<li>对于命令&#x2F;工具调用场景，解析到完整 JSON 命令后立刻断流</li>
+</ul>
+<h3 id="4-模型预热"><a href="#4-模型预热" class="headerlink" title="4. 模型预热"></a>4. 模型预热</h3><p>Ollama 第一次加载模型时会慢（要把权重加载到显存），之后会缓存。如果你频繁切换模型，缓存会被挤掉。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 提前加载模型，保持热缓存</span></span><br><span class="line">curl http://localhost:11434/api/generate -d <span class="string">&#x27;&#123;&quot;model&quot;: &quot;qwen3:4b&quot;, &quot;keep_alive&quot;: -1&#125;&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p><code>keep_alive: -1</code> 让模型永远留在显存里。如果你显存够大，可以同时预热两个模型。</p>
+<h2 id="策略二：Chatbox-AI-免费额度的正确用法"><a href="#策略二：Chatbox-AI-免费额度的正确用法" class="headerlink" title="策略二：Chatbox AI 免费额度的正确用法"></a>策略二：Chatbox AI 免费额度的正确用法</h2><h3 id="注册和领取"><a href="#注册和领取" class="headerlink" title="注册和领取"></a>注册和领取</h3><ol>
+<li>访问 <a target="_blank" rel="noopener" href="https://chatboxai.app/zh/user/overview?utm_source=app&utm_content=guide_session_free_trial#free">chatboxai.app</a></li>
+<li>用邮箱注册登录（没有账户会自动创建）</li>
+<li>登录后在账户页面会看到免费套餐入口</li>
+<li>免费配额每天刷新，不用攒着</li>
+</ol>
+<h3 id="Chatbox-AI-的三档付费计划（了解边界）"><a href="#Chatbox-AI-的三档付费计划（了解边界）" class="headerlink" title="Chatbox AI 的三档付费计划（了解边界）"></a>Chatbox AI 的三档付费计划（了解边界）</h3><table>
+<thead>
+<tr>
+<th>计划</th>
+<th>价格</th>
+<th>定位</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Chatbox 应用</td>
+<td>免费</td>
+<td>全平台客户端，自带 API Key</td>
+</tr>
+<tr>
+<td>Chatbox AI Lite</td>
+<td>$3.99</td>
+<td>入门云服务</td>
+</tr>
+<tr>
+<td>Chatbox AI Pro</td>
+<td>$19.99</td>
+<td>主力使用</td>
+</tr>
+<tr>
+<td>Chatbox AI Pro+</td>
+<td>$39.99</td>
+<td>重度用户</td>
+</tr>
+</tbody></table>
+<p><strong>免费试用相当于体验 Pro 级别的服务</strong>，只是有每日配额限制。配额用完了？切回本地 Ollama。</p>
+<h3 id="什么时候用-Chatbox-AI-云服务，什么时候用本地-Ollama"><a href="#什么时候用-Chatbox-AI-云服务，什么时候用本地-Ollama" class="headerlink" title="什么时候用 Chatbox AI 云服务，什么时候用本地 Ollama"></a>什么时候用 Chatbox AI 云服务，什么时候用本地 Ollama</h3><table>
+<thead>
+<tr>
+<th>场景</th>
+<th>用什么</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>日常写代码</td>
+<td>本地 Ollama</td>
+<td>不花钱，延迟低</td>
+</tr>
+<tr>
+<td>处理超长文档</td>
+<td>Chatbox AI 云</td>
+<td>本地模型上下文不够</td>
+</tr>
+<tr>
+<td>联网搜索</td>
+<td>Chatbox AI 云</td>
+<td>本地模型没法联网</td>
+</tr>
+<tr>
+<td>图片识别</td>
+<td>Chatbox AI 云</td>
+<td>多模态模型需要算力</td>
+</tr>
+<tr>
+<td>隐私敏感数据</td>
+<td>本地 Ollama</td>
+<td>数据不出本机</td>
+</tr>
+<tr>
+<td>离线环境</td>
+<td>本地 Ollama</td>
+<td>不需要网络</td>
+</tr>
+<tr>
+<td>AI 绘图</td>
+<td>Chatbox AI 云</td>
+<td>本地跑不了图像生成</td>
+</tr>
+</tbody></table>
+<p>核心策略：<strong>本地为主，云端为辅。每天的重活用本地模型干完，需要联网&#x2F;多模态&#x2F;超长上下文的任务留给 Chatbox AI 的免费额度。</strong></p>
+<h2 id="策略三：用-Chatbox-连接-Ollama"><a href="#策略三：用-Chatbox-连接-Ollama" class="headerlink" title="策略三：用 Chatbox 连接 Ollama"></a>策略三：用 Chatbox 连接 Ollama</h2><p>这是最香的部分——Chatbox 可以直接连你本地的 Ollama，等于你有了一个免费的全功能 AI 聊天界面。</p>
+<h3 id="配置步骤"><a href="#配置步骤" class="headerlink" title="配置步骤"></a>配置步骤</h3><ol>
+<li><strong>下载 Chatbox</strong>：去 <a target="_blank" rel="noopener" href="https://chatboxai.app/zh">chatboxai.app</a> 下载对应平台的客户端，或者直接用网页版</li>
+<li><strong>确保 Ollama 在运行</strong>：<code>ollama serve</code>（默认端口 11434）</li>
+<li><strong>在 Chatbox 中添加 Ollama 作为模型提供方</strong>：<ul>
+<li>打开 Chatbox 设置</li>
+<li>选择「模型提供方」→ 添加 Ollama</li>
+<li>API 地址填 <code>http://localhost:11434</code></li>
+<li>选择你已拉取的模型（如 <code>qwen3:4b</code>）</li>
+</ul>
+</li>
+<li><strong>开始聊天</strong>，所有对话走本地模型，不消耗任何云额度</li>
+</ol>
+<h3 id="进阶：多模型切换"><a href="#进阶：多模型切换" class="headerlink" title="进阶：多模型切换"></a>进阶：多模型切换</h3><p>Chatbox 支持在不同对话中切换模型。你可以：</p>
+<ul>
+<li>开一个对话用 <code>qwen3:4b</code> 做日常问答</li>
+<li>开另一个对话用 <code>deepseek-r1:7b</code> 做深度推理</li>
+<li>开第三个对话用 Chatbox AI 云服务做联网搜索</li>
+</ul>
+<p><strong>模型切换不花钱</strong>，本地模型之间随便切。</p>
+<h2 id="策略四：省钱组合拳"><a href="#策略四：省钱组合拳" class="headerlink" title="策略四：省钱组合拳"></a>策略四：省钱组合拳</h2><h3 id="日常工作流"><a href="#日常工作流" class="headerlink" title="日常工作流"></a>日常工作流</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">早上：Chatbox + Ollama 本地模型</span><br><span class="line">  ├─ 写代码 → qwen3:8b</span><br><span class="line">  ├─ 回复邮件 → qwen3:4b</span><br><span class="line">  └─ 翻译文档 → qwen3:4b</span><br><span class="line"></span><br><span class="line">下午：需要联网搜索时切 Chatbox AI 云服务</span><br><span class="line">  ├─ 查最新技术资料 → Chatbox AI 免费额度</span><br><span class="line">  └─ 分析网页内容 → Chatbox AI 免费额度</span><br><span class="line"></span><br><span class="line">晚上：配额用完了</span><br><span class="line">  └─ 切回 Ollama 本地模型，该干嘛干嘛</span><br></pre></td></tr></table></figure>
+
+<h3 id="省钱清单"><a href="#省钱清单" class="headerlink" title="省钱清单"></a>省钱清单</h3><ol>
+<li><strong>能用 4B 就别用 8B</strong>——速度翻倍，效果差不了多少</li>
+<li><strong>系统提示词控制在 300 字以内</strong>——省的是每轮都扣的 token</li>
+<li><strong>对话超 10 轮就总结</strong>——别让上下文无限膨胀</li>
+<li><strong>Chatbox AI 配额每天刷新</strong>——别攒着，今天能用完就今天用</li>
+<li><strong>Ollama 模型预热</strong>——避免反复加载浪费时间和电</li>
+<li><strong>离线时用本地</strong>——断网了也不影响干活</li>
+</ol>
+<h3 id="隐私数据的安全线"><a href="#隐私数据的安全线" class="headerlink" title="隐私数据的安全线"></a>隐私数据的安全线</h3><p>本地模型最大的优势不是省钱，是<strong>数据不出机器</strong>。</p>
+<ul>
+<li>公司代码、内部文档 → 只用本地 Ollama，绝对不碰云端</li>
+<li>个人信息、密码相关 → 同上</li>
+<li>公开技术资料、通用知识 → 随便用云端</li>
+</ul>
+<p>Chatbox AI 的云服务虽然方便，但数据终究过了第三方服务器。这个边界要守住。</p>
+<h2 id="硬件不够怎么办"><a href="#硬件不够怎么办" class="headerlink" title="硬件不够怎么办"></a>硬件不够怎么办</h2><p>如果你没有 GPU，或者显存太小跑不动 4B 模型：</p>
+<ol>
+<li><strong>用 CPU 模式跑 Ollama</strong>——慢但能跑，4B 模型在 CPU 上大概 5-10 token&#x2F;s</li>
+<li><strong>用更小的模型</strong>——<code>qwen3:1.7b</code> 或 <code>llama3.2:1b</code>，2GB 内存就够</li>
+<li><strong>租便宜的云 GPU</strong>——比如 AutoDL，按小时计费，跑完就释放</li>
+<li><strong>纯用 Chatbox AI 免费额度</strong>——每天配额够轻度使用</li>
+</ol>
+<p>没有 GPU 不是放弃的理由，只是需要更聪明地分配资源。</p>
+<h2 id="总结：免费-AI-工具链的全景"><a href="#总结：免费-AI-工具链的全景" class="headerlink" title="总结：免费 AI 工具链的全景"></a>总结：免费 AI 工具链的全景</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">┌─────────────────────────────────────────┐</span><br><span class="line">│              Chatbox（免费客户端）         │</span><br><span class="line">│  ┌─────────┐  ┌──────────┐  ┌─────────┐ │</span><br><span class="line">│  │ Ollama  │  │ Chatbox  │  │ 自带    │ │</span><br><span class="line">│  │ 本地模型 │  │ AI 云服务 │  │ API Key │ │</span><br><span class="line">│  │ (无限量) │  │ (每日免费) │  │ (按量付) │ │</span><br><span class="line">│  └─────────┘  └──────────┘  └─────────┘ │</span><br><span class="line">└─────────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>通道</th>
+<th>费用</th>
+<th>限制</th>
+<th>适合</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Ollama 本地</td>
+<td>0 元</td>
+<td>受硬件限制</td>
+<td>日常所有任务</td>
+</tr>
+<tr>
+<td>Chatbox AI 免费</td>
+<td>0 元</td>
+<td>每日配额</td>
+<td>联网&#x2F;多模态</td>
+</tr>
+<tr>
+<td>自带 API Key</td>
+<td>按用量</td>
+<td>无</td>
+<td>超出免费额度时</td>
+</tr>
+</tbody></table>
+<p><strong>最后一句话：免费工具已经够你做 90% 的事情了。剩下 10% 再考虑花钱。</strong></p>
+<hr>
+<p><strong>相关链接：</strong></p>
+<ul>
+<li>Ollama 官网：<a target="_blank" rel="noopener" href="https://ollama.com/">https://ollama.com</a></li>
+<li>Chatbox AI 官网：<a target="_blank" rel="noopener" href="https://chatboxai.app/zh">https://chatboxai.app/zh</a></li>
+<li>Chatbox AI 免费试用：<a target="_blank" rel="noopener" href="https://chatboxai.app/zh/user/overview#free">https://chatboxai.app/zh/user/overview#free</a></li>
+<li>Chatbox GitHub（开源）：<a target="_blank" rel="noopener" href="https://github.com/Bin-Huang/chatbox">https://github.com/Bin-Huang/chatbox</a></li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://chyyl.netlify.app/2026/07/03/00/00/00/" data-id="cuidga85FFdW5gallmnYDCprQ" data-title="白嫖指南：免费 Ollama 云模型 + Chatbox AI 的正确打开方式" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/AI%E5%B7%A5%E5%85%B7/" rel="tag">AI工具</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Chatbox-AI/" rel="tag">Chatbox-AI</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Ollama/" rel="tag">Ollama</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%9C%81%E9%92%B1/" rel="tag">省钱</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-ollama-streaming-parser" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2026/07/02/00/00/00/" class="article-date">
+  <time class="dt-published" datetime="2026-07-01T16:00:00.000Z" itemprop="datePublished">2026-07-02</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E6%8A%80%E6%9C%AF%E5%AE%9E%E6%93%8D/">技术实操</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2026/07/02/00/00/00/">Ollama 流式输出踩坑：从乱码 SSE 到可控的文本/思维链/命令三通道</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <blockquote>
+<p>这是我做 OpenCloud Agent 时踩的最有意思的一个坑：Ollama 给你的流式输出是一堆逐 token 的碎片，你得自己拼回来，还得同时拆出三样东西——正文、思维链、JSON 命令。这篇文章记录我是怎么搞定的。</p>
+</blockquote>
+<h2 id="问题：Ollama-给了你什么"><a href="#问题：Ollama-给了你什么" class="headerlink" title="问题：Ollama 给了你什么"></a>问题：Ollama 给了你什么</h2><p>Ollama 的 <code>/api/chat</code> 接口开启 <code>stream: true</code> 后，返回的是 SSE 格式的逐行 JSON：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">&#123;&quot;model&quot;:&quot;qwen3&quot;,&quot;message&quot;:&#123;&quot;content&quot;:&quot;用&quot;&#125;,&quot;done&quot;:false&#125;</span><br><span class="line">&#123;&quot;model&quot;:&quot;qwen3&quot;,&quot;message&quot;:&#123;&quot;content&quot;:&quot;户&quot;&#125;,&quot;done&quot;:false&#125;</span><br><span class="line">&#123;&quot;model&quot;:&quot;qwen3&quot;,&quot;message&quot;:&#123;&quot;content&quot;:&quot;好&quot;&#125;,&quot;done&quot;:false&#125;</span><br><span class="line">&#123;&quot;model&quot;:&quot;qwen3&quot;,&quot;message&quot;:&#123;&quot;content&quot;:&quot;&lt;think&gt;&quot;&#125;,&quot;done&quot;:false&#125;</span><br><span class="line">&#123;&quot;model&quot;:&quot;qwen3&quot;,&quot;message&quot;:&#123;&quot;content&quot;:&quot;这&quot;&#125;,&quot;done&quot;:false&#125;</span><br><span class="line">...</span><br><span class="line">&#123;&quot;model&quot;:&quot;qwen3&quot;,&quot;message&quot;:&#123;&quot;content&quot;:&quot;&lt;/think&gt;&quot;&#125;,&quot;done&quot;:false&#125;</span><br><span class="line">&#123;&quot;model&quot;:&quot;qwen3&quot;,&quot;message&quot;:&#123;&quot;content&quot;:&quot;\n&quot;&#125;,&quot;done&quot;:false&#125;</span><br><span class="line">&#123;&quot;model&quot;:&quot;qwen3&quot;,&quot;message&quot;:&#123;&quot;content&quot;:&quot;&#123;&quot;&#125;,&quot;done&quot;:false&#125;</span><br><span class="line">&#123;&quot;model&quot;:&quot;qwen3&quot;,&quot;message&quot;:&#123;&quot;content&quot;:&quot;\&quot;command\&quot;&quot;&#125;,&quot;done&quot;:false&#125;</span><br><span class="line">&#123;&quot;model&quot;:&quot;qwen3&quot;,&quot;message&quot;:&#123;&quot;content&quot;:&quot;:&quot;&#125;,&quot;done&quot;:false&#125;</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>一个字一个字蹦。而且——<strong>Ollama SDK 不帮你做任何解析</strong>。<code>&lt;think&gt;</code> 标签？你自己拆。JSON 命令块？你自己检测。JSON 跨 chunk？你自己拼。</p>
+<p>我需要从这堆碎片里分离出三个通道：</p>
+<table>
+<thead>
+<tr>
+<th>通道</th>
+<th>用途</th>
+<th>来源</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>text</code></td>
+<td>给用户看的正文</td>
+<td>模型输出的普通文本</td>
+</tr>
+<tr>
+<td><code>thinking</code></td>
+<td>思维链，CLI 里单独渲染</td>
+<td><code>&lt;think&gt;...&lt;/think&gt;</code> 内的内容</td>
+</tr>
+<tr>
+<td><code>command</code></td>
+<td>工具调用命令</td>
+<td><code>{ &quot;command&quot;: &quot;...&quot;, &quot;params&quot;: {...} }</code></td>
+</tr>
+</tbody></table>
+<h2 id="第一关：拆-标签"><a href="#第一关：拆-标签" class="headerlink" title="第一关：拆 &lt;think&gt; 标签"></a>第一关：拆 <code>&lt;think&gt;</code> 标签</h2><h3 id="朴素想法"><a href="#朴素想法" class="headerlink" title="朴素想法"></a>朴素想法</h3><p>正则一把梭：<code>re.findall(r&#39;&lt;think&gt;(.*?)&lt;/think&gt;&#39;, full_text)</code>。</p>
+<p><strong>问题</strong>：这是流式输出。你不能等全部文本到齐再拆——那跟非流式有什么区别？用户要的是逐字打字效果。</p>
+<p>而且 <code>&lt;think&gt;</code> 标签的开闭可能被切到不同的 chunk 里：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">chunk 23: &quot;我在想&lt;th&quot;</span><br><span class="line">chunk 24: &quot;ink&gt;这个问题&quot;</span><br><span class="line">chunk 25: &quot;应该&lt;/thi&quot;</span><br><span class="line">chunk 26: &quot;nk&gt;这样解决&quot;</span><br></pre></td></tr></table></figure>
+
+<p>正则在半个标签上根本匹配不到。</p>
+<h3 id="我的解法：状态机-末尾保留"><a href="#我的解法：状态机-末尾保留" class="headerlink" title="我的解法：状态机 + 末尾保留"></a>我的解法：状态机 + 末尾保留</h3><p>核心思路是一个简单的状态机，两个状态：<code>in_thinking = True/False</code>。关键 trick 是：<strong>每次输出时检查末尾是否有未完成的标签前缀，如果有就留在 buffer 里不输出。</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">in_thinking = <span class="literal">False</span></span><br><span class="line">buffer = <span class="string">&quot;&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">for</span> line <span class="keyword">in</span> resp.aiter_lines():</span><br><span class="line">    chunk = json.loads(line)</span><br><span class="line">    token = chunk.get(<span class="string">&quot;message&quot;</span>, &#123;&#125;).get(<span class="string">&quot;content&quot;</span>, <span class="string">&quot;&quot;</span>)</span><br><span class="line">    buffer += token</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> buffer:</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> in_thinking:</span><br><span class="line">            open_idx = buffer.find(<span class="string">&quot;&lt;think&gt;&quot;</span>)</span><br><span class="line">            <span class="keyword">if</span> open_idx == -<span class="number">1</span>:</span><br><span class="line">                <span class="comment"># 没有开标签，但末尾可能有未完成的 &quot;&lt;th&quot;</span></span><br><span class="line">                <span class="keyword">if</span> <span class="string">&quot;&lt;th&quot;</span> <span class="keyword">in</span> buffer:</span><br><span class="line">                    idx = buffer.rfind(<span class="string">&quot;&lt;th&quot;</span>)</span><br><span class="line">                    <span class="keyword">yield</span> &#123;<span class="string">&quot;type&quot;</span>: <span class="string">&quot;text&quot;</span>, <span class="string">&quot;content&quot;</span>: buffer[:idx]&#125;</span><br><span class="line">                    buffer = buffer[idx:]  <span class="comment"># 保留未完成部分</span></span><br><span class="line">                <span class="keyword">else</span>:</span><br><span class="line">                    <span class="keyword">yield</span> &#123;<span class="string">&quot;type&quot;</span>: <span class="string">&quot;text&quot;</span>, <span class="string">&quot;content&quot;</span>: buffer&#125;</span><br><span class="line">                    buffer = <span class="string">&quot;&quot;</span></span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                <span class="comment"># 输出开标签前的文本，进入思维链模式</span></span><br><span class="line">                <span class="keyword">if</span> open_idx &gt; <span class="number">0</span>:</span><br><span class="line">                    <span class="keyword">yield</span> &#123;<span class="string">&quot;type&quot;</span>: <span class="string">&quot;text&quot;</span>, <span class="string">&quot;content&quot;</span>: buffer[:open_idx]&#125;</span><br><span class="line">                buffer = buffer[open_idx + <span class="number">7</span>:]  <span class="comment"># 跳过 &quot;&lt;think&gt;&quot;</span></span><br><span class="line">                in_thinking = <span class="literal">True</span></span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            close_idx = buffer.find(<span class="string">&quot;&lt;/think&gt;&quot;</span>)</span><br><span class="line">            <span class="keyword">if</span> close_idx == -<span class="number">1</span>:</span><br><span class="line">                <span class="comment"># 还在思维链中，但末尾可能有未完成的 &quot;&lt;/&quot;</span></span><br><span class="line">                <span class="keyword">if</span> <span class="string">&quot;&lt;/&quot;</span> <span class="keyword">in</span> buffer:</span><br><span class="line">                    idx = buffer.rfind(<span class="string">&quot;&lt;/&quot;</span>)</span><br><span class="line">                    <span class="keyword">yield</span> &#123;<span class="string">&quot;type&quot;</span>: <span class="string">&quot;thinking&quot;</span>, <span class="string">&quot;content&quot;</span>: buffer[:idx]&#125;</span><br><span class="line">                    buffer = buffer[idx:]</span><br><span class="line">                <span class="keyword">else</span>:</span><br><span class="line">                    <span class="keyword">yield</span> &#123;<span class="string">&quot;type&quot;</span>: <span class="string">&quot;thinking&quot;</span>, <span class="string">&quot;content&quot;</span>: buffer&#125;</span><br><span class="line">                    buffer = <span class="string">&quot;&quot;</span></span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                <span class="comment"># 思维链结束</span></span><br><span class="line">                <span class="keyword">yield</span> &#123;<span class="string">&quot;type&quot;</span>: <span class="string">&quot;thinking&quot;</span>, <span class="string">&quot;content&quot;</span>: buffer[:close_idx]&#125;</span><br><span class="line">                buffer = buffer[close_idx + <span class="number">8</span>:]  <span class="comment"># 跳过 &quot;&lt;/think&gt;&quot;</span></span><br><span class="line">                in_thinking = <span class="literal">False</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>关键点</strong>：<code>rfind(&quot;&lt;th&quot;)</code> 和 <code>rfind(&quot;&lt;/&quot;)</code> 这两个”末尾保留”逻辑。它们确保即使标签被切断，碎片留在 buffer 里等下一个 chunk 拼完整。</p>
+<p>这个 pattern 后来我在很多流式处理场景中都用了——不只是标签，任何”标记可能跨 chunk”的场景都适用。</p>
+<h2 id="第二关：JSON-命令块检测"><a href="#第二关：JSON-命令块检测" class="headerlink" title="第二关：JSON 命令块检测"></a>第二关：JSON 命令块检测</h2><p>模型不只输出文字，还会输出工具调用命令：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span><span class="attr">&quot;command&quot;</span><span class="punctuation">:</span> <span class="string">&quot;web_search&quot;</span><span class="punctuation">,</span> <span class="attr">&quot;params&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span><span class="attr">&quot;query&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Ollama streaming&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>这个命令块需要被检测、提取、解析成结构化数据传给工具执行器。</p>
+<h3 id="朴素想法-1"><a href="#朴素想法-1" class="headerlink" title="朴素想法"></a>朴素想法</h3><p>按行分割，找 <code>{</code> 开头的行，<code>json.loads</code> 解析。</p>
+<p><strong>问题</strong>：命令块经常跨 chunk。上面那个 JSON 可能是这样来的：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">chunk 31: &#x27;&#123;&quot;comma&#x27;</span><br><span class="line">chunk 32: &#x27;nd&quot;: &quot;we&#x27;</span><br><span class="line">chunk 33: &#x27;b_search&quot;&#x27;</span><br><span class="line">chunk 34: &#x27;, &quot;par&#x27;</span><br><span class="line">chunk 35: &#x27;ams&quot;: &#123;&quot;q&#x27;</span><br><span class="line">chunk 36: &#x27;uery&quot;: &quot;Ol&#x27;</span><br><span class="line">chunk 37: &#x27;lama strea&#x27;</span><br><span class="line">chunk 38: &#x27;ming&quot;&#125;&#125;&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>按行分？根本没换行。按 chunk 分？一个 chunk 不是一个完整 JSON。</p>
+<h3 id="我的解法：花括号深度计数-缓冲区"><a href="#我的解法：花括号深度计数-缓冲区" class="headerlink" title="我的解法：花括号深度计数 + 缓冲区"></a>我的解法：花括号深度计数 + 缓冲区</h3><p>思路：一旦检测到 JSON 命令块的起始标记 <code>{&quot;command&quot;</code>，就进入”JSON 模式”，把后续所有 token 攒进 buffer，用花括号深度计数判断什么时候 JSON 完整了。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">StreamParser</span>:</span><br><span class="line">    JSON_START = re.<span class="built_in">compile</span>(<span class="string">r&#x27;\&#123;\s*&quot;command&quot;\s*:&#x27;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="variable language_">self</span>.buffer = <span class="string">&quot;&quot;</span></span><br><span class="line">        <span class="variable language_">self</span>.in_json = <span class="literal">False</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">_process_buffer</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">while</span> <span class="variable language_">self</span>.buffer:</span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">not</span> <span class="variable language_">self</span>.in_json:</span><br><span class="line">                <span class="comment"># 寻找 JSON 开始位置</span></span><br><span class="line">                <span class="keyword">match</span> = <span class="variable language_">self</span>.JSON_START.search(<span class="variable language_">self</span>.buffer)</span><br><span class="line">                <span class="keyword">if</span> <span class="keyword">not</span> <span class="keyword">match</span>:</span><br><span class="line">                    <span class="comment"># 没有 JSON，输出安全部分（保留末尾可能的 &quot;&#123;&quot;）</span></span><br><span class="line">                    ...</span><br><span class="line">                <span class="keyword">else</span>:</span><br><span class="line">                    <span class="comment"># 输出 JSON 前的文本</span></span><br><span class="line">                    <span class="keyword">if</span> <span class="keyword">match</span>.start() &gt; <span class="number">0</span>:</span><br><span class="line">                        <span class="keyword">yield</span> &#123;<span class="string">&quot;type&quot;</span>: <span class="string">&quot;text&quot;</span>, <span class="string">&quot;content&quot;</span>: <span class="variable language_">self</span>.buffer[:<span class="keyword">match</span>.start()]&#125;</span><br><span class="line">                    <span class="variable language_">self</span>.buffer = <span class="variable language_">self</span>.buffer[<span class="keyword">match</span>.start():]</span><br><span class="line">                    <span class="variable language_">self</span>.in_json = <span class="literal">True</span></span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                <span class="comment"># 在 JSON 块中，尝试提取完整 JSON</span></span><br><span class="line">                cmd = <span class="variable language_">self</span>._try_extract_json()</span><br><span class="line">                <span class="keyword">if</span> cmd:</span><br><span class="line">                    <span class="keyword">yield</span> &#123;<span class="string">&quot;type&quot;</span>: <span class="string">&quot;command&quot;</span>, <span class="string">&quot;data&quot;</span>: cmd&#125;</span><br><span class="line">                    <span class="variable language_">self</span>.in_json = <span class="literal">False</span></span><br><span class="line">                <span class="keyword">else</span>:</span><br><span class="line">                    <span class="keyword">break</span>  <span class="comment"># JSON 不完整，等更多数据</span></span><br></pre></td></tr></table></figure>
+
+<p>核心是 <code>_try_extract_json()</code>——逐字符扫描，跟踪花括号深度：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">_try_extract_json</span>(<span class="params">self</span>):</span><br><span class="line">    depth = <span class="number">0</span></span><br><span class="line">    in_string = <span class="literal">False</span></span><br><span class="line">    escape = <span class="literal">False</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> i, ch <span class="keyword">in</span> <span class="built_in">enumerate</span>(<span class="variable language_">self</span>.buffer):</span><br><span class="line">        <span class="keyword">if</span> escape:</span><br><span class="line">            escape = <span class="literal">False</span></span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line">        <span class="keyword">if</span> ch == <span class="string">&quot;\\&quot;</span>:</span><br><span class="line">            escape = <span class="literal">True</span></span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line">        <span class="keyword">if</span> ch == <span class="string">&#x27;&quot;&#x27;</span>:</span><br><span class="line">            in_string = <span class="keyword">not</span> in_string</span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line">        <span class="keyword">if</span> in_string:</span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line">        <span class="keyword">if</span> ch == <span class="string">&quot;&#123;&quot;</span>:</span><br><span class="line">            depth += <span class="number">1</span></span><br><span class="line">        <span class="keyword">elif</span> ch == <span class="string">&quot;&#125;&quot;</span>:</span><br><span class="line">            depth -= <span class="number">1</span></span><br><span class="line">            <span class="keyword">if</span> depth == <span class="number">0</span>:</span><br><span class="line">                <span class="comment"># 花括号配平了，JSON 完整</span></span><br><span class="line">                json_str = <span class="variable language_">self</span>.buffer[:i + <span class="number">1</span>]</span><br><span class="line">                cmd = <span class="variable language_">self</span>._try_parse_json(json_str)</span><br><span class="line">                <span class="keyword">if</span> cmd:</span><br><span class="line">                    <span class="variable language_">self</span>.buffer = <span class="variable language_">self</span>.buffer[i + <span class="number">1</span>:]</span><br><span class="line">                    <span class="keyword">return</span> cmd</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">None</span>  <span class="comment"># 还没配平，等更多数据</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>三个要注意的点：</strong></p>
+<ol>
+<li><strong>字符串内的花括号不算</strong>。<code>&quot;params&quot;: {&quot;query&quot;: &quot;{test}&quot;}</code> 里的 <code>{test}</code> 不能影响深度计数。所以要跟踪 <code>in_string</code> 状态。</li>
+<li><strong>转义字符</strong>。<code>&quot;path&quot;: &quot;C:\\folder&quot;</code> 里的 <code>\\</code> 后面的引号不能翻转 <code>in_string</code>。所以要有 <code>escape</code> 标志。</li>
+<li><strong>markdown 包裹</strong>。模型有时会把 JSON 包在 <code>```json ... ```</code> 里，解析前要剥掉。</li>
+</ol>
+<h2 id="第三关：两个解析器怎么串起来"><a href="#第三关：两个解析器怎么串起来" class="headerlink" title="第三关：两个解析器怎么串起来"></a>第三关：两个解析器怎么串起来</h2><p><code>&lt;think&gt;</code> 拆分和 JSON 检测不能在同一步做——因为思维链里可能包含看起来像 JSON 的文本（模型在思考时可能写示例）。</p>
+<p>我的架构是分两层：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">Ollama SSE</span><br><span class="line">    │</span><br><span class="line">    ▼</span><br><span class="line">┌──────────┐</span><br><span class="line">│ model.py │  拆 &lt;think&gt; 标签</span><br><span class="line">│          │  → text 事件 / thinking 事件 / done 事件</span><br><span class="line">└────┬─────┘</span><br><span class="line">     │</span><br><span class="line">     ▼</span><br><span class="line">┌──────────┐</span><br><span class="line">│parser.py │  从 text 事件中检测 JSON 命令块</span><br><span class="line">│          │  → text 事件 / command 事件 / done 事件</span><br><span class="line">└──────────┘</span><br></pre></td></tr></table></figure>
+
+<p>model.py 先把流拆成 <code>text</code> 和 <code>thinking</code> 事件。parser.py 只处理 <code>text</code> 事件中的 JSON 命令块，<code>thinking</code> 事件直接透传。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">feed</span>(<span class="params">self, events</span>):</span><br><span class="line">    <span class="keyword">async</span> <span class="keyword">for</span> event <span class="keyword">in</span> events:</span><br><span class="line">        <span class="keyword">if</span> event[<span class="string">&quot;type&quot;</span>] == <span class="string">&quot;thinking&quot;</span>:</span><br><span class="line">            <span class="keyword">yield</span> event  <span class="comment"># 思维链不参与 JSON 检测，直接透传</span></span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line">        <span class="keyword">if</span> event[<span class="string">&quot;type&quot;</span>] == <span class="string">&quot;text&quot;</span>:</span><br><span class="line">            <span class="variable language_">self</span>.buffer += event[<span class="string">&quot;content&quot;</span>]</span><br><span class="line">            <span class="keyword">async</span> <span class="keyword">for</span> evt <span class="keyword">in</span> <span class="variable language_">self</span>._process_buffer():</span><br><span class="line">                <span class="keyword">yield</span> evt</span><br><span class="line">        <span class="keyword">elif</span> event[<span class="string">&quot;type&quot;</span>] == <span class="string">&quot;done&quot;</span>:</span><br><span class="line">            <span class="comment"># 冲刷缓冲区</span></span><br><span class="line">            ...</span><br></pre></td></tr></table></figure>
+
+<p>这样思维链里的假 JSON 不会被误判为命令。</p>
+<h2 id="一个容易忽略的边界情况"><a href="#一个容易忽略的边界情况" class="headerlink" title="一个容易忽略的边界情况"></a>一个容易忽略的边界情况</h2><p>模型输出 JSON 命令块之前，可能先输出一些正文文本。比如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">好的，我来帮你搜索一下。</span><br><span class="line"></span><br><span class="line">&#123;&quot;command&quot;: &quot;web_search&quot;, &quot;params&quot;: &#123;&quot;query&quot;: &quot;...&quot;&#125;&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>&quot;好的，我来帮你搜索一下。\n\n&quot;</code> 这部分要作为 <code>text</code> 事件输出给用户，不能被吞掉。</p>
+<p>但反过来，如果 buffer 末尾只有一个 <code>{</code>，它可能是 JSON 命令的开始，也可能是正文里的一个花括号。我的处理方式是：<strong>保留末尾最多 20 个字符中最后一个 <code>{</code> 之后的 内容</strong>，等下一个 chunk 来了再判断。如果后面跟着 <code>&quot;command&quot;</code>，进入 JSON 模式；如果没有，就当普通文本输出。</p>
+<p>这个”等一等”的策略会让正文末尾有最多 20 字符的延迟，但对用户体验影响很小。</p>
+<h2 id="效果"><a href="#效果" class="headerlink" title="效果"></a>效果</h2><p>最终的 CLI 渲染效果：</p>
+<ul>
+<li>正文实时逐字打出</li>
+<li>思维链在单独的面板里展示，灰色斜体</li>
+<li>命令块触发工具执行面板，显示工具名和参数</li>
+</ul>
+<p>三通道并行，互不干扰。用户看到的是一个流畅的对话界面，背后是两个解析器在逐 token 地拆分流式数据。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><table>
+<thead>
+<tr>
+<th>问题</th>
+<th>朴素方案</th>
+<th>为什么不行</th>
+<th>我的方案</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>&lt;think&gt;</code> 跨 chunk</td>
+<td>正则匹配</td>
+<td>半个标签匹配不到</td>
+<td>状态机 + 末尾保留</td>
+</tr>
+<tr>
+<td>JSON 跨 chunk</td>
+<td>按行分割</td>
+<td>命令块没有换行</td>
+<td>花括号深度计数 + 缓冲区</td>
+</tr>
+<tr>
+<td>思维链内的假 JSON</td>
+<td>一起检测</td>
+<td>误触发命令</td>
+<td>分层解析，thinking 透传</td>
+</tr>
+</tbody></table>
+<p>核心教训就一句：<strong>流式数据不能等齐了再处理，但也不能盲目地按 chunk 处理。你需要一个缓冲区 + 一个状态机，让数据”流”过你的解析逻辑，在每个 token 到来时做增量判断。</strong></p>
+<p>这套东西写完之后，我发现它其实是一个很通用的 pattern。任何”结构化数据混在非结构化流里”的场景都能用：日志解析、协议拆包、混合内容渲染。AI Agent 只是触发我去想这个问题的契机。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://chyyl.netlify.app/2026/07/02/00/00/00/" data-id="cuidKuCHIxME24wNIOeXcej8X" data-title="Ollama 流式输出踩坑：从乱码 SSE 到可控的文本/思维链/命令三通道" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/AI-Agent/" rel="tag">AI-Agent</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Ollama/" rel="tag">Ollama</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Python/" rel="tag">Python</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%B5%81%E5%BC%8F%E8%BE%93%E5%87%BA/" rel="tag">流式输出</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-hello-world" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2026/07/01/00/00/00/" class="article-date">
+  <time class="dt-published" datetime="2026-06-30T16:00:00.000Z" itemprop="datePublished">2026-07-01</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2026/07/01/00/00/00/">Hello World</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
+<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
+<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
+<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
+<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://chyyl.netlify.app/2026/07/01/00/00/00/" data-id="cuid5ZwNu8J_hq-Nc4pLa8tdq" data-title="Hello World" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%8A%80%E6%9C%AF%E5%AE%9E%E6%93%8D/">技术实操</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/AI-Agent/" rel="tag">AI-Agent</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/AI%E5%B7%A5%E5%85%B7/" rel="tag">AI工具</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Chatbox-AI/" rel="tag">Chatbox-AI</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Ollama/" rel="tag">Ollama</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Python/" rel="tag">Python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%B5%81%E5%BC%8F%E8%BE%93%E5%87%BA/" rel="tag">流式输出</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%9C%81%E9%92%B1/" rel="tag">省钱</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/AI-Agent/" style="font-size: 10px;">AI-Agent</a> <a href="/tags/AI%E5%B7%A5%E5%85%B7/" style="font-size: 10px;">AI工具</a> <a href="/tags/Chatbox-AI/" style="font-size: 10px;">Chatbox-AI</a> <a href="/tags/Ollama/" style="font-size: 20px;">Ollama</a> <a href="/tags/Python/" style="font-size: 10px;">Python</a> <a href="/tags/%E6%B5%81%E5%BC%8F%E8%BE%93%E5%87%BA/" style="font-size: 10px;">流式输出</a> <a href="/tags/%E7%9C%81%E9%92%B1/" style="font-size: 10px;">省钱</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2026/07/">July 2026</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2026/07/03/00/00/00/">白嫖指南：免费 Ollama 云模型 + Chatbox AI 的正确打开方式</a>
+          </li>
+        
+          <li>
+            <a href="/2026/07/02/00/00/00/">Ollama 流式输出踩坑：从乱码 SSE 到可控的文本/思维链/命令三通道</a>
+          </li>
+        
+          <li>
+            <a href="/2026/07/01/00/00/00/">Hello World</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2026 John Doe<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.6.4.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>
