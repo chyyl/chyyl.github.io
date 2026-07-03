@@ -210,7 +210,7 @@
                                    href="/"
                                         >
                                     <i class="fa-regular fa-house fa-fw"></i>
-                                    INICIO
+                                    HOME
                                     
                                 </a>
 
@@ -244,7 +244,7 @@
                            href="/"
                         >
                             <span>
-                                INICIO
+                                HOME
                             </span>
                             
                                 <i class="fa-regular fa-house fa-sm fa-fw"></i>
@@ -263,15 +263,15 @@
         <div class="statistics flex justify-around my-2.5">
     <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/tags">
         <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">7</div>
-        <div class="label text-third-text-color text-sm">Etiquetas</div>
+        <div class="label text-third-text-color text-sm">Tags</div>
     </a>
     <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/categories">
         <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">1</div>
-        <div class="label text-third-text-color text-sm">Categorías</div>
+        <div class="label text-third-text-color text-sm">Categories</div>
     </a>
     <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/archives">
         <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">3</div>
-        <div class="label text-third-text-color text-sm">Publicaciones</div>
+        <div class="label text-third-text-color text-sm">Posts</div>
     </a>
 </div>
     </div>
@@ -316,14 +316,14 @@
         <i class="fa-regular fa-pen-fancy"></i>&nbsp;
         <span class="desktop">2026-07-03</span>
         <span class="mobile">2026-07-03</span>
-        <span class="hover-info">Creado</span>
+        <span class="hover-info">Created</span>
     </span>
     
         <span class="article-date article-meta-item">
             <i class="fa-regular fa-wrench"></i>&nbsp;
             <span class="desktop">2026-07-03 13:10:17</span>
             <span class="mobile">2026-07-03 13:10:17</span>
-            <span class="hover-info">Actualizado</span>
+            <span class="hover-info">Updated</span>
         </span>
     
 
@@ -433,7 +433,7 @@
 </tr>
 </tbody></table>
 <p><strong>第一原则：能用小模型就别用大模型。</strong> 3B 模型的速度是 8B 的 3-5 倍，对大多数日常任务够用了。</p>
-<h3 id="Chatbox-AI-免费额度"><a href="#Chatbox-AI-免费额度" class="headerlink" title="Chatbox AI 免费额度"></a>Chatbox AI 免费额度</h3><p>Chatbox AI（<a target="_blank" rel="noopener" href="https://chatboxai.app/zh">chatboxai.app</a>）是一个全平台 AI 客户端，它的免费策略是这样的：</p>
+<h3 id="Chatbox-AI-免费额度"><a href="#Chatbox-AI-免费额度" class="headerlink" title="Chatbox AI 免费额度"></a>Chatbox AI 免费额度</h3><p>Chatbox AI（<a class="link"   target="_blank" rel="noopener" href="https://chatboxai.app/zh" >chatboxai.app<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a>）是一个全平台 AI 客户端，它的免费策略是这样的：</p>
 <ul>
 <li><strong>Chatbox 应用本身完全免费</strong>——Windows&#x2F;Mac&#x2F;Linux&#x2F;iOS&#x2F;Android&#x2F;Web 全平台覆盖，所有功能开放</li>
 <li><strong>Chatbox AI 云服务免费试用</strong>——新用户无需购买任何计划即可使用，每日配额每日刷新</li>
@@ -441,7 +441,7 @@
 </ul>
 <p>这意味着什么？<strong>你可以把 Chatbox 当作 Ollama 的免费前端</strong>，本地模型无限用，云服务每天还有免费额度补充。</p>
 <h2 id="策略一：Ollama-本地模型最大化利用"><a href="#策略一：Ollama-本地模型最大化利用" class="headerlink" title="策略一：Ollama 本地模型最大化利用"></a>策略一：Ollama 本地模型最大化利用</h2><h3 id="1-模型分级调用"><a href="#1-模型分级调用" class="headerlink" title="1. 模型分级调用"></a>1. 模型分级调用</h3><p>不是所有任务都需要最大的模型。我在 OpenCloud Agent 项目里做了这样的分级：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">简单问答 / 翻译 / 摘要  → qwen3:4b   （快、省）</span><br><span class="line">代码生成 / 长文分析      → qwen3:8b   （慢、准）</span><br><span class="line">复杂推理 / 数学          → deepseek-r1:7b（带思维链）</span><br></pre></td></tr></table></figure>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">简单问答 / 翻译 / 摘要  → qwen3:4b   （快、省）</span><br><span class="line">代码生成 / 长文分析      → qwen3:8b   （慢、准）</span><br><span class="line">复杂推理 / 数学          → deepseek-r1:7b（带思维链）</span><br></pre></td></tr></table></figure></div>
 
 <p>如果你的显存只够跑一个模型，选 <code>qwen3:4b</code>。它是性价比之王——4B 参数但中文能力很强，代码也不差。</p>
 <h3 id="2-上下文窗口管理"><a href="#2-上下文窗口管理" class="headerlink" title="2. 上下文窗口管理"></a>2. 上下文窗口管理</h3><p>免费模型最大的浪费来源是<strong>上下文太长</strong>。每次请求都把整个对话历史发过去，token 翻倍涨。</p>
@@ -458,11 +458,11 @@
 <li>对于命令&#x2F;工具调用场景，解析到完整 JSON 命令后立刻断流</li>
 </ul>
 <h3 id="4-模型预热"><a href="#4-模型预热" class="headerlink" title="4. 模型预热"></a>4. 模型预热</h3><p>Ollama 第一次加载模型时会慢（要把权重加载到显存），之后会缓存。如果你频繁切换模型，缓存会被挤掉。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 提前加载模型，保持热缓存</span></span><br><span class="line">curl http://localhost:11434/api/generate -d <span class="string">&#x27;&#123;&quot;model&quot;: &quot;qwen3:4b&quot;, &quot;keep_alive&quot;: -1&#125;&#x27;</span></span><br></pre></td></tr></table></figure>
+<div class="code-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 提前加载模型，保持热缓存</span></span><br><span class="line">curl http://localhost:11434/api/generate -d <span class="string">&#x27;&#123;&quot;model&quot;: &quot;qwen3:4b&quot;, &quot;keep_alive&quot;: -1&#125;&#x27;</span></span><br></pre></td></tr></table></figure></div>
 
 <p><code>keep_alive: -1</code> 让模型永远留在显存里。如果你显存够大，可以同时预热两个模型。</p>
 <h2 id="策略二：Chatbox-AI-免费额度的正确用法"><a href="#策略二：Chatbox-AI-免费额度的正确用法" class="headerlink" title="策略二：Chatbox AI 免费额度的正确用法"></a>策略二：Chatbox AI 免费额度的正确用法</h2><h3 id="注册和领取"><a href="#注册和领取" class="headerlink" title="注册和领取"></a>注册和领取</h3><ol>
-<li>访问 <a target="_blank" rel="noopener" href="https://chatboxai.app/zh/user/overview?utm_source=app&utm_content=guide_session_free_trial#free">chatboxai.app</a></li>
+<li>访问 <a class="link"   target="_blank" rel="noopener" href="https://chatboxai.app/zh/user/overview?utm_source=app&utm_content=guide_session_free_trial#free" >chatboxai.app<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
 <li>用邮箱注册登录（没有账户会自动创建）</li>
 <li>登录后在账户页面会看到免费套餐入口</li>
 <li>免费配额每天刷新，不用攒着</li>
@@ -544,7 +544,7 @@
 <p>核心策略：<strong>本地为主，云端为辅。每天的重活用本地模型干完，需要联网&#x2F;多模态&#x2F;超长上下文的任务留给 Chatbox AI 的免费额度。</strong></p>
 <h2 id="策略三：用-Chatbox-连接-Ollama"><a href="#策略三：用-Chatbox-连接-Ollama" class="headerlink" title="策略三：用 Chatbox 连接 Ollama"></a>策略三：用 Chatbox 连接 Ollama</h2><p>这是最香的部分——Chatbox 可以直接连你本地的 Ollama，等于你有了一个免费的全功能 AI 聊天界面。</p>
 <h3 id="配置步骤"><a href="#配置步骤" class="headerlink" title="配置步骤"></a>配置步骤</h3><ol>
-<li><strong>下载 Chatbox</strong>：去 <a target="_blank" rel="noopener" href="https://chatboxai.app/zh">chatboxai.app</a> 下载对应平台的客户端，或者直接用网页版</li>
+<li><strong>下载 Chatbox</strong>：去 <a class="link"   target="_blank" rel="noopener" href="https://chatboxai.app/zh" >chatboxai.app<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a> 下载对应平台的客户端，或者直接用网页版</li>
 <li><strong>确保 Ollama 在运行</strong>：<code>ollama serve</code>（默认端口 11434）</li>
 <li><strong>在 Chatbox 中添加 Ollama 作为模型提供方</strong>：<ul>
 <li>打开 Chatbox 设置</li>
@@ -562,7 +562,7 @@
 <li>开第三个对话用 Chatbox AI 云服务做联网搜索</li>
 </ul>
 <p><strong>模型切换不花钱</strong>，本地模型之间随便切。</p>
-<h2 id="策略四：省钱组合拳"><a href="#策略四：省钱组合拳" class="headerlink" title="策略四：省钱组合拳"></a>策略四：省钱组合拳</h2><h3 id="日常工作流"><a href="#日常工作流" class="headerlink" title="日常工作流"></a>日常工作流</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">早上：Chatbox + Ollama 本地模型</span><br><span class="line">  ├─ 写代码 → qwen3:8b</span><br><span class="line">  ├─ 回复邮件 → qwen3:4b</span><br><span class="line">  └─ 翻译文档 → qwen3:4b</span><br><span class="line"></span><br><span class="line">下午：需要联网搜索时切 Chatbox AI 云服务</span><br><span class="line">  ├─ 查最新技术资料 → Chatbox AI 免费额度</span><br><span class="line">  └─ 分析网页内容 → Chatbox AI 免费额度</span><br><span class="line"></span><br><span class="line">晚上：配额用完了</span><br><span class="line">  └─ 切回 Ollama 本地模型，该干嘛干嘛</span><br></pre></td></tr></table></figure>
+<h2 id="策略四：省钱组合拳"><a href="#策略四：省钱组合拳" class="headerlink" title="策略四：省钱组合拳"></a>策略四：省钱组合拳</h2><h3 id="日常工作流"><a href="#日常工作流" class="headerlink" title="日常工作流"></a>日常工作流</h3><div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">早上：Chatbox + Ollama 本地模型</span><br><span class="line">  ├─ 写代码 → qwen3:8b</span><br><span class="line">  ├─ 回复邮件 → qwen3:4b</span><br><span class="line">  └─ 翻译文档 → qwen3:4b</span><br><span class="line"></span><br><span class="line">下午：需要联网搜索时切 Chatbox AI 云服务</span><br><span class="line">  ├─ 查最新技术资料 → Chatbox AI 免费额度</span><br><span class="line">  └─ 分析网页内容 → Chatbox AI 免费额度</span><br><span class="line"></span><br><span class="line">晚上：配额用完了</span><br><span class="line">  └─ 切回 Ollama 本地模型，该干嘛干嘛</span><br></pre></td></tr></table></figure></div>
 
 <h3 id="省钱清单"><a href="#省钱清单" class="headerlink" title="省钱清单"></a>省钱清单</h3><ol>
 <li><strong>能用 4B 就别用 8B</strong>——速度翻倍，效果差不了多少</li>
@@ -587,7 +587,7 @@
 <li><strong>纯用 Chatbox AI 免费额度</strong>——每天配额够轻度使用</li>
 </ol>
 <p>没有 GPU 不是放弃的理由，只是需要更聪明地分配资源。</p>
-<h2 id="总结：免费-AI-工具链的全景"><a href="#总结：免费-AI-工具链的全景" class="headerlink" title="总结：免费 AI 工具链的全景"></a>总结：免费 AI 工具链的全景</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">┌─────────────────────────────────────────┐</span><br><span class="line">│              Chatbox（免费客户端）         │</span><br><span class="line">│  ┌─────────┐  ┌──────────┐  ┌─────────┐ │</span><br><span class="line">│  │ Ollama  │  │ Chatbox  │  │ 自带    │ │</span><br><span class="line">│  │ 本地模型 │  │ AI 云服务 │  │ API Key │ │</span><br><span class="line">│  │ (无限量) │  │ (每日免费) │  │ (按量付) │ │</span><br><span class="line">│  └─────────┘  └──────────┘  └─────────┘ │</span><br><span class="line">└─────────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+<h2 id="总结：免费-AI-工具链的全景"><a href="#总结：免费-AI-工具链的全景" class="headerlink" title="总结：免费 AI 工具链的全景"></a>总结：免费 AI 工具链的全景</h2><div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">┌─────────────────────────────────────────┐</span><br><span class="line">│              Chatbox（免费客户端）         │</span><br><span class="line">│  ┌─────────┐  ┌──────────┐  ┌─────────┐ │</span><br><span class="line">│  │ Ollama  │  │ Chatbox  │  │ 自带    │ │</span><br><span class="line">│  │ 本地模型 │  │ AI 云服务 │  │ API Key │ │</span><br><span class="line">│  │ (无限量) │  │ (每日免费) │  │ (按量付) │ │</span><br><span class="line">│  └─────────┘  └──────────┘  └─────────┘ │</span><br><span class="line">└─────────────────────────────────────────┘</span><br></pre></td></tr></table></figure></div>
 
 <table>
 <thead>
@@ -621,10 +621,10 @@
 <hr>
 <p><strong>相关链接：</strong></p>
 <ul>
-<li>Ollama 官网：<a target="_blank" rel="noopener" href="https://ollama.com/">https://ollama.com</a></li>
-<li>Chatbox AI 官网：<a target="_blank" rel="noopener" href="https://chatboxai.app/zh">https://chatboxai.app/zh</a></li>
-<li>Chatbox AI 免费试用：<a target="_blank" rel="noopener" href="https://chatboxai.app/zh/user/overview#free">https://chatboxai.app/zh/user/overview#free</a></li>
-<li>Chatbox GitHub（开源）：<a target="_blank" rel="noopener" href="https://github.com/Bin-Huang/chatbox">https://github.com/Bin-Huang/chatbox</a></li>
+<li>Ollama 官网：<a class="link"   target="_blank" rel="noopener" href="https://ollama.com/" >https://ollama.com<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>Chatbox AI 官网：<a class="link"   target="_blank" rel="noopener" href="https://chatboxai.app/zh" >https://chatboxai.app/zh<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>Chatbox AI 免费试用：<a class="link"   target="_blank" rel="noopener" href="https://chatboxai.app/zh/user/overview#free" >https://chatboxai.app/zh/user/overview#free<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>Chatbox GitHub（开源）：<a class="link"   target="_blank" rel="noopener" href="https://github.com/Bin-Huang/chatbox" >https://github.com/Bin-Huang/chatbox<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
 </ul>
 
 		</div>
@@ -633,27 +633,27 @@
 		<div class="post-copyright-info w-full my-8 px-2 sm:px-6 md:px-8">
 			<div class="article-copyright-info-container">
     <ul>
-        <li><strong>Título:</strong> 白嫖指南：免费 Ollama 云模型 + Chatbox AI 的正确打开方式</li>
-        <li><strong>Autor:</strong> Chyyl</li>
-        <li><strong>Creado el
+        <li><strong>Title:</strong> 白嫖指南：免费 Ollama 云模型 + Chatbox AI 的正确打开方式</li>
+        <li><strong>Author:</strong> Chyyl</li>
+        <li><strong>Created at
                 :</strong> 2026-07-03 00:00:00</li>
         
             <li>
-                <strong>Actualizado el
+                <strong>Updated at
                     :</strong> 2026-07-03 13:10:17
             </li>
         
         <li>
-            <strong>Enlace:</strong> https://chyyl.netlify.app/2026/07/03/00/00/00/
+            <strong>Link:</strong> https://chyyl.netlify.app/2026/07/03/00/00/00/
         </li>
         <li>
             <strong>
-                Licencia:
+                License:
             </strong>
             
 
             
-                Este trabajo está licenciado bajo <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY-NC-SA 4.0</a>.
+                This work is licensed under <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY-NC-SA 4.0</a>.
             
         </li>
     </ul>
@@ -694,7 +694,7 @@
 				<a class="next" rel="next" href="/2026/07/02/00/00/00/">
 					<span class="title flex justify-center items-center">
 						<span class="post-nav-title-item truncate max-w-48">Ollama 流式输出踩坑：从乱码 SSE 到可控的文本/思维链/命令三通道</span>
-						<span class="post-nav-item">Publicaciones siguientes</span>
+						<span class="post-nav-item">Next posts</span>
 					</span>
 					<span class="right arrow-icon flex justify-center items-center">
 						<i class="fa-solid fa-chevron-right"></i>
@@ -711,7 +711,7 @@
 			<div class="comments-container mt-10 w-full ">
     <div id="comment-anchor" class="w-full h-2.5"></div>
     <div class="comment-area-title w-full my-1.5 md:my-2.5 text-xl md:text-3xl font-bold">
-        Comentarios
+        Comments
     </div>
     
 
@@ -775,7 +775,7 @@
 	<div class="toc-content-container">
 		<div class="post-toc-wrap">
 	<div class="post-toc">
-		<div class="toc-title">En esta página</div>
+		<div class="toc-title">On this page</div>
 		<div class="page-title">白嫖指南：免费 Ollama 云模型 + Chatbox AI 的正确打开方式</div>
 		<ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%88%E6%90%9E%E6%B8%85%E6%A5%9A%EF%BC%9A%E4%BD%A0%E6%89%8B%E4%B8%8A%E6%9C%89%E5%93%AA%E4%BA%9B%E5%85%8D%E8%B4%B9%E8%B5%84%E6%BA%90"><span class="nav-text">先搞清楚：你手上有哪些免费资源</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Ollama-%E7%94%9F%E6%80%81"><span class="nav-text">Ollama 生态</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Chatbox-AI-%E5%85%8D%E8%B4%B9%E9%A2%9D%E5%BA%A6"><span class="nav-text">Chatbox AI 免费额度</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AD%96%E7%95%A5%E4%B8%80%EF%BC%9AOllama-%E6%9C%AC%E5%9C%B0%E6%A8%A1%E5%9E%8B%E6%9C%80%E5%A4%A7%E5%8C%96%E5%88%A9%E7%94%A8"><span class="nav-text">策略一：Ollama 本地模型最大化利用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E6%A8%A1%E5%9E%8B%E5%88%86%E7%BA%A7%E8%B0%83%E7%94%A8"><span class="nav-text">1. 模型分级调用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E4%B8%8A%E4%B8%8B%E6%96%87%E7%AA%97%E5%8F%A3%E7%AE%A1%E7%90%86"><span class="nav-text">2. 上下文窗口管理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E6%B5%81%E5%BC%8F%E8%BE%93%E5%87%BA-%E6%97%A9%E6%9C%9F%E6%88%AA%E6%96%AD"><span class="nav-text">3. 流式输出 + 早期截断</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E6%A8%A1%E5%9E%8B%E9%A2%84%E7%83%AD"><span class="nav-text">4. 模型预热</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AD%96%E7%95%A5%E4%BA%8C%EF%BC%9AChatbox-AI-%E5%85%8D%E8%B4%B9%E9%A2%9D%E5%BA%A6%E7%9A%84%E6%AD%A3%E7%A1%AE%E7%94%A8%E6%B3%95"><span class="nav-text">策略二：Chatbox AI 免费额度的正确用法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B3%A8%E5%86%8C%E5%92%8C%E9%A2%86%E5%8F%96"><span class="nav-text">注册和领取</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Chatbox-AI-%E7%9A%84%E4%B8%89%E6%A1%A3%E4%BB%98%E8%B4%B9%E8%AE%A1%E5%88%92%EF%BC%88%E4%BA%86%E8%A7%A3%E8%BE%B9%E7%95%8C%EF%BC%89"><span class="nav-text">Chatbox AI 的三档付费计划（了解边界）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E7%94%A8-Chatbox-AI-%E4%BA%91%E6%9C%8D%E5%8A%A1%EF%BC%8C%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E7%94%A8%E6%9C%AC%E5%9C%B0-Ollama"><span class="nav-text">什么时候用 Chatbox AI 云服务，什么时候用本地 Ollama</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AD%96%E7%95%A5%E4%B8%89%EF%BC%9A%E7%94%A8-Chatbox-%E8%BF%9E%E6%8E%A5-Ollama"><span class="nav-text">策略三：用 Chatbox 连接 Ollama</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E6%AD%A5%E9%AA%A4"><span class="nav-text">配置步骤</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%9B%E9%98%B6%EF%BC%9A%E5%A4%9A%E6%A8%A1%E5%9E%8B%E5%88%87%E6%8D%A2"><span class="nav-text">进阶：多模型切换</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AD%96%E7%95%A5%E5%9B%9B%EF%BC%9A%E7%9C%81%E9%92%B1%E7%BB%84%E5%90%88%E6%8B%B3"><span class="nav-text">策略四：省钱组合拳</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%97%A5%E5%B8%B8%E5%B7%A5%E4%BD%9C%E6%B5%81"><span class="nav-text">日常工作流</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9C%81%E9%92%B1%E6%B8%85%E5%8D%95"><span class="nav-text">省钱清单</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9A%90%E7%A7%81%E6%95%B0%E6%8D%AE%E7%9A%84%E5%AE%89%E5%85%A8%E7%BA%BF"><span class="nav-text">隐私数据的安全线</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A1%AC%E4%BB%B6%E4%B8%8D%E5%A4%9F%E6%80%8E%E4%B9%88%E5%8A%9E"><span class="nav-text">硬件不够怎么办</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%EF%BC%9A%E5%85%8D%E8%B4%B9-AI-%E5%B7%A5%E5%85%B7%E9%93%BE%E7%9A%84%E5%85%A8%E6%99%AF"><span class="nav-text">总结：免费 AI 工具链的全景</span></a></li></ol>
 
@@ -805,7 +805,7 @@
                 
                 <p class="post-count space-x-0.5">
                     <span>
-                        3 publicaciones en total
+                        3 posts in total
                     </span>
                     
                 </p>
@@ -816,26 +816,26 @@
             <div class="relative text-center lg:absolute lg:right-[20px] lg:top-1/2 lg:-translate-y-1/2 lg:text-right">
                 
                     <span id="busuanzi_container_site_uv" class="lg:!block">
-                        <span class="text-sm">CONTADOR DE VISITANTES</span>
+                        <span class="text-sm">VISITOR COUNT</span>
                         <span id="busuanzi_value_site_uv"></span>
                     </span>
                 
                 
                     <span id="busuanzi_container_site_pv" class="lg:!block">
-                        <span class="text-sm">TOTAL DE VISITAS</span>
+                        <span class="text-sm">TOTAL PAGE VIEWS</span>
                         <span id="busuanzi_value_site_pv"></span>
                     </span>
                 
             </div>
         
         <div class="relative text-center lg:absolute lg:left-[20px] lg:top-1/2 lg:-translate-y-1/2 lg:text-left">
-            <span class="lg:block text-sm">DESARROLLADO POR <?xml version="1.0" encoding="utf-8"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg class="relative top-[2px] inline-block align-baseline" version="1.1" id="圖層_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="1rem" height="1rem" viewBox="0 0 512 512" enable-background="new 0 0 512 512" xml:space="preserve"><path fill="#0E83CD" d="M256.4,25.8l-200,115.5L56,371.5l199.6,114.7l200-115.5l0.4-230.2L256.4,25.8z M349,354.6l-18.4,10.7l-18.6-11V275H200v79.6l-18.4,10.7l-18.6-11v-197l18.5-10.6l18.5,10.8V237h112v-79.6l18.5-10.6l18.5,10.8V354.6z"/></svg><a target="_blank" class="text-base" href="https://hexo.io">Hexo</a></span>
-            <span class="text-sm lg:block">TEMA&nbsp;<a class="text-base" target="_blank" href="https://github.com/EvanNotFound/hexo-theme-redefine">Redefine v2.9.0</a></span>
+            <span class="lg:block text-sm">POWERED BY <?xml version="1.0" encoding="utf-8"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg class="relative top-[2px] inline-block align-baseline" version="1.1" id="圖層_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="1rem" height="1rem" viewBox="0 0 512 512" enable-background="new 0 0 512 512" xml:space="preserve"><path fill="#0E83CD" d="M256.4,25.8l-200,115.5L56,371.5l199.6,114.7l200-115.5l0.4-230.2L256.4,25.8z M349,354.6l-18.4,10.7l-18.6-11V275H200v79.6l-18.4,10.7l-18.6-11v-197l18.5-10.6l18.5,10.8V237h112v-79.6l18.5-10.6l18.5,10.8V354.6z"/></svg><a target="_blank" class="text-base" href="https://hexo.io">Hexo</a></span>
+            <span class="text-sm lg:block">THEME&nbsp;<a class="text-base" target="_blank" href="https://github.com/EvanNotFound/hexo-theme-redefine">Redefine v2.9.0</a></span>
         </div>
         
         
             <div>
-                Blog en línea por <span class="odometer" id="runtime_days" ></span> días <span class="odometer" id="runtime_hours"></span> horas <span class="odometer" id="runtime_minutes"></span> Min <span class="odometer" id="runtime_seconds"></span> Seg
+                Blog up for <span class="odometer" id="runtime_days" ></span> days <span class="odometer" id="runtime_hours"></span> hrs <span class="odometer" id="runtime_minutes"></span> Min <span class="odometer" id="runtime_seconds"></span> Sec
             </div>
         
         
@@ -930,11 +930,11 @@
 </div>
 	</div>
 
-	<div class="image-viewer-container" role="dialog" aria-modal="true" aria-label="Visor de imágenes">
-	<button class="image-viewer-close" type="button" aria-label="Cerrar">
+	<div class="image-viewer-container" role="dialog" aria-modal="true" aria-label="Image viewer">
+	<button class="image-viewer-close" type="button" aria-label="Close">
 		<i class="fa-solid fa-xmark"></i>
 	</button>
-	<button class="image-viewer-prev" type="button" aria-label="Anterior">
+	<button class="image-viewer-prev" type="button" aria-label="Prev">
 		<i class="fa-solid fa-chevron-left"></i>
 	</button>
 	<div class="image-viewer-frame">
@@ -943,7 +943,7 @@
 	<div class="image-viewer-exif-panel hidden absolute left-1/2 bottom-20 -translate-x-1/2 w-[min(92vw,420px)] max-h-[60vh] overflow-hidden rounded-2xl bg-background-color-transparent-80 p-4 text-left shadow-redefine-flat backdrop-blur-md" role="dialog" aria-label="EXIF" aria-hidden="true">
 		<div class="flex items-center justify-between mb-3">
 			<span class="text-sm font-semibold text-first-text-color">EXIF</span>
-			<button class="image-viewer-exif-close flex h-8 w-8 items-center justify-center rounded-full bg-background-color-transparent-80 text-first-text-color transition hover:bg-background-color-transparent-40" type="button" aria-label="Cerrar">
+			<button class="image-viewer-exif-close flex h-8 w-8 items-center justify-center rounded-full bg-background-color-transparent-80 text-first-text-color transition hover:bg-background-color-transparent-40" type="button" aria-label="Close">
 				<i class="fa-solid fa-xmark text-[0.65rem]"></i>
 			</button>
 		</div>
@@ -962,7 +962,7 @@
 		<i class="fa-solid fa-circle-info text-xs"></i>
 		<span class="text-xs font-semibold uppercase tracking-wider">EXIF</span>
 	</button>
-	<button class="image-viewer-next" type="button" aria-label="Siguiente">
+	<button class="image-viewer-next" type="button" aria-label="Next">
 		<i class="fa-solid fa-chevron-right"></i>
 	</button>
 </div>
