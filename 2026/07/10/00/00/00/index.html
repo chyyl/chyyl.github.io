@@ -1,0 +1,2265 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="keywords" content="Hexo Theme Redefine">
+    
+    
+    <meta name="author" content="Chyyl">
+    
+    <!-- Completely eliminate flash of wrong theme -->
+    <script>
+        (function() {
+            const THEME_KEY = "REDEFINE-THEME-STATUS";
+            const DARK = "dark", LIGHT = "light";
+            
+            // Get preferred theme
+            function getTheme() {
+                try {
+                    const saved = localStorage.getItem(THEME_KEY);
+                    if (saved) {
+                        const { isDark } = JSON.parse(saved);
+                        return isDark ? DARK : LIGHT;
+                    }
+                } catch (e) {}
+                
+                return matchMedia("(prefers-color-scheme: dark)").matches ? DARK : LIGHT;
+            }
+            
+            // Apply theme to document
+            function applyTheme(theme) {
+                const isDark = theme === DARK;
+                const root = document.documentElement;
+                
+                // Set classes for compatibility
+                root.classList.add(theme);
+                root.classList.remove(isDark ? LIGHT : DARK);
+                root.style.colorScheme = theme;
+            }
+            
+            // Initial application
+            const theme = getTheme();
+            applyTheme(theme);
+            
+            // Listen for system preference changes
+            matchMedia("(prefers-color-scheme: dark)").addEventListener("change", ({ matches }) => {
+                // Only update if using system preference (no localStorage entry)
+                if (!localStorage.getItem(THEME_KEY)) {
+                    applyTheme(matches ? DARK : LIGHT);
+                }
+            });
+            
+            // Set body classes ASAP (before DOMContentLoaded)
+            (function() {
+                const addBodyClass = () => {
+                    const b = document.body;
+                    if (!b) return false;
+                    b.classList.add(theme + "-mode");
+                    return true;
+                };
+
+                // Try immediately
+                if (addBodyClass()) return;
+
+                // Observe until body exists
+                const mo = new MutationObserver(() => {
+                    if (addBodyClass()) mo.disconnect();
+                });
+                mo.observe(document.documentElement, { childList: true, subtree: true });
+            })();
+        })();
+    </script>
+    
+    <!-- preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    
+        
+        
+        
+            <link rel="preconnect" href="https://registry.npmmirror.com" crossorigin>
+        
+    
+    <!--- Seo Part-->
+    
+    <link rel="canonical" href="https://chyyl.netlify.app/2026/07/10/00/00/00/"/>
+    <meta name="robots" content="index,follow">
+    <meta name="googlebot" content="index,follow">
+    <meta name="revisit-after" content="1 days">
+    
+    
+        
+        <meta name="description" content="Hexo Theme Redefine, Redefine Your Hexo Journey.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="免费MCP全景图 + llama.cpp最新命令行指南 + ggml生态一览 + llama-server Agent参数全解">
+<meta property="og:url" content="https://chyyl.netlify.app/2026/07/10/00/00/00/index.html">
+<meta property="og:site_name" content="Chyyl&#39;s Blog">
+<meta property="og:description" content="Hexo Theme Redefine, Redefine Your Hexo Journey.">
+<meta property="og:locale">
+<meta property="og:image" content="https://chyyl.netlify.app/images/redefine-og.webp">
+<meta property="article:published_time" content="2026-07-09T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-07-10T11:11:01.984Z">
+<meta property="article:author" content="Chyyl">
+<meta property="article:tag" content="Agent">
+<meta property="article:tag" content="MCP">
+<meta property="article:tag" content="ggml">
+<meta property="article:tag" content="llama-server">
+<meta property="article:tag" content="llama.cpp">
+<meta property="article:tag" content="命令行">
+<meta property="article:tag" content="本地部署">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://chyyl.netlify.app/images/redefine-og.webp">
+    
+    
+    <!--- Icon Part-->
+    <link rel="icon" type="image/png" href="https://avatars.githubusercontent.com/u/115130037?v=4" sizes="192x192">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://avatars.githubusercontent.com/u/115130037?v=4">
+    <meta name="theme-color" content="#A31F34">
+    <link rel="shortcut icon" href="https://avatars.githubusercontent.com/u/115130037?v=4">
+    <!--- Page Info-->
+    
+    <title>
+        
+            免费MCP全景图 + llama.cpp最新命令行指南 + ggml生态一览 + llama-server Agent参数全解 | ChyyL&#39;s Blog
+        
+    </title>
+
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fonts/Chillax/chillax.css">
+
+    <!--- Inject Part-->
+    
+
+    
+<link rel="stylesheet" href="/css/style.css">
+
+
+    
+        <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/css/build/tailwind.css">
+    
+
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fonts/GeistMono/geist-mono.css">
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fonts/Geist/geist.css">
+    <!--- Font Part-->
+    
+    
+    
+    
+    
+    
+
+    <script id="hexo-configurations">
+    window.config = {"hostname":"chyyl.netlify.app","root":"/","language":"zh-Hans"};
+    window.theme = {"articles":{"style":{"font_size":"16px","line_height":1.5,"image_border_radius":"14px","image_alignment":"center","image_caption":false,"link_icon":true,"delete_mask":false,"title_alignment":"left","headings_top_spacing":{"h1":"3.2rem","h2":"2.4rem","h3":"1.9rem","h4":"1.6rem","h5":"1.4rem","h6":"1.3rem"}},"word_count":{"enable":true,"count":true,"min2read":true},"author_label":{"enable":true,"auto":false,"list":[]},"code_block":{"copy":true,"style":"mac","highlight_theme":{"light":"github","dark":"vs2015"},"font":{"enable":false,"family":null,"url":null}},"toc":{"enable":true,"max_depth":3,"number":false,"expand":true,"init_open":true},"copyright":{"enable":true,"default":"cc_by_nc_sa"},"lazyload":true,"pangu_js":false,"recommendation":{"enable":false,"title":"推荐阅读","limit":3,"mobile_limit":2,"placeholder":"/images/wallhaven-wqery6-light.webp","skip_dirs":[]}},"colors":{"primary":"#A31F34","secondary":null,"default_mode":"light"},"global":{"fonts":{"chinese":{"enable":false,"family":null,"url":null},"english":{"enable":false,"family":null,"url":null},"title":{"enable":false,"family":null,"url":null}},"content_max_width":"1000px","sidebar_width":"210px","hover":{"shadow":true,"scale":false},"scroll_progress":{"bar":false,"percentage":true},"website_counter":{"url":"https://cn.vercount.one/js","enable":true,"site_pv":true,"site_uv":true,"post_pv":true},"single_page":true,"preloader":{"enable":false,"custom_message":null},"side_tools":{"gear_rotation":true,"auto_expand":false},"open_graph":{"enable":true,"image":"/images/redefine-og.webp","description":"Hexo Theme Redefine, Redefine Your Hexo Journey."},"google_analytics":{"enable":false,"id":null}},"home_banner":{"enable":true,"style":"fixed","image":{"light":"/images/wallhaven-wqery6-light.webp","dark":"/images/wallhaven-wqery6-dark.webp"},"title":"Theme Redefine","subtitle":{"text":[],"hitokoto":{"enable":true,"show_author":true,"api":"https://v1.hitokoto.cn"},"typing_speed":100,"backing_speed":80,"starting_delay":500,"backing_delay":1500,"loop":true,"smart_backspace":true},"text_color":{"light":"#fff","dark":"#d1d1b6"},"text_style":{"title_size":"2.8rem","subtitle_size":"1.5rem","line_height":1.2},"custom_font":{"enable":false,"family":null,"url":null},"social_links":{"enable":false,"style":"default","links":[{"icon":"fa-brands fa-github","url":null},{"icon":"fa-brands fa-twitter","url":null},{"icon":"fa-solid fa-at","url":"you@example.com"},{"icon":"fa-brands fa-telegram","url":null},{"icon":"/images/custom-icon.svg","url":null}],"qrs":[{"icon":"fa-brands fa-weixin","qr":null},{"icon":"/images/custom-icon.svg","qr":null}]}},"plugins":{"feed":{"enable":true},"aplayer":{"enable":false,"type":"fixed","audios":[{"name":null,"artist":null,"url":null,"cover":null,"lrc":null}]},"mermaid":{"enable":false,"version":"11.4.1","theme":{"light":"default","dark":"dark"}}},"version":"2.9.0","navbar":{"auto_hide":false,"color":{"left":"#f78736","right":"#367df7","transparency":35},"width":{"home":"1200px","pages":"1000px"},"links":{"Home":{"path":"/","icon":"fa-regular fa-house"}},"search":{"enable":false,"preload":true}},"page_templates":{"friends_column":2,"tags_style":"blur","masonry":{"batch_size":12,"initial_batch_size":24}},"home":{"sidebar":{"enable":true,"position":"left","first_item":"menu","announcement":null,"show_on_mobile":true,"links":null},"article_date_format":"auto","excerpt_length":200,"categories":{"enable":true,"limit":3},"tags":{"enable":true,"limit":3}},"footer":{"runtime":true,"icon":"<i class=\"fa-solid fa-heart fa-beat\" style=\"--fa-animation-duration: 0.5s; color: #f54545\"></i>","start":"2024/06/01 00:00:00","statistics":true,"customize":null,"icp":{"enable":false,"number":null,"url":null}},"footerStart":"2024/06/01 00:00:00","mermaid":{"style":{"light":"default","dark":"dark"}}};
+    window.lang_ago = {"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days ago","week":"%s weeks ago","month":"%s months ago","year":"%s years ago"};
+    window.i18n = {"search":"Search...","toc":"On this page","prev":"Prev","next":"Next","prev_posts":"Prev posts","next_posts":"Next posts","page":"Page %d","recent_posts":"Recent Posts","share":"Share","powered_by":"POWERED BY %s","theme":"THEME","rss_feed":"RSS Feed","category":"Category","categories":"Categories","tag":"Tag","tags":"Tags","post":"Post","posts":"Posts","tagcloud":"Tag Cloud","comment":"Comment","comments":"Comments","home":"Home","archive":"Archive","archives":"Archives","top":"TOP","sticky":"Sticky","go-back-home":"Go Back Home","masonry_loading":"Loading photos...","image_viewer":"Image viewer","close":"Close","exif":{"title":"EXIF","cards":{"camera":"Camera","lens":"Lens","exposure":"Exposure","other":"Other"},"fields":{"make":"Brand","model":"Model","date_taken":"Date taken","lens_model":"Lens","focal_length":"Focal length","focus_mode":"Focus mode","shutter":"Shutter","aperture":"Aperture","iso":"ISO","exposure_program":"Exposure program","exposure_compensation":"Exposure compensation","metering_mode":"Metering mode","flash":"Flash","white_balance":"White balance","latitude":"Latitude","longitude":"Longitude","altitude":"Altitude"},"status":{"loading":"Loading...","no_exif":"No EXIF available","library_missing":"EXIF library not loaded","image_source_missing":"Image source unavailable","unavailable":"EXIF unavailable (blocked by CORS or missing metadata)","flag_unavailable":"EXIF unavailable"}},"about":"About","changelog":"Changelog","links":"Links","link":"Link","friends":"Friends","friend":"Friend","timeline":"Timeline","shuoshuo":"Shuoshuo","bookmarks":"Bookmarks","site_uv":"VISITOR COUNT","site_pv":"TOTAL PAGE VIEWS","read_more":"Read more","wordcount":"Words","min2read":"Mins","status":"Status","runtime":"Blog up for","days":"days","hours":"hrs","minutes":"Min","seconds":"Sec","optimized_by":"and Optimized by Evan","rights":"All Rights Reserved","site_posts":"%s posts in total","site_wordcount":"%s words in total","copyright":{"author":"Author","title":"Title","link":"Link","create_time":"Created at","update_time":"Updated at","license_title":"License","license_content":"This work is licensed under %s.","all_rights_reserved":"All Rights Reserved &#169; %s","public_domain":"This work is in the public domain."},"ago":{"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days ago","week":"%s weeks ago","month":"%s months ago","year":"%s years ago"},"create_time":"Created","update_time":"Updated","expired":"This post is written %s days ago, and the content may not be up to date."};
+    window.data = {"masonry":false};
+  </script>
+    
+    <!--- Fontawesome Part-->
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fontawesome/fontawesome.min.css">
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fontawesome/brands.min.css">
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fontawesome/solid.min.css">
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fontawesome/regular.min.css">
+    
+    
+    
+    
+<meta name="generator" content="Hexo 8.1.2"><link rel="alternate" href="/atom.xml" title="Chyyl's Blog" type="application/atom+xml">
+</head>
+
+
+<body>
+	<div class="progress-bar-container">
+	
+
+	
+	<span class="pjax-progress-bar"></span>
+	<!--        <span class="swup-progress-icon">-->
+	<!--            <i class="fa-solid fa-circle-notch fa-spin"></i>-->
+	<!--        </span>-->
+	
+</div>
+
+<main class="page-container" id="swup">
+
+	
+
+	<div class="main-content-container flex flex-col justify-between min-h-dvh">
+		<div class="main-content-header">
+			<header class="navbar-container px-6 md:px-12">
+    <div class="navbar-content transition-navbar ">
+        <div class="left">
+            
+            <a class="logo-title" href="/">
+                
+                ChyyL&#39;s Blog
+                
+            </a>
+        </div>
+
+        <div class="right">
+            <!-- PC -->
+            <div class="desktop">
+                <ul class="navbar-list">
+                    
+                        
+                            
+
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class=""
+                                   href="/"
+                                        >
+                                    <i class="fa-regular fa-house fa-fw"></i>
+                                    INICIO
+                                    
+                                </a>
+
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                    
+                </ul>
+            </div>
+            <!-- Mobile -->
+            <div class="mobile">
+                
+                <div class="icon-item navbar-bar">
+                    <div class="navbar-bar-middle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile sheet -->
+    <div class="navbar-drawer h-dvh w-full absolute top-0 left-0 bg-background-color flex flex-col justify-between">
+        <ul class="drawer-navbar-list flex flex-col px-4 justify-center items-start">
+            
+                
+                    
+
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full "
+                           href="/"
+                        >
+                            <span>
+                                INICIO
+                            </span>
+                            
+                                <i class="fa-regular fa-house fa-sm fa-fw"></i>
+                            
+                        </a>
+                        
+
+                        
+                    </li>
+            
+
+            
+            
+        </ul>
+
+        <div class="statistics flex justify-around my-2.5">
+    <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/tags">
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">31</div>
+        <div class="label text-third-text-color text-sm">Etiquetas</div>
+    </a>
+    <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/categories">
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">2</div>
+        <div class="label text-third-text-color text-sm">Categorías</div>
+    </a>
+    <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/archives">
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">9</div>
+        <div class="label text-third-text-color text-sm">Publicaciones</div>
+    </a>
+</div>
+    </div>
+
+    <div class="window-mask"></div>
+
+</header>
+
+
+		</div>
+
+		<div class="main-content-body transition-fade-up">
+			
+
+			<div class="main-content">
+				<div class="post-page-container flex relative justify-between box-border w-full h-full">
+	<div class="article-content-container">
+
+		<div class="article-title relative w-full">
+			
+			<div class="w-full flex items-center pt-6 justify-start">
+				<h1 class="article-title-regular text-second-text-color tracking-tight text-4xl md:text-6xl font-semibold px-2 sm:px-6 md:px-8 py-3">免费MCP全景图 + llama.cpp最新命令行指南 + ggml生态一览 + llama-server Agent参数全解</h1>
+			</div>
+			
+		</div>
+
+		
+		<div class="article-header flex flex-row gap-2 items-center px-2 sm:px-6 md:px-8">
+			<div class="avatar w-[46px] h-[46px] shrink-0 rounded-medium border border-border-color p-px">
+				<img src="https://avatars.githubusercontent.com/u/115130037?v=4">
+			</div>
+			<div class="info flex flex-col justify-between">
+				<div class="author flex items-center">
+					<span class="name text-default-text-color text-lg font-semibold">Chyyl</span>
+					
+					<span class="author-label ml-1.5 text-xs px-2 py-0.5 rounded-small text-third-text-color border border-shadow-color-1">Lv2</span>
+					
+				</div>
+				<div class="meta-info">
+					<div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fa-regular fa-pen-fancy"></i>&nbsp;
+        <span class="desktop">2026-07-10</span>
+        <span class="mobile">2026-07-10</span>
+        <span class="hover-info">Creado</span>
+    </span>
+    
+        <span class="article-date article-meta-item">
+            <i class="fa-regular fa-wrench"></i>&nbsp;
+            <span class="desktop">2026-07-10 19:11:01</span>
+            <span class="mobile">2026-07-10 19:11:01</span>
+            <span class="hover-info">Actualizado</span>
+        </span>
+    
+
+    
+        <span class="article-categories article-meta-item">
+            <i class="fa-regular fa-folders"></i>&nbsp;
+            <ul>
+                
+                
+                    
+                        
+                        <li>
+                            <a href="/categories/%E6%8A%80%E6%9C%AF%E5%AE%9E%E6%93%8D/">技术实操</a>&nbsp;
+                        </li>
+                    
+                    
+                
+            </ul>
+        </span>
+    
+    
+        <span class="article-tags article-meta-item">
+            <i class="fa-regular fa-tags"></i>&nbsp;
+            <ul>
+                
+                    <li>
+                        <a href="/tags/llama-cpp/">llama.cpp</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/%E6%9C%AC%E5%9C%B0%E9%83%A8%E7%BD%B2/">本地部署</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/MCP/">MCP</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/ggml/">ggml</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/llama-server/">llama-server</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/Agent/">Agent</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/%E5%91%BD%E4%BB%A4%E8%A1%8C/">命令行</a>&nbsp;
+                    </li>
+                
+            </ul>
+        </span>
+    
+
+    
+    
+    
+    
+        <span class="article-pv article-meta-item">
+            <i class="fa-regular fa-eye"></i>&nbsp;<span id="busuanzi_value_page_pv"></span>
+        </span>
+    
+</div>
+
+				</div>
+			</div>
+		</div>
+		
+
+		
+
+
+		<div class="article-content markdown-body px-2 sm:px-6 md:px-8 pb-8">
+			<blockquote>
+<p>四个话题一篇打包：MCP 是什么、有哪些免费 Server 可以直接用；llama.cpp 最新版 llama-cli 命令行参数全解；ggml 组织下都有哪些项目；llama-server 的 Agent 相关参数完整列表。所有信息基于 2026 年 7 月 llama.cpp 主分支最新代码。</p>
+</blockquote>
+<h2 id="一、免费-MCP-全景图"><a href="#一、免费-MCP-全景图" class="headerlink" title="一、免费 MCP 全景图"></a>一、免费 MCP 全景图</h2><h3 id="1-1-MCP-是什么"><a href="#1-1-MCP-是什么" class="headerlink" title="1.1 MCP 是什么"></a>1.1 MCP 是什么</h3><p>MCP（Model Context Protocol，模型上下文协议）是 Anthropic 于 2024 年底开源的协议，用于让 AI 模型与外部工具、数据源、服务进行标准化通信。你可以把它理解成”AI 界的 USB 接口”——不管什么模型，不管什么工具，插上就能用。</p>
+<p><strong>核心概念：</strong></p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">AI 模型 (Claude/Cursor/Codex/llama-server)</span><br><span class="line">    ↕ MCP 协议（JSON-RPC 2.0）</span><br><span class="line">MCP Server（文件系统/Git/数据库/浏览器...）</span><br><span class="line">    ↕</span><br><span class="line">实际操作（读写文件/查仓库/执行SQL/自动化网页）</span><br></pre></td></tr></table></figure></div>
+
+<p>MCP 定义了三种能力：</p>
+<ul>
+<li><strong>Tools</strong>：可调用的函数（如”执行 SQL 查询”）</li>
+<li><strong>Resources</strong>：可读取的数据源（如”当前 Git diff”）</li>
+<li><strong>Prompts</strong>：预定义的提示模板</li>
+</ul>
+<h3 id="1-2-官方-Reference-Servers（全部免费）"><a href="#1-2-官方-Reference-Servers（全部免费）" class="headerlink" title="1.2 官方 Reference Servers（全部免费）"></a>1.2 官方 Reference Servers（全部免费）</h3><p>Anthropic 官方维护的参考实现，开箱即用：</p>
+<table>
+<thead>
+<tr>
+<th>Server</th>
+<th>语言</th>
+<th>功能</th>
+<th>启动命令</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Everything</strong></td>
+<td>TS</td>
+<td>测试用，含 prompts&#x2F;resources&#x2F;tools 全部功能</td>
+<td><code>npx -y @modelcontextprotocol/server-everything</code></td>
+</tr>
+<tr>
+<td><strong>Fetch</strong></td>
+<td>TS</td>
+<td>网页抓取并转换为 LLM 友好格式</td>
+<td><code>npx -y @modelcontextprotocol/server-fetch</code></td>
+</tr>
+<tr>
+<td><strong>Filesystem</strong></td>
+<td>TS</td>
+<td>安全的文件读写，可配置访问目录</td>
+<td><code>npx -y @modelcontextprotocol/server-filesystem /path/to/dir</code></td>
+</tr>
+<tr>
+<td><strong>Git</strong></td>
+<td>Python</td>
+<td>Git 仓库读取、搜索、操作</td>
+<td><code>uvx mcp-server-git --repository /path/to/repo</code></td>
+</tr>
+<tr>
+<td><strong>Memory</strong></td>
+<td>TS</td>
+<td>知识图谱式持久记忆系统</td>
+<td><code>npx -y @modelcontextprotocol/server-memory</code></td>
+</tr>
+<tr>
+<td><strong>Sequential Thinking</strong></td>
+<td>TS</td>
+<td>动态反思式问题求解</td>
+<td><code>npx -y @modelcontextprotocol/server-sequential-thinking</code></td>
+</tr>
+<tr>
+<td><strong>Time</strong></td>
+<td>TS</td>
+<td>时间和时区转换</td>
+<td><code>npx -y @modelcontextprotocol/server-time</code></td>
+</tr>
+</tbody></table>
+<h3 id="1-3-社区常用免费-MCP-Servers"><a href="#1-3-社区常用免费-MCP-Servers" class="headerlink" title="1.3 社区常用免费 MCP Servers"></a>1.3 社区常用免费 MCP Servers</h3><p>以下是从 awesome-mcp、mcpservers.org、mcp.so 等目录中筛选出的<strong>免费且活跃维护</strong>的 MCP Server：</p>
+<h4 id="文件与代码"><a href="#文件与代码" class="headerlink" title="文件与代码"></a>文件与代码</h4><table>
+<thead>
+<tr>
+<th>Server</th>
+<th>功能</th>
+<th>来源</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Filesystem</strong></td>
+<td>文件读写、目录浏览</td>
+<td>官方</td>
+</tr>
+<tr>
+<td><strong>Git</strong></td>
+<td>Git 仓库操作</td>
+<td>官方</td>
+</tr>
+<tr>
+<td><strong>GitHub</strong></td>
+<td>仓库管理、Issue&#x2F;PR 操作</td>
+<td>官方（已归档，仍可用）</td>
+</tr>
+<tr>
+<td><strong>Playwright</strong></td>
+<td>浏览器自动化、截图、点击</td>
+<td>微软官方</td>
+</tr>
+<tr>
+<td><strong>grep_search</strong></td>
+<td>代码内容搜索</td>
+<td>llama-server 内置</td>
+</tr>
+</tbody></table>
+<h4 id="数据库"><a href="#数据库" class="headerlink" title="数据库"></a>数据库</h4><table>
+<thead>
+<tr>
+<th>Server</th>
+<th>功能</th>
+<th>来源</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>SQLite</strong></td>
+<td>SQLite 数据库查询</td>
+<td>官方</td>
+</tr>
+<tr>
+<td><strong>PostgreSQL</strong></td>
+<td>只读 PostgreSQL 访问</td>
+<td>官方</td>
+</tr>
+<tr>
+<td><strong>Supabase</strong></td>
+<td>Supabase 数据库操作</td>
+<td>社区</td>
+</tr>
+</tbody></table>
+<h4 id="搜索与信息"><a href="#搜索与信息" class="headerlink" title="搜索与信息"></a>搜索与信息</h4><table>
+<thead>
+<tr>
+<th>Server</th>
+<th>功能</th>
+<th>来源</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Fetch</strong></td>
+<td>网页抓取</td>
+<td>官方</td>
+</tr>
+<tr>
+<td><strong>Brave Search</strong></td>
+<td>Brave 搜索 API</td>
+<td>官方（已归档）</td>
+</tr>
+<tr>
+<td><strong>Context7</strong></td>
+<td>实时文档查询（免费层）</td>
+<td>社区</td>
+</tr>
+</tbody></table>
+<h4 id="生产力"><a href="#生产力" class="headerlink" title="生产力"></a>生产力</h4><table>
+<thead>
+<tr>
+<th>Server</th>
+<th>功能</th>
+<th>来源</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Memory</strong></td>
+<td>知识图谱记忆</td>
+<td>官方</td>
+</tr>
+<tr>
+<td><strong>Sequential Thinking</strong></td>
+<td>分步推理</td>
+<td>官方</td>
+</tr>
+<tr>
+<td><strong>Time</strong></td>
+<td>时间&#x2F;时区</td>
+<td>官方</td>
+</tr>
+</tbody></table>
+<h3 id="1-4-MCP-怎么用"><a href="#1-4-MCP-怎么用" class="headerlink" title="1.4 MCP 怎么用"></a>1.4 MCP 怎么用</h3><p><strong>方式一：配合 Claude Desktop &#x2F; Cursor &#x2F; Codex</strong></p>
+<p>在客户端配置文件中添加 MCP Server：</p>
+<div class="code-container" data-rel="Json"><figure class="iseeu highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;mcpServers&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;filesystem&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;command&quot;</span><span class="punctuation">:</span> <span class="string">&quot;npx&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;args&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="string">&quot;-y&quot;</span><span class="punctuation">,</span> <span class="string">&quot;@modelcontextprotocol/server-filesystem&quot;</span><span class="punctuation">,</span> <span class="string">&quot;/home/user/docs&quot;</span><span class="punctuation">]</span></span><br><span class="line">    <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;git&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;command&quot;</span><span class="punctuation">:</span> <span class="string">&quot;uvx&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;args&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="string">&quot;mcp-server-git&quot;</span><span class="punctuation">,</span> <span class="string">&quot;--repository&quot;</span><span class="punctuation">,</span> <span class="string">&quot;/home/user/project&quot;</span><span class="punctuation">]</span></span><br><span class="line">    <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;github&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;command&quot;</span><span class="punctuation">:</span> <span class="string">&quot;npx&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;args&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="string">&quot;-y&quot;</span><span class="punctuation">,</span> <span class="string">&quot;@modelcontextprotocol/server-github&quot;</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;env&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;GITHUB_PERSONAL_ACCESS_TOKEN&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&lt;your-token&gt;&quot;</span></span><br><span class="line">      <span class="punctuation">&#125;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure></div>
+
+<p><strong>方式二：配合 llama-server</strong></p>
+<p>llama.cpp 从 2026 年起内置了 MCP 支持，可以直接通过 <code>--tools</code> 参数启用内置工具，或通过 Web UI 的 MCP 代理连接外部 MCP Server：</p>
+<div class="code-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 启用内置工具（文件读写、grep、shell 命令等）</span></span><br><span class="line">./llama-server -m model.gguf --tools all --agent</span><br><span class="line"></span><br><span class="line"><span class="comment"># 或只启用特定工具</span></span><br><span class="line">./llama-server -m model.gguf --tools read_file,grep_search,get_datetime --agent</span><br></pre></td></tr></table></figure></div>
+
+<p><strong>方式三：独立运行 MCP Server</strong></p>
+<div class="code-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 安装 uv（Python 包管理器）</span></span><br><span class="line">curl -LsSf https://astral.sh/uv/install.sh | sh</span><br><span class="line"></span><br><span class="line"><span class="comment"># 直接运行任何 MCP Server</span></span><br><span class="line">uvx mcp-server-git --repository /path/to/repo</span><br><span class="line">npx -y @modelcontextprotocol/server-memory</span><br></pre></td></tr></table></figure></div>
+
+<h3 id="1-5-MCP-资源索引"><a href="#1-5-MCP-资源索引" class="headerlink" title="1.5 MCP 资源索引"></a>1.5 MCP 资源索引</h3><table>
+<thead>
+<tr>
+<th>资源</th>
+<th>地址</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>官方 Server 仓库</td>
+<td>github.com&#x2F;modelcontextprotocol&#x2F;servers</td>
+</tr>
+<tr>
+<td>Awesome MCP Servers</td>
+<td>mcpservers.org</td>
+</tr>
+<tr>
+<td>MCP 市场</td>
+<td>mcp.so</td>
+</tr>
+<tr>
+<td>MCP 最佳列表（400+）</td>
+<td>github.com&#x2F;tolkonepiu&#x2F;best-of-mcp-servers</td>
+</tr>
+<tr>
+<td>MCP 官方文档</td>
+<td>modelcontextprotocol.io</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="二、llama-cpp-最新版-llama-cli-命令行用法"><a href="#二、llama-cpp-最新版-llama-cli-命令行用法" class="headerlink" title="二、llama.cpp 最新版 llama-cli 命令行用法"></a>二、llama.cpp 最新版 llama-cli 命令行用法</h2><h3 id="2-1-llama-cli-是什么"><a href="#2-1-llama-cli-是什么" class="headerlink" title="2.1 llama-cli 是什么"></a>2.1 llama-cli 是什么</h3><p><code>llama-cli</code> 是 llama.cpp 的命令行推理工具，用于单轮对话、文本生成和交互式聊天。它是除了 <code>llama-server</code> 之外最常用的入口。</p>
+<p>基本调用：</p>
+<div class="code-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./llama-cli -m model.gguf -p <span class="string">&quot;你好&quot;</span> -n 512</span><br></pre></td></tr></table></figure></div>
+
+<h3 id="2-2-Common-Params（通用参数）"><a href="#2-2-Common-Params（通用参数）" class="headerlink" title="2.2 Common Params（通用参数）"></a>2.2 Common Params（通用参数）</h3><p>这些参数在 llama-cli 和 llama-server 之间共享：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>-h, --help</code></td>
+<td>打印用法并退出</td>
+</tr>
+<tr>
+<td><code>--version</code></td>
+<td>显示版本和构建信息</td>
+</tr>
+<tr>
+<td><code>-cl, --cache-list</code></td>
+<td>显示缓存中的模型列表</td>
+</tr>
+<tr>
+<td><code>--completion-bash</code></td>
+<td>输出 bash 自动补全脚本</td>
+</tr>
+<tr>
+<td><code>-t, --threads N</code></td>
+<td>生成时使用的 CPU 线程数（默认 -1）</td>
+</tr>
+<tr>
+<td><code>-tb, --threads-batch N</code></td>
+<td>批处理&#x2F;prompt 处理线程数（默认同 –threads）</td>
+</tr>
+<tr>
+<td><code>-C, --cpu-mask M</code></td>
+<td>CPU 亲和性掩码（十六进制）</td>
+</tr>
+<tr>
+<td><code>-Cr, --cpu-range lo-hi</code></td>
+<td>CPU 亲和性范围</td>
+</tr>
+<tr>
+<td><code>--cpu-strict &lt;0|1&gt;</code></td>
+<td>严格 CPU 绑定（默认 0）</td>
+</tr>
+<tr>
+<td><code>--prio N</code></td>
+<td>进程优先级：-1(低) 0(正常) 1(中) 2(高) 3(实时)</td>
+</tr>
+<tr>
+<td><code>--poll &lt;0...100&gt;</code></td>
+<td>轮询等待级别（默认 50，0&#x3D;不轮询）</td>
+</tr>
+<tr>
+<td><code>-c, --ctx-size N</code></td>
+<td>上下文窗口大小（默认 0，从模型加载）</td>
+</tr>
+<tr>
+<td><code>-n, --predict N</code></td>
+<td>生成 token 数（默认 -1，无限）</td>
+</tr>
+<tr>
+<td><code>-b, --batch-size N</code></td>
+<td>逻辑最大批大小（默认 2048）</td>
+</tr>
+<tr>
+<td><code>-ub, --ubatch-size N</code></td>
+<td>物理最大批大小（默认 512）</td>
+</tr>
+<tr>
+<td><code>--keep N</code></td>
+<td>保留初始 prompt 的 token 数（-1&#x3D;全部）</td>
+</tr>
+<tr>
+<td><code>-fa, --flash-attn [on|off|auto]</code></td>
+<td>Flash Attention（默认 auto）</td>
+</tr>
+<tr>
+<td><code>-p, --prompt PROMPT</code></td>
+<td>输入 prompt；系统消息用 <code>-sys</code></td>
+</tr>
+<tr>
+<td><code>-f, --file FNAME</code></td>
+<td>从文件读取 prompt</td>
+</tr>
+<tr>
+<td><code>-bf, --binary-file FNAME</code></td>
+<td>从二进制文件读取 prompt</td>
+</tr>
+<tr>
+<td><code>-e, --escape</code></td>
+<td>处理转义序列 <code>\n \r \t &#39; &quot;</code></td>
+</tr>
+<tr>
+<td><code>--rope-scaling {none,linear,yarn}</code></td>
+<td>RoPE 频率缩放方法</td>
+</tr>
+<tr>
+<td><code>--rope-scale N</code></td>
+<td>RoPE 上下文缩放因子</td>
+</tr>
+<tr>
+<td><code>--rope-freq-base N</code></td>
+<td>RoPE 基础频率</td>
+</tr>
+<tr>
+<td><code>--rope-freq-scale N</code></td>
+<td>RoPE 频率缩放因子</td>
+</tr>
+<tr>
+<td><code>--yarn-orig-ctx N</code></td>
+<td>YaRN 原始上下文大小</td>
+</tr>
+<tr>
+<td><code>--yarn-ext-factor N</code></td>
+<td>YaRN 外推混合因子</td>
+</tr>
+<tr>
+<td><code>--yarn-attn-factor N</code></td>
+<td>YaRN 注意力缩放因子</td>
+</tr>
+<tr>
+<td><code>--yarn-beta-slow N</code></td>
+<td>YaRN 高校正维度</td>
+</tr>
+<tr>
+<td><code>--yarn-beta-fast N</code></td>
+<td>YaRN 低校正维度</td>
+</tr>
+<tr>
+<td><code>-kvo, --kv-offload</code> &#x2F; <code>-nkvo</code></td>
+<td>KV 缓存卸载（默认开启）</td>
+</tr>
+<tr>
+<td><code>-ctk, --cache-type-k TYPE</code></td>
+<td>K 缓存类型：f32&#x2F;f16&#x2F;bf16&#x2F;q8_0&#x2F;q4_0&#x2F;q4_1&#x2F;q5_0&#x2F;q5_1&#x2F;iq4_nl（默认 f16）</td>
+</tr>
+<tr>
+<td><code>-ctv, --cache-type-v TYPE</code></td>
+<td>V 缓存类型（同上，默认 f16）</td>
+</tr>
+<tr>
+<td><code>-np, --parallel N</code></td>
+<td>并行解码序列数（默认 1）</td>
+</tr>
+<tr>
+<td><code>--mlock</code></td>
+<td>强制模型驻留 RAM，防止交换</td>
+</tr>
+<tr>
+<td><code>--mmap</code> &#x2F; <code>--no-mmap</code></td>
+<td>内存映射（默认开启，关闭则加载慢但减少页出）</td>
+</tr>
+<tr>
+<td><code>-dio, --direct-io</code></td>
+<td>使用 DirectIO</td>
+</tr>
+<tr>
+<td><code>--numa TYPE</code></td>
+<td>NUMA 优化：distribute&#x2F;isolate&#x2F;numactl</td>
+</tr>
+<tr>
+<td><code>-dev, --device &lt;dev1,dev2,..&gt;</code></td>
+<td>指定 GPU 设备</td>
+</tr>
+<tr>
+<td><code>--list-devices</code></td>
+<td>列出可用设备</td>
+</tr>
+<tr>
+<td><code>-ot, --override-tensor</code></td>
+<td>覆盖张量缓冲区类型</td>
+</tr>
+<tr>
+<td><code>-cmoe, --cpu-moe</code></td>
+<td>MoE 权重保留在 CPU</td>
+</tr>
+<tr>
+<td><code>-ngl, --gpu-layers N</code></td>
+<td>GPU 层数（支持数字&#x2F;auto&#x2F;all，默认 auto）</td>
+</tr>
+<tr>
+<td><code>-sm, --split-mode {none,layer,row,tensor}</code></td>
+<td>多 GPU 分割模式</td>
+</tr>
+<tr>
+<td><code>-ts, --tensor-split N0,N1,...</code></td>
+<td>多 GPU 张量分割比例</td>
+</tr>
+<tr>
+<td><code>-mg, --main-gpu INDEX</code></td>
+<td>主 GPU</td>
+</tr>
+<tr>
+<td><code>-fit, --fit [on|off]</code></td>
+<td>自动调整参数以适配显存（默认 on）</td>
+</tr>
+<tr>
+<td><code>-fitt, --fit-target MiB0,...</code></td>
+<td>每设备目标余量（默认 1024 MiB）</td>
+</tr>
+<tr>
+<td><code>-fitc, --fit-ctx N</code></td>
+<td>–fit 可调整的最小上下文（默认 4096）</td>
+</tr>
+<tr>
+<td><code>--check-tensors</code></td>
+<td>检查模型张量数据有效性</td>
+</tr>
+<tr>
+<td><code>--override-kv KEY=TYPE:VALUE</code></td>
+<td>覆盖模型元数据</td>
+</tr>
+<tr>
+<td><code>--lora FNAME</code></td>
+<td>加载 LoRA 适配器</td>
+</tr>
+<tr>
+<td><code>--lora-scaled FNAME:SCALE</code></td>
+<td>带缩放的 LoRA</td>
+</tr>
+<tr>
+<td><code>--control-vector FNAME</code></td>
+<td>控制向量</td>
+</tr>
+<tr>
+<td><code>-m, --model FNAME</code></td>
+<td>模型文件路径</td>
+</tr>
+<tr>
+<td><code>-mu, --model-url URL</code></td>
+<td>模型下载 URL</td>
+</tr>
+<tr>
+<td><code>-dr, --docker-repo &lt;repo&gt;/&lt;model&gt;[:quant]</code></td>
+<td>Docker Hub 模型</td>
+</tr>
+<tr>
+<td><code>-hf, --hf-repo &lt;user&gt;/&lt;model&gt;[:quant]</code></td>
+<td>HuggingFace 模型仓库（默认 Q4_K_M）</td>
+</tr>
+<tr>
+<td><code>-hff, --hf-file FILE</code></td>
+<td>HuggingFace 模型文件名</td>
+</tr>
+<tr>
+<td><code>-hft, --hf-token TOKEN</code></td>
+<td>HuggingFace 访问令牌</td>
+</tr>
+<tr>
+<td><code>--log-disable</code></td>
+<td>禁用日志</td>
+</tr>
+<tr>
+<td><code>--log-file FNAME</code></td>
+<td>日志写入文件</td>
+</tr>
+<tr>
+<td><code>--log-colors [on|off|auto]</code></td>
+<td>彩色日志</td>
+</tr>
+</tbody></table>
+<h3 id="2-3-Sampling-Params（采样参数）"><a href="#2-3-Sampling-Params（采样参数）" class="headerlink" title="2.3 Sampling Params（采样参数）"></a>2.3 Sampling Params（采样参数）</h3><table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>--samplers SAMPLERS</code></td>
+<td>采样器顺序，分号分隔（默认：penalties;dry;top_n_sigma;top_k;typ_p;top_p;min_p;xtc;temperature）</td>
+</tr>
+<tr>
+<td><code>-s, --seed SEED</code></td>
+<td>随机种子（默认 -1，随机）</td>
+</tr>
+<tr>
+<td><code>--sampler-seq SEQUENCE</code></td>
+<td>简化采样序列（默认 edskypmxt）</td>
+</tr>
+<tr>
+<td><code>--ignore-eos</code></td>
+<td>忽略 EOS token，继续生成</td>
+</tr>
+<tr>
+<td><code>--temp, --temperature N</code></td>
+<td>温度（默认 0.80）</td>
+</tr>
+<tr>
+<td><code>--top-k N</code></td>
+<td>Top-K 采样（默认 40，0&#x3D;禁用）</td>
+</tr>
+<tr>
+<td><code>--top-p N</code></td>
+<td>Top-P 采样（默认 0.95，1.0&#x3D;禁用）</td>
+</tr>
+<tr>
+<td><code>--min-p N</code></td>
+<td>Min-P 采样（默认 0.05，0.0&#x3D;禁用）</td>
+</tr>
+<tr>
+<td><code>--top-nsigma N</code></td>
+<td>Top-N-Sigma 采样（默认 -1.00，-1.0&#x3D;禁用）</td>
+</tr>
+<tr>
+<td><code>--xtc-probability N</code></td>
+<td>XTC 概率（默认 0.00）</td>
+</tr>
+<tr>
+<td><code>--xtc-threshold N</code></td>
+<td>XTC 阈值（默认 0.10）</td>
+</tr>
+<tr>
+<td><code>--typical, --typical-p N</code></td>
+<td>局部典型采样（默认 1.00）</td>
+</tr>
+<tr>
+<td><code>--repeat-last-n N</code></td>
+<td>重复惩罚考虑的最近 token 数（默认 64）</td>
+</tr>
+<tr>
+<td><code>--repeat-penalty N</code></td>
+<td>重复惩罚（默认 1.00）</td>
+</tr>
+<tr>
+<td><code>--presence-penalty N</code></td>
+<td>存在惩罚（默认 0.00）</td>
+</tr>
+<tr>
+<td><code>--frequency-penalty N</code></td>
+<td>频率惩罚（默认 0.00）</td>
+</tr>
+<tr>
+<td><code>--dry-multiplier N</code></td>
+<td>DRY 采样乘数（默认 0.00）</td>
+</tr>
+<tr>
+<td><code>--dry-base N</code></td>
+<td>DRY 基数值（默认 1.75）</td>
+</tr>
+<tr>
+<td><code>--dry-allowed-length N</code></td>
+<td>DRY 允许长度（默认 2）</td>
+</tr>
+<tr>
+<td><code>--dry-penalty-last-n N</code></td>
+<td>DRY 惩罚范围（默认 -1，全部上下文）</td>
+</tr>
+<tr>
+<td><code>--dry-sequence-breaker STRING</code></td>
+<td>DRY 序列断点（默认 <code>\n : &quot; *</code>）</td>
+</tr>
+<tr>
+<td><code>--adaptive-target N</code></td>
+<td>自适应 P 目标概率（默认 -1.00，禁用）</td>
+</tr>
+<tr>
+<td><code>--adaptive-decay N</code></td>
+<td>自适应衰减率（默认 0.90）</td>
+</tr>
+<tr>
+<td><code>--dynatemp-range N</code></td>
+<td>动态温度范围（默认 0.00）</td>
+</tr>
+<tr>
+<td><code>--dynatemp-exp N</code></td>
+<td>动态温度指数（默认 1.00）</td>
+</tr>
+<tr>
+<td><code>--mirostat N</code></td>
+<td>Mirostat 采样（0&#x3D;禁用，1&#x3D;v1，2&#x3D;v2）</td>
+</tr>
+<tr>
+<td><code>--mirostat-lr N</code></td>
+<td>Mirostat 学习率 eta（默认 0.10）</td>
+</tr>
+<tr>
+<td><code>--mirostat-ent N</code></td>
+<td>Mirostat 目标熵 tau（默认 5.00）</td>
+</tr>
+<tr>
+<td><code>-l, --logit-bias TOKEN_ID(+/-)BIAS</code></td>
+<td>修改 token 的对数概率</td>
+</tr>
+<tr>
+<td><code>--grammar GRAMMAR</code></td>
+<td>BNF 语法约束生成</td>
+</tr>
+<tr>
+<td><code>--grammar-file FNAME</code></td>
+<td>从文件读取语法</td>
+</tr>
+<tr>
+<td><code>-j, --json-schema SCHEMA</code></td>
+<td>JSON Schema 约束生成</td>
+</tr>
+<tr>
+<td><code>-jf, --json-schema-file FILE</code></td>
+<td>从文件读取 JSON Schema</td>
+</tr>
+<tr>
+<td><code>-bs, --backend-sampling</code></td>
+<td>启用后端采样（实验性）</td>
+</tr>
+</tbody></table>
+<h3 id="2-4-CLI-Specific-Params（交互-对话参数）"><a href="#2-4-CLI-Specific-Params（交互-对话参数）" class="headerlink" title="2.4 CLI-Specific Params（交互&#x2F;对话参数）"></a>2.4 CLI-Specific Params（交互&#x2F;对话参数）</h3><table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>--verbose-prompt</code></td>
+<td>打印详细 prompt</td>
+</tr>
+<tr>
+<td><code>--display-prompt</code> &#x2F; <code>--no-display-prompt</code></td>
+<td>是否显示 prompt（默认 true）</td>
+</tr>
+<tr>
+<td><code>-co, --color [on|off|auto]</code></td>
+<td>彩色输出</td>
+</tr>
+<tr>
+<td><code>-ctxcp, --ctx-checkpoints N</code></td>
+<td>上下文检查点数量（默认 32）</td>
+</tr>
+<tr>
+<td><code>-cram, --cache-ram N</code></td>
+<td>最大缓存 MiB（默认 8192，-1&#x3D;无限）</td>
+</tr>
+<tr>
+<td><code>--context-shift</code> &#x2F; <code>--no-context-shift</code></td>
+<td>无限生成时上下文移位（默认禁用）</td>
+</tr>
+<tr>
+<td><code>-sys, --system-prompt PROMPT</code></td>
+<td>系统提示词</td>
+</tr>
+<tr>
+<td><code>-sysf, --system-prompt-file FNAME</code></td>
+<td>从文件读取系统提示词</td>
+</tr>
+<tr>
+<td><code>-r, --reverse-prompt PROMPT</code></td>
+<td>反向提示，遇到则停止生成</td>
+</tr>
+<tr>
+<td><code>-sp, --special</code></td>
+<td>输出特殊 token</td>
+</tr>
+<tr>
+<td><code>-cnv, --conversation</code> &#x2F; <code>-no-cnv</code></td>
+<td>对话模式（有 chat template 时自动启用）</td>
+</tr>
+<tr>
+<td><code>-st, --single-turn</code></td>
+<td>单轮对话后退出</td>
+</tr>
+<tr>
+<td><code>-mli, --multiline-input</code></td>
+<td>多行输入</td>
+</tr>
+<tr>
+<td><code>--warmup</code> &#x2F; <code>--no-warmup</code></td>
+<td>预热空运行（默认开启）</td>
+</tr>
+<tr>
+<td><code>-mm, --mmproj FILE</code></td>
+<td>多模态投影文件</td>
+</tr>
+<tr>
+<td><code>--image</code> &#x2F; <code>--audio</code> &#x2F; <code>--video FILE</code></td>
+<td>多模态输入文件</td>
+</tr>
+<tr>
+<td><code>--image-min-tokens N</code></td>
+<td>图像最小 token 数</td>
+</tr>
+<tr>
+<td><code>--image-max-tokens N</code></td>
+<td>图像最大 token 数</td>
+</tr>
+<tr>
+<td><code>--chat-template-kwargs STRING</code></td>
+<td>Jinja 模板额外参数（JSON）</td>
+</tr>
+<tr>
+<td><code>--jinja</code> &#x2F; <code>--no-jinja</code></td>
+<td>使用 Jinja 模板引擎（默认开启）</td>
+</tr>
+<tr>
+<td><code>--reasoning-format FORMAT</code></td>
+<td>思维链格式：none&#x2F;deepseek&#x2F;deepseek-legacy（默认 auto）</td>
+</tr>
+<tr>
+<td><code>-rea, --reasoning [on|off|auto]</code></td>
+<td>推理&#x2F;思考模式（默认 auto）</td>
+</tr>
+<tr>
+<td><code>--reasoning-budget N</code></td>
+<td>思考 token 预算（-1&#x3D;无限，0&#x3D;立即结束，N&gt;0&#x3D;限制）</td>
+</tr>
+<tr>
+<td><code>--reasoning-budget-message MESSAGE</code></td>
+<td>预算耗尽时注入的消息</td>
+</tr>
+<tr>
+<td><code>--chat-template JINJA_TEMPLATE</code></td>
+<td>自定义聊天模板</td>
+</tr>
+<tr>
+<td><code>--chat-template-file FILE</code></td>
+<td>从文件读取聊天模板</td>
+</tr>
+<tr>
+<td><code>--simple-io</code></td>
+<td>简化 IO，适合子进程</td>
+</tr>
+<tr>
+<td><code>--spec-draft-model</code> &#x2F; <code>-md</code></td>
+<td>投机解码草稿模型</td>
+</tr>
+<tr>
+<td><code>--spec-type</code></td>
+<td>投机解码类型：none&#x2F;draft-simple&#x2F;draft-eagle3&#x2F;draft-mtp&#x2F;ngram-simple&#x2F;ngram-map-k&#x2F;ngram-map-k4v&#x2F;ngram-mod&#x2F;ngram-cache</td>
+</tr>
+<tr>
+<td><code>--spec-draft-n-max N</code></td>
+<td>草稿最大 token 数（默认 3）</td>
+</tr>
+<tr>
+<td><code>--spec-draft-n-min N</code></td>
+<td>草稿最小 token 数（默认 0）</td>
+</tr>
+<tr>
+<td><code>--spec-draft-p-split P</code></td>
+<td>分裂概率（默认 0.10）</td>
+</tr>
+<tr>
+<td><code>--spec-draft-p-min P</code></td>
+<td>最小概率（默认 0.00）</td>
+</tr>
+<tr>
+<td><code>--spec-draft-ngl N</code></td>
+<td>草稿模型 GPU 层数</td>
+</tr>
+<tr>
+<td><code>--spec-draft-device</code></td>
+<td>草稿模型设备</td>
+</tr>
+<tr>
+<td><code>--spec-draft-threads N</code></td>
+<td>草稿模型线程数</td>
+</tr>
+<tr>
+<td><code>--spec-ngram-mod-n-min N</code></td>
+<td>ngram-mod 最小 N（默认 48）</td>
+</tr>
+<tr>
+<td><code>--spec-ngram-mod-n-max N</code></td>
+<td>ngram-mod 最大 N（默认 64）</td>
+</tr>
+<tr>
+<td><code>--spec-ngram-mod-n-match N</code></td>
+<td>ngram-mod 匹配长度（默认 24）</td>
+</tr>
+<tr>
+<td><code>--spec-ngram-simple-size-n N</code></td>
+<td>ngram-simple N（默认 12）</td>
+</tr>
+<tr>
+<td><code>--spec-ngram-simple-size-m N</code></td>
+<td>ngram-simple M（默认 48）</td>
+</tr>
+<tr>
+<td><code>--spec-ngram-simple-min-hits N</code></td>
+<td>ngram-simple 最小命中数（默认 1）</td>
+</tr>
+<tr>
+<td><code>--spec-default</code></td>
+<td>启用默认投机解码配置</td>
+</tr>
+<tr>
+<td><code>--gpt-oss-20b-default</code></td>
+<td>使用 GPT-OSS 20B</td>
+</tr>
+<tr>
+<td><code>--gpt-oss-120b-default</code></td>
+<td>使用 GPT-OSS 120B</td>
+</tr>
+<tr>
+<td><code>--vision-gemma-4b-default</code></td>
+<td>使用 Gemma 3 4B QAT</td>
+</tr>
+<tr>
+<td><code>--vision-gemma-12b-default</code></td>
+<td>使用 Gemma 3 12B QAT</td>
+</tr>
+</tbody></table>
+<h3 id="2-5-常用命令组合"><a href="#2-5-常用命令组合" class="headerlink" title="2.5 常用命令组合"></a>2.5 常用命令组合</h3><div class="code-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 基础对话</span></span><br><span class="line">./llama-cli -m model.gguf -c 4096 -ngl 99</span><br><span class="line"></span><br><span class="line"><span class="comment"># 带系统提示词的对话</span></span><br><span class="line">./llama-cli -m model.gguf -sys <span class="string">&quot;你是一个Python专家&quot;</span> -c 4096</span><br><span class="line"></span><br><span class="line"><span class="comment"># 从 HuggingFace 直接下载并运行</span></span><br><span class="line">./llama-cli -hf ggml-org/Qwen2.5-7B-Instruct-GGUF:Q4_K_M -p <span class="string">&quot;解释快速排序&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 非交互式单次生成</span></span><br><span class="line">./llama-cli -m model.gguf -p <span class="string">&quot;写一个hello world&quot;</span> -n 256 -no-cnv</span><br><span class="line"></span><br><span class="line"><span class="comment"># 多模态（图片理解）</span></span><br><span class="line">./llama-cli -m model.gguf -mm projector.gguf --image photo.jpg -p <span class="string">&quot;描述这张图片&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 投机解码加速</span></span><br><span class="line">./llama-cli -m model.gguf -md draft.gguf --spec-type draft-simple --spec-draft-n-max 5</span><br><span class="line"></span><br><span class="line"><span class="comment"># JSON 结构化输出</span></span><br><span class="line">./llama-cli -m model.gguf -p <span class="string">&quot;生成一个用户信息&quot;</span> -j <span class="string">&#x27;&#123;&quot;type&quot;:&quot;object&quot;,&quot;properties&quot;:&#123;&quot;name&quot;:&#123;&quot;type&quot;:&quot;string&quot;&#125;,&quot;age&quot;:&#123;&quot;type&quot;:&quot;number&quot;&#125;&#125;&#125;&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 关闭思考模式（适用于 Qwen3 等模型）</span></span><br><span class="line">./llama-cli -m model.gguf -rea off</span><br><span class="line"></span><br><span class="line"><span class="comment"># 限制思考 token 预算</span></span><br><span class="line">./llama-cli -m model.gguf -rea on --reasoning-budget 2048</span><br></pre></td></tr></table></figure></div>
+
+<hr>
+<h2 id="三、ggml-项目生态一览"><a href="#三、ggml-项目生态一览" class="headerlink" title="三、ggml 项目生态一览"></a>三、ggml 项目生态一览</h2><h3 id="3-1-ggml-是什么"><a href="#3-1-ggml-是什么" class="headerlink" title="3.1 ggml 是什么"></a>3.1 ggml 是什么</h3><p>ggml（GPT-Generated Model Language）是一个底层 C&#x2F;C++ 张量计算库，专为在普通硬件上高效运行 ML 模型设计。它是 llama.cpp、whisper.cpp 等项目的共同基座。</p>
+<p>ggml-org 在 GitHub 上有 <strong>22 个仓库</strong>，覆盖从底层库到上层应用的完整生态。</p>
+<h3 id="3-2-核心项目"><a href="#3-2-核心项目" class="headerlink" title="3.2 核心项目"></a>3.2 核心项目</h3><div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ggml (张量库)</span><br><span class="line">├── llama.cpp (LLM 推理)</span><br><span class="line">├── whisper.cpp (语音识别)</span><br><span class="line">└── (历史上还有 stable-diffusion.cpp / llava.cpp，已合并或归档)</span><br></pre></td></tr></table></figure></div>
+
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>Stars</th>
+<th>语言</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong><a class="link"   target="_blank" rel="noopener" href="https://github.com/ggml-org/ggml" >ggml<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></strong></td>
+<td>15k</td>
+<td>C++</td>
+<td>底层张量计算库，所有项目的基座</td>
+</tr>
+<tr>
+<td><strong><a class="link"   target="_blank" rel="noopener" href="https://github.com/ggml-org/llama.cpp" >llama.cpp<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></strong></td>
+<td>120k</td>
+<td>C++</td>
+<td>LLM 推理引擎，支持数百种模型格式</td>
+</tr>
+<tr>
+<td><strong><a class="link"   target="_blank" rel="noopener" href="https://github.com/ggml-org/whisper.cpp" >whisper.cpp<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></strong></td>
+<td>~40k</td>
+<td>C++</td>
+<td>OpenAI Whisper 语音识别的 C&#x2F;C++ 移植</td>
+</tr>
+</tbody></table>
+<h3 id="3-3-开发工具"><a href="#3-3-开发工具" class="headerlink" title="3.3 开发工具"></a>3.3 开发工具</h3><table>
+<thead>
+<tr>
+<th>项目</th>
+<th>Stars</th>
+<th>语言</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong><a class="link"   target="_blank" rel="noopener" href="https://github.com/ggml-org/llama.vim" >llama.vim<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></strong></td>
+<td>2.1k</td>
+<td>Vim Script</td>
+<td>Vim 代码补全插件</td>
+</tr>
+<tr>
+<td><strong><a class="link"   target="_blank" rel="noopener" href="https://github.com/ggml-org/llama.vscode" >llama.vscode<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></strong></td>
+<td>1.4k</td>
+<td>TypeScript</td>
+<td>VS Code 代码补全插件</td>
+</tr>
+<tr>
+<td><strong><a class="link"   target="_blank" rel="noopener" href="https://github.com/ggml-org/llama.qtcreator" >llama.qtcreator<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></strong></td>
+<td>63</td>
+<td>C++</td>
+<td>Qt Creator 代码补全插件</td>
+</tr>
+</tbody></table>
+<h3 id="3-4-应用与工具"><a href="#3-4-应用与工具" class="headerlink" title="3.4 应用与工具"></a>3.4 应用与工具</h3><table>
+<thead>
+<tr>
+<th>项目</th>
+<th>Stars</th>
+<th>语言</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong><a class="link"   target="_blank" rel="noopener" href="https://github.com/ggml-org/Llama-macOS" >Llama-macOS<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></strong></td>
+<td>1.4k</td>
+<td>Swift</td>
+<td>macOS 原生 LLM 应用（菜单栏 App）</td>
+</tr>
+<tr>
+<td><strong><a class="link"   target="_blank" rel="noopener" href="https://github.com/ggml-org/llama.pages" >llama.pages<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></strong></td>
+<td>15</td>
+<td>Svelte</td>
+<td>llama.cpp 官方网站 llama.app</td>
+</tr>
+<tr>
+<td><strong><a class="link"   target="_blank" rel="noopener" href="https://github.com/ggml-org/llama-install.sh" >llama-install.sh<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></strong></td>
+<td>17</td>
+<td>Python</td>
+<td>一键安装脚本</td>
+</tr>
+<tr>
+<td><strong><a class="link"   target="_blank" rel="noopener" href="https://github.com/ggml-org/llama.cpp-dev" >llama.cpp-dev<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></strong></td>
+<td>3</td>
+<td>Shell</td>
+<td>开发辅助脚本</td>
+</tr>
+</tbody></table>
+<h3 id="3-5-历史项目（已归档或合并）"><a href="#3-5-历史项目（已归档或合并）" class="headerlink" title="3.5 历史项目（已归档或合并）"></a>3.5 历史项目（已归档或合并）</h3><table>
+<thead>
+<tr>
+<th>项目</th>
+<th>状态</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>stable-diffusion.cpp</strong></td>
+<td>讨论合并</td>
+<td>Stable Diffusion 的 C&#x2F;C++ 实现，社区讨论与 llama.cpp 共享 ggml-bridge</td>
+</tr>
+<tr>
+<td><strong>llava.cpp</strong></td>
+<td>已合并</td>
+<td>多模态推理，已合并进 llama.cpp 的 <code>tools/mtmd/</code></td>
+</tr>
+<tr>
+<td><strong>server-ui</strong></td>
+<td>已合并</td>
+<td>Web UI 已内置进 llama-server</td>
+</tr>
+</tbody></table>
+<h3 id="3-6-GGUF-格式"><a href="#3-6-GGUF-格式" class="headerlink" title="3.6 GGUF 格式"></a>3.6 GGUF 格式</h3><p>ggml 还定义了 <strong>GGUF</strong>（GPT-Generated Unified Format）模型文件格式，已成为开源 LLM 量化的事实标准。几乎所有主流开源模型都有社区提供的 GGUF 版本。</p>
+<p>GGUF 支持的量化级别：</p>
+<table>
+<thead>
+<tr>
+<th>量化</th>
+<th>位宽</th>
+<th>典型压缩比</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>F32</td>
+<td>32-bit</td>
+<td>1×</td>
+</tr>
+<tr>
+<td>F16 &#x2F; BF16</td>
+<td>16-bit</td>
+<td>2×</td>
+</tr>
+<tr>
+<td>Q8_0</td>
+<td>8.5-bit</td>
+<td>~2×</td>
+</tr>
+<tr>
+<td>Q6_K</td>
+<td>6-bit</td>
+<td>~2.5×</td>
+</tr>
+<tr>
+<td>Q5_K_M</td>
+<td>5.5-bit</td>
+<td>~3×</td>
+</tr>
+<tr>
+<td>Q4_K_M</td>
+<td>4.5-bit</td>
+<td>~4×</td>
+</tr>
+<tr>
+<td>Q3_K_M</td>
+<td>3.5-bit</td>
+<td>~5×</td>
+</tr>
+<tr>
+<td>Q2_K_S</td>
+<td>2.5-bit</td>
+<td>~6×</td>
+</tr>
+<tr>
+<td>TQ2_0</td>
+<td>1.6-bit</td>
+<td>~10×（三值）</td>
+</tr>
+</tbody></table>
+<h3 id="3-7-ggml-生态全景图"><a href="#3-7-ggml-生态全景图" class="headerlink" title="3.7 ggml 生态全景图"></a>3.7 ggml 生态全景图</h3><div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">                    ggml (张量库)</span><br><span class="line">                   /     |      \</span><br><span class="line">            llama.cpp  whisper.cpp  (更多)</span><br><span class="line">            /    |          |</span><br><span class="line">    llama-server llama-cli  whisper-cli</span><br><span class="line">    /    |         |          |</span><br><span class="line">  Web UI  API   命令行交互    语音转文字</span><br><span class="line">  /   |</span><br><span class="line">MCP  Agent</span><br><span class="line">工具  工具</span><br></pre></td></tr></table></figure></div>
+
+<hr>
+<h2 id="四、llama-server-Agent-参数全解"><a href="#四、llama-server-Agent-参数全解" class="headerlink" title="四、llama-server Agent 参数全解"></a>四、llama-server Agent 参数全解</h2><h3 id="4-1-Agent-功能概述"><a href="#4-1-Agent-功能概述" class="headerlink" title="4.1 Agent 功能概述"></a>4.1 Agent 功能概述</h3><p>llama-server 从 2026 年起内置了 <strong>Agent 模式</strong>，包含一组内置工具（文件操作、Shell 命令、搜索等），让 LLM 可以直接操作本地系统。这是除了通过 MCP 连接外部工具之外的另一种 Agent 实现方式。</p>
+<p>⚠️ <strong>安全警告</strong>：Agent 工具可以执行 Shell 命令和文件写入，<strong>不要在不可信环境中启用</strong>。</p>
+<h3 id="4-2-Agent-核心参数"><a href="#4-2-Agent-核心参数" class="headerlink" title="4.2 Agent 核心参数"></a>4.2 Agent 核心参数</h3><table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>-ag, --agent</code> &#x2F; <code>--no-agent</code></td>
+<td>启用 CORS 代理和所有内置工具（默认禁用）</td>
+</tr>
+<tr>
+<td><code>--tools TOOL1,TOOL2,...</code></td>
+<td>启用指定内置工具；<code>all</code> 启用全部</td>
+</tr>
+<tr>
+<td><code>--ui-mcp-proxy</code> &#x2F; <code>--no-ui-mcp-proxy</code></td>
+<td>启用 Web UI 的 MCP CORS 代理（实验性，默认禁用）</td>
+</tr>
+</tbody></table>
+<h3 id="4-3-内置工具列表"><a href="#4-3-内置工具列表" class="headerlink" title="4.3 内置工具列表"></a>4.3 内置工具列表</h3><p><code>--tools</code> 参数可选值：</p>
+<table>
+<thead>
+<tr>
+<th>工具名</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>read_file</code></td>
+<td>读取文件内容</td>
+</tr>
+<tr>
+<td><code>file_glob_search</code></td>
+<td>文件名通配符搜索</td>
+</tr>
+<tr>
+<td><code>grep_search</code></td>
+<td>文件内容正则搜索</td>
+</tr>
+<tr>
+<td><code>exec_shell_command</code></td>
+<td>执行 Shell 命令</td>
+</tr>
+<tr>
+<td><code>write_file</code></td>
+<td>写入文件</td>
+</tr>
+<tr>
+<td><code>edit_file</code></td>
+<td>编辑文件（查找替换）</td>
+</tr>
+<tr>
+<td><code>apply_diff</code></td>
+<td>应用 diff 补丁</td>
+</tr>
+<tr>
+<td><code>get_datetime</code></td>
+<td>获取当前日期时间</td>
+</tr>
+</tbody></table>
+<h3 id="4-4-Agent-启动方式"><a href="#4-4-Agent-启动方式" class="headerlink" title="4.4 Agent 启动方式"></a>4.4 Agent 启动方式</h3><div class="code-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 方式一：一键全开（不安全，仅限本机可信环境）</span></span><br><span class="line">./llama-server -m model.gguf --agent</span><br><span class="line"></span><br><span class="line"><span class="comment"># 方式二：只启用安全工具</span></span><br><span class="line">./llama-server -m model.gguf --tools read_file,file_glob_search,grep_search,get_datetime</span><br><span class="line"></span><br><span class="line"><span class="comment"># 方式三：启用文件操作但不开 Shell</span></span><br><span class="line">./llama-server -m model.gguf --tools read_file,write_file,edit_file</span><br><span class="line"></span><br><span class="line"><span class="comment"># 方式四：全部工具 + MCP 代理</span></span><br><span class="line">./llama-server -m model.gguf --tools all --agent --ui-mcp-proxy</span><br></pre></td></tr></table></figure></div>
+
+<h3 id="4-5-Function-Calling-相关参数"><a href="#4-5-Function-Calling-相关参数" class="headerlink" title="4.5 Function Calling 相关参数"></a>4.5 Function Calling 相关参数</h3><p>Agent 模式依赖模型的 Function Calling 能力。以下参数控制工具调用的行为：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>--jinja</code> &#x2F; <code>--no-jinja</code></td>
+<td>使用 Jinja 模板引擎（默认开启）</td>
+</tr>
+<tr>
+<td><code>--chat-template JINJA_TEMPLATE</code></td>
+<td>自定义聊天模板</td>
+</tr>
+<tr>
+<td><code>--chat-template-file FILE</code></td>
+<td>从文件加载聊天模板</td>
+</tr>
+<tr>
+<td><code>--chat-template-kwargs STRING</code></td>
+<td>模板额外参数（JSON 格式）</td>
+</tr>
+<tr>
+<td><code>--skip-chat-parsing</code></td>
+<td>强制纯内容解析器，不做工具调用解析</td>
+</tr>
+</tbody></table>
+<h3 id="4-6-推理-思考控制参数"><a href="#4-6-推理-思考控制参数" class="headerlink" title="4.6 推理&#x2F;思考控制参数"></a>4.6 推理&#x2F;思考控制参数</h3><p>Agent 在执行任务时经常需要模型进行深度思考，以下参数控制推理行为：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>-rea, --reasoning [on|off|auto]</code></td>
+<td>推理模式开关（默认 auto，从模板检测）</td>
+</tr>
+<tr>
+<td><code>--reasoning-format FORMAT</code></td>
+<td>思维链输出格式：none&#x2F;deepseek&#x2F;deepseek-legacy（默认 auto）</td>
+</tr>
+<tr>
+<td><code>--reasoning-budget N</code></td>
+<td>思考 token 预算（-1&#x3D;无限，0&#x3D;立即结束，N&gt;0&#x3D;限额）</td>
+</tr>
+<tr>
+<td><code>--reasoning-budget-message MSG</code></td>
+<td>预算耗尽时注入的消息</td>
+</tr>
+<tr>
+<td><code>--prefill-assistant</code> &#x2F; <code>--no-prefill-assistant</code></td>
+<td>预填充助手响应（默认开启）</td>
+</tr>
+</tbody></table>
+<h3 id="4-7-Server-运行参数"><a href="#4-7-Server-运行参数" class="headerlink" title="4.7 Server 运行参数"></a>4.7 Server 运行参数</h3><table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>--host HOST</code></td>
+<td>监听地址（默认 127.0.0.1）</td>
+</tr>
+<tr>
+<td><code>--port PORT</code></td>
+<td>监听端口（默认 8080）</td>
+</tr>
+<tr>
+<td><code>--reuse-port</code></td>
+<td>允许多端口绑定</td>
+</tr>
+<tr>
+<td><code>--path PATH</code></td>
+<td>静态文件路径</td>
+</tr>
+<tr>
+<td><code>--api-prefix PREFIX</code></td>
+<td>API 路径前缀</td>
+</tr>
+<tr>
+<td><code>--ui</code> &#x2F; <code>--no-ui</code></td>
+<td>Web UI 开关（默认开启）</td>
+</tr>
+<tr>
+<td><code>--ui-config JSON</code></td>
+<td>Web UI 默认配置</td>
+</tr>
+<tr>
+<td><code>--api-key KEY</code></td>
+<td>API 认证密钥</td>
+</tr>
+<tr>
+<td><code>--api-key-file FNAME</code></td>
+<td>从文件加载 API 密钥</td>
+</tr>
+<tr>
+<td><code>--ssl-key-file FNAME</code></td>
+<td>SSL 私钥文件</td>
+</tr>
+<tr>
+<td><code>--ssl-cert-file FNAME</code></td>
+<td>SSL 证书文件</td>
+</tr>
+<tr>
+<td><code>-to, --timeout N</code></td>
+<td>读写超时秒数（默认 3600）</td>
+</tr>
+<tr>
+<td><code>--sse-ping-interval N</code></td>
+<td>SSE 心跳间隔（默认 30，-1&#x3D;禁用）</td>
+</tr>
+<tr>
+<td><code>--threads-http N</code></td>
+<td>HTTP 请求处理线程数</td>
+</tr>
+<tr>
+<td><code>--metrics</code></td>
+<td>Prometheus 指标端点</td>
+</tr>
+<tr>
+<td><code>--props</code></td>
+<td>允许通过 POST &#x2F;props 修改全局属性</td>
+</tr>
+<tr>
+<td><code>--slots</code> &#x2F; <code>--no-slots</code></td>
+<td>槽位监控端点（默认开启）</td>
+</tr>
+</tbody></table>
+<h3 id="4-8-缓存与批处理参数"><a href="#4-8-缓存与批处理参数" class="headerlink" title="4.8 缓存与批处理参数"></a>4.8 缓存与批处理参数</h3><table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>--cache-prompt</code> &#x2F; <code>--no-cache-prompt</code></td>
+<td>Prompt 缓存（默认开启）</td>
+</tr>
+<tr>
+<td><code>--cache-reuse N</code></td>
+<td>KV 移位复用的最小块大小（默认 0）</td>
+</tr>
+<tr>
+<td><code>-cram, --cache-ram N</code></td>
+<td>最大缓存 MiB（默认 8192）</td>
+</tr>
+<tr>
+<td><code>-kvu, --kv-unified</code></td>
+<td>统一 KV 缓冲区（多 slot 共享）</td>
+</tr>
+<tr>
+<td><code>--cache-idle-slots</code></td>
+<td>闲置 slot 保存到缓存（默认开启）</td>
+</tr>
+<tr>
+<td><code>--context-shift</code> &#x2F; <code>--no-context-shift</code></td>
+<td>上下文移位（默认禁用）</td>
+</tr>
+<tr>
+<td><code>-np, --parallel N</code></td>
+<td>并发 slot 数（默认 -1，自动）</td>
+</tr>
+<tr>
+<td><code>-cb, --cont-batching</code></td>
+<td>连续批处理（默认开启）</td>
+</tr>
+<tr>
+<td><code>-sps, --slot-prompt-similarity</code></td>
+<td>Slot prompt 匹配阈值（默认 0.10）</td>
+</tr>
+<tr>
+<td><code>--sleep-idle-seconds N</code></td>
+<td>闲置休眠秒数（默认 -1，禁用）</td>
+</tr>
+</tbody></table>
+<h3 id="4-9-多模态参数"><a href="#4-9-多模态参数" class="headerlink" title="4.9 多模态参数"></a>4.9 多模态参数</h3><table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>-mm, --mmproj FILE</code></td>
+<td>多模态投影文件</td>
+</tr>
+<tr>
+<td><code>--mmproj-auto</code> &#x2F; <code>--no-mmproj</code></td>
+<td>自动加载投影（默认开启）</td>
+</tr>
+<tr>
+<td><code>--mmproj-offload</code></td>
+<td>投影 GPU 卸载（默认开启）</td>
+</tr>
+<tr>
+<td><code>--image-min-tokens N</code></td>
+<td>图像最小 token</td>
+</tr>
+<tr>
+<td><code>--image-max-tokens N</code></td>
+<td>图像最大 token</td>
+</tr>
+<tr>
+<td><code>--mtmd-batch-max-tokens N</code></td>
+<td>图像编码批大小（默认 1024）</td>
+</tr>
+</tbody></table>
+<h3 id="4-10-路由-多模型参数"><a href="#4-10-路由-多模型参数" class="headerlink" title="4.10 路由&#x2F;多模型参数"></a>4.10 路由&#x2F;多模型参数</h3><table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>--models-dir PATH</code></td>
+<td>模型目录（路由模式）</td>
+</tr>
+<tr>
+<td><code>--models-preset PATH</code></td>
+<td>模型预设 INI 文件</td>
+</tr>
+<tr>
+<td><code>--models-max N</code></td>
+<td>最大同时加载模型数（默认 4）</td>
+</tr>
+<tr>
+<td><code>--models-autoload</code> &#x2F; <code>--no-models-autoload</code></td>
+<td>自动加载模型（默认开启）</td>
+</tr>
+</tbody></table>
+<h3 id="4-11-模型标识参数"><a href="#4-11-模型标识参数" class="headerlink" title="4.11 模型标识参数"></a>4.11 模型标识参数</h3><table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>-a, --alias STRING</code></td>
+<td>模型别名（API 返回的模型名）</td>
+</tr>
+<tr>
+<td><code>--tags STRING</code></td>
+<td>模型标签（仅信息性）</td>
+</tr>
+<tr>
+<td><code>-lcs, --lookup-cache-static FNAME</code></td>
+<td>静态查找缓存</td>
+</tr>
+<tr>
+<td><code>-lcd, --lookup-cache-dynamic FNAME</code></td>
+<td>动态查找缓存</td>
+</tr>
+<tr>
+<td><code>--lora-init-without-apply</code></td>
+<td>加载 LoRA 但不立即应用</td>
+</tr>
+<tr>
+<td><code>--media-path PATH</code></td>
+<td>本地媒体文件目录</td>
+</tr>
+<tr>
+<td><code>--slot-save-path PATH</code></td>
+<td>Slot KV 缓存保存路径</td>
+</tr>
+<tr>
+<td><code>--log-prompts-dir PATH</code></td>
+<td>Prompt 日志目录</td>
+</tr>
+</tbody></table>
+<h3 id="4-12-嵌入-重排参数"><a href="#4-12-嵌入-重排参数" class="headerlink" title="4.12 嵌入&#x2F;重排参数"></a>4.12 嵌入&#x2F;重排参数</h3><table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>--embedding</code> &#x2F; <code>--embeddings</code></td>
+<td>仅嵌入模式</td>
+</tr>
+<tr>
+<td><code>--rerank</code> &#x2F; <code>--reranking</code></td>
+<td>重排端点</td>
+</tr>
+<tr>
+<td><code>--pooling {none,mean,cls,last,rank}</code></td>
+<td>池化类型</td>
+</tr>
+<tr>
+<td><code>--embd-normalize N</code></td>
+<td>嵌入归一化（默认 2&#x3D;欧几里得）</td>
+</tr>
+</tbody></table>
+<h3 id="4-13-Function-Calling-支持的模型"><a href="#4-13-Function-Calling-支持的模型" class="headerlink" title="4.13 Function Calling 支持的模型"></a>4.13 Function Calling 支持的模型</h3><p>llama.cpp 的 Function Calling 支持以下原生格式：</p>
+<table>
+<thead>
+<tr>
+<th>格式</th>
+<th>代表模型</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Llama 3.x</strong></td>
+<td>Llama 3.1 &#x2F; 3.3 &#x2F; 3.2（含内置工具：wolfram_alpha、web_search、code_interpreter）</td>
+</tr>
+<tr>
+<td><strong>Hermes 2&#x2F;3</strong></td>
+<td>NousResearch Hermes 系列、Qwen 2.5 系列</td>
+</tr>
+<tr>
+<td><strong>Mistral Nemo</strong></td>
+<td>Mistral Nemo、Firefunction v2</td>
+</tr>
+<tr>
+<td><strong>Command R7B</strong></td>
+<td>Cohere Command R7B（含推理提取）</td>
+</tr>
+<tr>
+<td><strong>DeepSeek R1</strong></td>
+<td>DeepSeek R1（实验性）</td>
+</tr>
+<tr>
+<td><strong>Generic</strong></td>
+<td>通用格式（所有模型可用，但 token 消耗更多）</td>
+</tr>
+</tbody></table>
+<h3 id="4-14-Agent-实战示例"><a href="#4-14-Agent-实战示例" class="headerlink" title="4.14 Agent 实战示例"></a>4.14 Agent 实战示例</h3><div class="code-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 1. 安全 Agent：只读工具</span></span><br><span class="line">./llama-server -m qwen2.5-7b.gguf \</span><br><span class="line">  --tools read_file,file_glob_search,grep_search,get_datetime \</span><br><span class="line">  --host 0.0.0.0 --port 8080</span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. 全能 Agent：文件 + Shell</span></span><br><span class="line">./llama-server -m qwen2.5-14b.gguf \</span><br><span class="line">  --tools all --agent \</span><br><span class="line">  --host 127.0.0.1 --port 8080 \</span><br><span class="line">  -c 8192 -ngl 99</span><br><span class="line"></span><br><span class="line"><span class="comment"># 3. 编码 Agent：文件编辑 + diff</span></span><br><span class="line">./llama-server -m qwen2.5-coder-7b.gguf \</span><br><span class="line">  --tools read_file,write_file,edit_file,apply_diff,grep_search,file_glob_search \</span><br><span class="line">  -c 16384 -ngl 99</span><br><span class="line"></span><br><span class="line"><span class="comment"># 4. 带 API 认证的 Agent</span></span><br><span class="line">./llama-server -m model.gguf \</span><br><span class="line">  --tools all --agent \</span><br><span class="line">  --api-key <span class="string">&quot;sk-mysecret&quot;</span> \</span><br><span class="line">  --host 0.0.0.0 --port 8080</span><br><span class="line"></span><br><span class="line"><span class="comment"># 5. 推理模型 Agent（带思考预算）</span></span><br><span class="line">./llama-server -m deepseek-r1.gguf \</span><br><span class="line">  --tools read_file,grep_search \</span><br><span class="line">  -rea on --reasoning-budget 4096 \</span><br><span class="line">  --reasoning-format deepseek \</span><br><span class="line">  -c 32768</span><br></pre></td></tr></table></figure></div>
+
+<h3 id="4-15-Agent-API-调用"><a href="#4-15-Agent-API-调用" class="headerlink" title="4.15 Agent API 调用"></a>4.15 Agent API 调用</h3><p>启动 Agent 后，通过 OpenAI 兼容 API 调用：</p>
+<div class="code-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> openai <span class="keyword">import</span> OpenAI</span><br><span class="line"></span><br><span class="line">client = OpenAI(base_url=<span class="string">&quot;http://localhost:8080/v1&quot;</span>, api_key=<span class="string">&quot;no-key&quot;</span>)</span><br><span class="line"></span><br><span class="line">response = client.chat.completions.create(</span><br><span class="line">    model=<span class="string">&quot;local-model&quot;</span>,</span><br><span class="line">    messages=[</span><br><span class="line">        &#123;<span class="string">&quot;role&quot;</span>: <span class="string">&quot;user&quot;</span>, <span class="string">&quot;content&quot;</span>: <span class="string">&quot;读取 /etc/hostname 文件并告诉我内容&quot;</span>&#125;</span><br><span class="line">    ],</span><br><span class="line">    tools=<span class="literal">None</span>,  <span class="comment"># 内置工具自动可用，不需要在 API 中定义</span></span><br><span class="line">)</span><br><span class="line"><span class="built_in">print</span>(response.choices[<span class="number">0</span>].message.content)</span><br></pre></td></tr></table></figure></div>
+
+<div class="code-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># curl 方式</span></span><br><span class="line">curl http://localhost:8080/v1/chat/completions \</span><br><span class="line">  -H <span class="string">&quot;Content-Type: application/json&quot;</span> \</span><br><span class="line">  -d <span class="string">&#x27;&#123;</span></span><br><span class="line"><span class="string">    &quot;messages&quot;: [</span></span><br><span class="line"><span class="string">      &#123;&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;列出当前目录下的 .py 文件&quot;&#125;</span></span><br><span class="line"><span class="string">    ]</span></span><br><span class="line"><span class="string">  &#125;&#x27;</span></span><br></pre></td></tr></table></figure></div>
+
+<hr>
+<h2 id="总结速查表"><a href="#总结速查表" class="headerlink" title="总结速查表"></a>总结速查表</h2><table>
+<thead>
+<tr>
+<th>主题</th>
+<th>核心要点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>免费 MCP</strong></td>
+<td>官方 7 个 Reference Server 全免费；社区数百个；npx&#x2F;uvx 一行命令启动</td>
+</tr>
+<tr>
+<td><strong>llama-cli</strong></td>
+<td>3 类参数：Common（模型&#x2F;硬件）、Sampling（采样）、CLI-specific（交互&#x2F;对话&#x2F;投机）</td>
+</tr>
+<tr>
+<td><strong>ggml 生态</strong></td>
+<td>底层 ggml 库 → llama.cpp + whisper.cpp → 编辑器插件 + macOS App</td>
+</tr>
+<tr>
+<td><strong>llama-server Agent</strong></td>
+<td><code>--agent</code> 一键开启；8 个内置工具；<code>--tools</code> 精细控制；注意安全</td>
+</tr>
+</tbody></table>
+<hr>
+<p><strong>相关链接：</strong></p>
+<ul>
+<li>MCP 官方仓库：<a class="link"   target="_blank" rel="noopener" href="https://github.com/modelcontextprotocol/servers" >https://github.com/modelcontextprotocol/servers<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>MCP 服务目录：<a class="link"   target="_blank" rel="noopener" href="https://mcpservers.org/" >https://mcpservers.org<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>llama.cpp GitHub：<a class="link"   target="_blank" rel="noopener" href="https://github.com/ggml-org/llama.cpp" >https://github.com/ggml-org/llama.cpp<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>llama-cli 文档：<a class="link"   target="_blank" rel="noopener" href="https://github.com/ggml-org/llama.cpp/blob/master/tools/cli/README.md" >https://github.com/ggml-org/llama.cpp/blob/master/tools/cli/README.md<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>llama-server 文档：<a class="link"   target="_blank" rel="noopener" href="https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md" >https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>Function Calling 文档：<a class="link"   target="_blank" rel="noopener" href="https://github.com/ggml-org/llama.cpp/blob/master/docs/function-calling.md" >https://github.com/ggml-org/llama.cpp/blob/master/docs/function-calling.md<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>ggml-org 主页：<a class="link"   target="_blank" rel="noopener" href="https://github.com/ggml-org" >https://github.com/ggml-org<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>ggml 官网：<a class="link"   target="_blank" rel="noopener" href="https://ggml.ai/" >https://ggml.ai<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>llama.app：<a class="link"   target="_blank" rel="noopener" href="https://llama.app/" >https://llama.app<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+</ul>
+
+		</div>
+
+		
+		<div class="post-copyright-info w-full my-8 px-2 sm:px-6 md:px-8">
+			<div class="article-copyright-info-container">
+    <ul>
+        <li><strong>Título:</strong> 免费MCP全景图 + llama.cpp最新命令行指南 + ggml生态一览 + llama-server Agent参数全解</li>
+        <li><strong>Autor:</strong> Chyyl</li>
+        <li><strong>Creado el
+                :</strong> 2026-07-10 00:00:00</li>
+        
+            <li>
+                <strong>Actualizado el
+                    :</strong> 2026-07-10 19:11:01
+            </li>
+        
+        <li>
+            <strong>Enlace:</strong> https://chyyl.netlify.app/2026/07/10/00/00/00/
+        </li>
+        <li>
+            <strong>
+                Licencia:
+            </strong>
+            
+
+            
+                Este trabajo está licenciado bajo <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY-NC-SA 4.0</a>.
+            
+        </li>
+    </ul>
+</div>
+
+		</div>
+		
+
+		
+		<ul class="post-tags-box text-lg mt-1.5 flex-wrap justify-center flex md:hidden">
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/llama-cpp/">#llama.cpp</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/%E6%9C%AC%E5%9C%B0%E9%83%A8%E7%BD%B2/">#本地部署</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/MCP/">#MCP</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/ggml/">#ggml</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/llama-server/">#llama-server</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/Agent/">#Agent</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/%E5%91%BD%E4%BB%A4%E8%A1%8C/">#命令行</a>&nbsp;
+			</li>
+			
+		</ul>
+		
+
+		
+
+		
+		<div class="article-nav my-8 flex justify-between items-center px-2 sm:px-6 md:px-8">
+			
+			
+			<div class="article-next border-border-color shadow-redefine-flat shadow-shadow-color-2 rounded-medium px-4 py-2 hover:shadow-redefine-flat-hover hover:shadow-shadow-color-2">
+				<a class="next" rel="next" href="/2026/07/09/00/00/00/">
+					<span class="title flex justify-center items-center">
+						<span class="post-nav-title-item truncate max-w-48">llama.cpp 与 BitCPM：1.58 位三值量化模型，8B 只需 2.3GB</span>
+						<span class="post-nav-item">Publicaciones siguientes</span>
+					</span>
+					<span class="right arrow-icon flex justify-center items-center">
+						<i class="fa-solid fa-chevron-right"></i>
+					</span>
+				</a>
+			</div>
+			
+		</div>
+		
+
+
+		
+		<div class="comment-container px-2 sm:px-6 md:px-8 pb-8">
+			<div class="comments-container mt-10 w-full ">
+    <div id="comment-anchor" class="w-full h-2.5"></div>
+    <div class="comment-area-title w-full my-1.5 md:my-2.5 text-xl md:text-3xl font-bold">
+        Comentarios
+    </div>
+    
+
+        
+            
+    <div id="waline"></div>
+    <script type="module" data-swup-reload-script>
+      import { init } from '/js/libs/waline.js';
+
+      (function() {
+        const startPath = location.pathname;
+        const startTime = Date.now();
+        const retryDelay = 200;
+        const retryLimit = 5000;
+
+        const runWaline = () => {
+          if (location.pathname !== startPath) {
+            return;
+          }
+
+          const container = document.getElementById('waline');
+          if (!container) {
+            if (Date.now() - startTime < retryLimit) {
+              setTimeout(runWaline, retryDelay);
+            }
+            return;
+          }
+
+          if (window.redefineWalineInstance?.destroy) {
+            window.redefineWalineInstance.destroy();
+          }
+
+          container.innerHTML = '';
+          window.redefineWalineInstance = init({
+            el: '#waline',
+            serverURL: 'https://example.example.com',
+            path: location.pathname,
+            dark: 'body[class~="dark-mode"]',
+            reaction: false,
+            requiredMeta: ['nick', 'mail'],
+            emoji: [],
+                      lang: 'zh-CN',
+          });
+        };
+
+        runWaline();
+      })();
+    </script>
+
+
+
+        
+    
+</div>
+
+		</div>
+		
+	</div>
+
+	
+	<div class="toc-content-container">
+		<div class="post-toc-wrap">
+	<div class="post-toc">
+		<div class="toc-title">En esta página</div>
+		<div class="page-title">免费MCP全景图 + llama.cpp最新命令行指南 + ggml生态一览 + llama-server Agent参数全解</div>
+		<ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E5%85%8D%E8%B4%B9-MCP-%E5%85%A8%E6%99%AF%E5%9B%BE"><span class="nav-text">一、免费 MCP 全景图</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-MCP-%E6%98%AF%E4%BB%80%E4%B9%88"><span class="nav-text">1.1 MCP 是什么</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-%E5%AE%98%E6%96%B9-Reference-Servers%EF%BC%88%E5%85%A8%E9%83%A8%E5%85%8D%E8%B4%B9%EF%BC%89"><span class="nav-text">1.2 官方 Reference Servers（全部免费）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-%E7%A4%BE%E5%8C%BA%E5%B8%B8%E7%94%A8%E5%85%8D%E8%B4%B9-MCP-Servers"><span class="nav-text">1.3 社区常用免费 MCP Servers</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-4-MCP-%E6%80%8E%E4%B9%88%E7%94%A8"><span class="nav-text">1.4 MCP 怎么用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-5-MCP-%E8%B5%84%E6%BA%90%E7%B4%A2%E5%BC%95"><span class="nav-text">1.5 MCP 资源索引</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E3%80%81llama-cpp-%E6%9C%80%E6%96%B0%E7%89%88-llama-cli-%E5%91%BD%E4%BB%A4%E8%A1%8C%E7%94%A8%E6%B3%95"><span class="nav-text">二、llama.cpp 最新版 llama-cli 命令行用法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-llama-cli-%E6%98%AF%E4%BB%80%E4%B9%88"><span class="nav-text">2.1 llama-cli 是什么</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-Common-Params%EF%BC%88%E9%80%9A%E7%94%A8%E5%8F%82%E6%95%B0%EF%BC%89"><span class="nav-text">2.2 Common Params（通用参数）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-Sampling-Params%EF%BC%88%E9%87%87%E6%A0%B7%E5%8F%82%E6%95%B0%EF%BC%89"><span class="nav-text">2.3 Sampling Params（采样参数）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-4-CLI-Specific-Params%EF%BC%88%E4%BA%A4%E4%BA%92-%E5%AF%B9%E8%AF%9D%E5%8F%82%E6%95%B0%EF%BC%89"><span class="nav-text">2.4 CLI-Specific Params（交互&#x2F;对话参数）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-5-%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E7%BB%84%E5%90%88"><span class="nav-text">2.5 常用命令组合</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E3%80%81ggml-%E9%A1%B9%E7%9B%AE%E7%94%9F%E6%80%81%E4%B8%80%E8%A7%88"><span class="nav-text">三、ggml 项目生态一览</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-ggml-%E6%98%AF%E4%BB%80%E4%B9%88"><span class="nav-text">3.1 ggml 是什么</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-%E6%A0%B8%E5%BF%83%E9%A1%B9%E7%9B%AE"><span class="nav-text">3.2 核心项目</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-%E5%BC%80%E5%8F%91%E5%B7%A5%E5%85%B7"><span class="nav-text">3.3 开发工具</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-%E5%BA%94%E7%94%A8%E4%B8%8E%E5%B7%A5%E5%85%B7"><span class="nav-text">3.4 应用与工具</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-5-%E5%8E%86%E5%8F%B2%E9%A1%B9%E7%9B%AE%EF%BC%88%E5%B7%B2%E5%BD%92%E6%A1%A3%E6%88%96%E5%90%88%E5%B9%B6%EF%BC%89"><span class="nav-text">3.5 历史项目（已归档或合并）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-6-GGUF-%E6%A0%BC%E5%BC%8F"><span class="nav-text">3.6 GGUF 格式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-7-ggml-%E7%94%9F%E6%80%81%E5%85%A8%E6%99%AF%E5%9B%BE"><span class="nav-text">3.7 ggml 生态全景图</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B%E3%80%81llama-server-Agent-%E5%8F%82%E6%95%B0%E5%85%A8%E8%A7%A3"><span class="nav-text">四、llama-server Agent 参数全解</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-Agent-%E5%8A%9F%E8%83%BD%E6%A6%82%E8%BF%B0"><span class="nav-text">4.1 Agent 功能概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-Agent-%E6%A0%B8%E5%BF%83%E5%8F%82%E6%95%B0"><span class="nav-text">4.2 Agent 核心参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-3-%E5%86%85%E7%BD%AE%E5%B7%A5%E5%85%B7%E5%88%97%E8%A1%A8"><span class="nav-text">4.3 内置工具列表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-4-Agent-%E5%90%AF%E5%8A%A8%E6%96%B9%E5%BC%8F"><span class="nav-text">4.4 Agent 启动方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-5-Function-Calling-%E7%9B%B8%E5%85%B3%E5%8F%82%E6%95%B0"><span class="nav-text">4.5 Function Calling 相关参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-6-%E6%8E%A8%E7%90%86-%E6%80%9D%E8%80%83%E6%8E%A7%E5%88%B6%E5%8F%82%E6%95%B0"><span class="nav-text">4.6 推理&#x2F;思考控制参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-7-Server-%E8%BF%90%E8%A1%8C%E5%8F%82%E6%95%B0"><span class="nav-text">4.7 Server 运行参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-8-%E7%BC%93%E5%AD%98%E4%B8%8E%E6%89%B9%E5%A4%84%E7%90%86%E5%8F%82%E6%95%B0"><span class="nav-text">4.8 缓存与批处理参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-9-%E5%A4%9A%E6%A8%A1%E6%80%81%E5%8F%82%E6%95%B0"><span class="nav-text">4.9 多模态参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-10-%E8%B7%AF%E7%94%B1-%E5%A4%9A%E6%A8%A1%E5%9E%8B%E5%8F%82%E6%95%B0"><span class="nav-text">4.10 路由&#x2F;多模型参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-11-%E6%A8%A1%E5%9E%8B%E6%A0%87%E8%AF%86%E5%8F%82%E6%95%B0"><span class="nav-text">4.11 模型标识参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-12-%E5%B5%8C%E5%85%A5-%E9%87%8D%E6%8E%92%E5%8F%82%E6%95%B0"><span class="nav-text">4.12 嵌入&#x2F;重排参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-13-Function-Calling-%E6%94%AF%E6%8C%81%E7%9A%84%E6%A8%A1%E5%9E%8B"><span class="nav-text">4.13 Function Calling 支持的模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-14-Agent-%E5%AE%9E%E6%88%98%E7%A4%BA%E4%BE%8B"><span class="nav-text">4.14 Agent 实战示例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-15-Agent-API-%E8%B0%83%E7%94%A8"><span class="nav-text">4.15 Agent API 调用</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%E9%80%9F%E6%9F%A5%E8%A1%A8"><span class="nav-text">总结速查表</span></a></li></ol>
+
+	</div>
+</div>
+	</div>
+	
+</div>
+
+			</div>
+
+			
+		</div>
+
+		<div class="main-content-footer">
+			<footer class="footer mt-5 py-5 h-auto text-base text-third-text-color relative border-t-2 border-t-border-color">
+    <div class="info-container py-3 text-center">
+        
+        <div class="text-center">
+            &copy;
+            
+              <span>2024</span>
+              -
+            
+            2026&nbsp;&nbsp;<i class="fa-solid fa-heart fa-beat" style="--fa-animation-duration: 0.5s; color: #f54545"></i>&nbsp;&nbsp;<a href="/">Chyyl</a>
+            
+                
+                <p class="post-count space-x-0.5">
+                    <span>
+                        9 publicaciones en total
+                    </span>
+                    
+                </p>
+            
+        </div>
+        
+            <script data-swup-reload-script src="https://cn.vercount.one/js"></script>
+            <div class="relative text-center lg:absolute lg:right-[20px] lg:top-1/2 lg:-translate-y-1/2 lg:text-right">
+                
+                    <span id="busuanzi_container_site_uv" class="lg:!block">
+                        <span class="text-sm">CONTADOR DE VISITANTES</span>
+                        <span id="busuanzi_value_site_uv"></span>
+                    </span>
+                
+                
+                    <span id="busuanzi_container_site_pv" class="lg:!block">
+                        <span class="text-sm">TOTAL DE VISITAS</span>
+                        <span id="busuanzi_value_site_pv"></span>
+                    </span>
+                
+            </div>
+        
+        <div class="relative text-center lg:absolute lg:left-[20px] lg:top-1/2 lg:-translate-y-1/2 lg:text-left">
+            <span class="lg:block text-sm">DESARROLLADO POR <?xml version="1.0" encoding="utf-8"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg class="relative top-[2px] inline-block align-baseline" version="1.1" id="圖層_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="1rem" height="1rem" viewBox="0 0 512 512" enable-background="new 0 0 512 512" xml:space="preserve"><path fill="#0E83CD" d="M256.4,25.8l-200,115.5L56,371.5l199.6,114.7l200-115.5l0.4-230.2L256.4,25.8z M349,354.6l-18.4,10.7l-18.6-11V275H200v79.6l-18.4,10.7l-18.6-11v-197l18.5-10.6l18.5,10.8V237h112v-79.6l18.5-10.6l18.5,10.8V354.6z"/></svg><a target="_blank" class="text-base" href="https://hexo.io">Hexo</a></span>
+            <span class="text-sm lg:block">TEMA&nbsp;<a class="text-base" target="_blank" href="https://github.com/EvanNotFound/hexo-theme-redefine">Redefine v2.9.0</a></span>
+        </div>
+        
+        
+            <div>
+                Blog en línea por <span class="odometer" id="runtime_days" ></span> días <span class="odometer" id="runtime_hours"></span> horas <span class="odometer" id="runtime_minutes"></span> Min <span class="odometer" id="runtime_seconds"></span> Seg
+            </div>
+        
+        
+            <script data-swup-reload-script>
+                try {
+                    function odometer_init() {
+                    const elements = document.querySelectorAll('.odometer');
+                    elements.forEach(el => {
+                        new Odometer({
+                            el,
+                            format: '( ddd).dd',
+                            duration: 200
+                        });
+                    });
+                    }
+                    odometer_init();
+                } catch (error) {}
+            </script>
+        
+        
+        
+    </div>  
+</footer>
+		</div>
+	</div>
+
+	
+	<div class="post-tools">
+		<div class="post-tools-container">
+	<ul class="article-tools-list">
+		<!-- TOC aside toggle -->
+		
+		<li class="right-bottom-tools page-aside-toggle">
+			<i class="fa-regular fa-outdent"></i>
+		</li>
+		
+
+		<!-- go comment -->
+		
+		<li class="go-comment">
+			<i class="fa-regular fa-comments"></i>
+		</li>
+		
+	</ul>
+</div>
+	</div>
+	
+
+	<div class="right-side-tools-container">
+		<div class="side-tools-container">
+	<ul class="hidden-tools-list">
+		<li class="right-bottom-tools tool-font-adjust-plus flex justify-center items-center">
+			<i class="fa-regular fa-magnifying-glass-plus"></i>
+		</li>
+
+		<li class="right-bottom-tools tool-font-adjust-minus flex justify-center items-center">
+			<i class="fa-regular fa-magnifying-glass-minus"></i>
+		</li>
+
+		<li class="right-bottom-tools tool-dark-light-toggle flex justify-center items-center">
+			<i class="fa-regular fa-moon"></i>
+		</li>
+
+		<!-- rss -->
+		
+		<li class="right-bottom-tools rss flex justify-center items-center">
+			<a class="flex justify-center items-center" href="/atom.xml" target="_blank">
+				<i class="fa-regular fa-rss"></i>
+			</a>
+		</li>
+		
+
+		
+
+		<li class="right-bottom-tools tool-scroll-to-bottom flex justify-center items-center">
+			<i class="fa-regular fa-arrow-down"></i>
+		</li>
+	</ul>
+
+	<ul class="visible-tools-list">
+		<li class="right-bottom-tools toggle-tools-list flex justify-center items-center">
+			<i class="fa-regular fa-cog fa-spin"></i>
+		</li>
+		
+		<li class="right-bottom-tools tool-scroll-to-top flex justify-center items-center">
+			<i class="arrow-up fas fa-arrow-up"></i>
+			<span class="percent"></span>
+		</li>
+		
+		
+	</ul>
+</div>
+	</div>
+
+	<div class="image-viewer-container" role="dialog" aria-modal="true" aria-label="Visor de imágenes">
+	<button class="image-viewer-close" type="button" aria-label="Cerrar">
+		<i class="fa-solid fa-xmark"></i>
+	</button>
+	<button class="image-viewer-prev" type="button" aria-label="Anterior">
+		<i class="fa-solid fa-chevron-left"></i>
+	</button>
+	<div class="image-viewer-frame">
+		<img src="" alt="">
+	</div>
+	<div class="image-viewer-exif-panel hidden absolute left-1/2 bottom-20 -translate-x-1/2 w-[min(92vw,420px)] max-h-[60vh] overflow-hidden rounded-2xl bg-background-color-transparent-80 p-4 text-left shadow-redefine-flat backdrop-blur-md" role="dialog" aria-label="EXIF" aria-hidden="true">
+		<div class="flex items-center justify-between mb-3">
+			<span class="text-sm font-semibold text-first-text-color">EXIF</span>
+			<button class="image-viewer-exif-close flex h-8 w-8 items-center justify-center rounded-full bg-background-color-transparent-80 text-first-text-color transition hover:bg-background-color-transparent-40" type="button" aria-label="Cerrar">
+				<i class="fa-solid fa-xmark text-[0.65rem]"></i>
+			</button>
+		</div>
+		<div class="image-viewer-exif-cards grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto pr-1 scrollbar-hide"></div>
+		<template class="image-viewer-exif-card-template">
+			<div class="rounded-lg bg-background-color-transparent-40 px-3 py-2">
+				<div class="image-viewer-exif-card-header flex items-center gap-2 mb-1">
+					<i class="image-viewer-exif-card-icon fa-solid fa-circle-info text-xs text-third-text-color"></i>
+					<div class="image-viewer-exif-card-title text-xs font-semibold text-first-text-color"></div>
+				</div>
+				<div class="image-viewer-exif-card-items flex flex-col gap-1"></div>
+			</div>
+		</template>
+	</div>
+	<button class="image-viewer-exif-toggle flex items-center gap-2 hidden absolute left-1/2 bottom-6 -translate-x-1/2 rounded-full border border-border-color bg-background-color-transparent-80 px-4 py-2 text-first-text-color backdrop-blur-md transition hover:bg-background-color-transparent-40" type="button" aria-label="EXIF" aria-expanded="false">
+		<i class="fa-solid fa-circle-info text-xs"></i>
+		<span class="text-xs font-semibold uppercase tracking-wider">EXIF</span>
+	</button>
+	<button class="image-viewer-next" type="button" aria-label="Siguiente">
+		<i class="fa-solid fa-chevron-right"></i>
+	</button>
+</div>
+
+
+	
+
+</main>
+
+
+<script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/Swup.min.js" ></script><script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/SwupSlideTheme.min.js" ></script><script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/SwupScriptsPlugin.min.js" ></script><script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/SwupProgressPlugin.min.js" ></script><script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/SwupScrollPlugin.min.js" ></script><script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/SwupPreloadPlugin.min.js" ></script>
+<script>
+    window.swup = new Swup({
+        plugins: [
+            new SwupScriptsPlugin({
+                optin: true,
+            }),
+            new SwupProgressPlugin(),
+            new SwupScrollPlugin({
+                offset: 80,
+            }),
+            new SwupSlideTheme({
+                mainElement: ".main-content-body",
+            }),
+            new SwupPreloadPlugin(),
+        ],
+        containers: ["#swup"],
+    });
+
+    window.dispatchEvent(
+        new CustomEvent("redefine:swup:ready", {
+            detail: {
+                swup: window.swup,
+            },
+        }),
+    );
+</script>
+
+
+
+
+	<script type="module" src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/main.js" ></script>
+
+
+    <script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/odometer.min.js" ></script>
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/assets/odometer-theme-minimal.css">
+
+
+
+
+
+
+  <script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/Typed.min.js" ></script>
+
+
+
+
+
+
+
+
+<script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/moment-with-locales.min.js" data-swup-reload-script></script>
+
+
+	
+</body>
+
+</html>
