@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="keywords" content="Hexo Theme Redefine">
+    
+    
+    <meta name="author" content="Chyyl">
+    
+    <!-- Completely eliminate flash of wrong theme -->
+    <script>
+        (function() {
+            const THEME_KEY = "REDEFINE-THEME-STATUS";
+            const DARK = "dark", LIGHT = "light";
+            
+            // Get preferred theme
+            function getTheme() {
+                try {
+                    const saved = localStorage.getItem(THEME_KEY);
+                    if (saved) {
+                        const { isDark } = JSON.parse(saved);
+                        return isDark ? DARK : LIGHT;
+                    }
+                } catch (e) {}
+                
+                return matchMedia("(prefers-color-scheme: dark)").matches ? DARK : LIGHT;
+            }
+            
+            // Apply theme to document
+            function applyTheme(theme) {
+                const isDark = theme === DARK;
+                const root = document.documentElement;
+                
+                // Set classes for compatibility
+                root.classList.add(theme);
+                root.classList.remove(isDark ? LIGHT : DARK);
+                root.style.colorScheme = theme;
+            }
+            
+            // Initial application
+            const theme = getTheme();
+            applyTheme(theme);
+            
+            // Listen for system preference changes
+            matchMedia("(prefers-color-scheme: dark)").addEventListener("change", ({ matches }) => {
+                // Only update if using system preference (no localStorage entry)
+                if (!localStorage.getItem(THEME_KEY)) {
+                    applyTheme(matches ? DARK : LIGHT);
+                }
+            });
+            
+            // Set body classes ASAP (before DOMContentLoaded)
+            (function() {
+                const addBodyClass = () => {
+                    const b = document.body;
+                    if (!b) return false;
+                    b.classList.add(theme + "-mode");
+                    return true;
+                };
+
+                // Try immediately
+                if (addBodyClass()) return;
+
+                // Observe until body exists
+                const mo = new MutationObserver(() => {
+                    if (addBodyClass()) mo.disconnect();
+                });
+                mo.observe(document.documentElement, { childList: true, subtree: true });
+            })();
+        })();
+    </script>
+    
+    <!-- preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    
+        
+        
+        
+            <link rel="preconnect" href="https://registry.npmmirror.com" crossorigin>
+        
+    
+    <!--- Seo Part-->
+    
+    <link rel="canonical" href="https://chyyl.netlify.app/2026/07/11/github-actions-complete-guide-2026/"/>
+    <meta name="robots" content="index,follow">
+    <meta name="googlebot" content="index,follow">
+    <meta name="revisit-after" content="1 days">
+    
+    
+        
+        <meta name="description" content="Hexo Theme Redefine, Redefine Your Hexo Journey.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GitHub Actions 实战指南：从第一条流水线到 2026 安全前沿">
+<meta property="og:url" content="https://chyyl.netlify.app/2026/07/11/github-actions-complete-guide-2026/index.html">
+<meta property="og:site_name" content="Chyyl&#39;s Blog">
+<meta property="og:description" content="Hexo Theme Redefine, Redefine Your Hexo Journey.">
+<meta property="og:locale">
+<meta property="og:image" content="https://chyyl.netlify.app/images/redefine-og.webp">
+<meta property="article:published_time" content="2026-07-10T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-07-13T03:23:21.774Z">
+<meta property="article:author" content="Chyyl">
+<meta property="article:tag" content="CI&#x2F;CD">
+<meta property="article:tag" content="DevOps">
+<meta property="article:tag" content="GitHub Actions">
+<meta property="article:tag" content="教程">
+<meta property="article:tag" content="自动化">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://chyyl.netlify.app/images/redefine-og.webp">
+    
+    
+    <!--- Icon Part-->
+    <link rel="icon" type="image/png" href="https://avatars.githubusercontent.com/u/115130037?v=4" sizes="192x192">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://avatars.githubusercontent.com/u/115130037?v=4">
+    <meta name="theme-color" content="#A31F34">
+    <link rel="shortcut icon" href="https://avatars.githubusercontent.com/u/115130037?v=4">
+    <!--- Page Info-->
+    
+    <title>
+        
+            GitHub Actions 实战指南：从第一条流水线到 2026 安全前沿 | ChyyL&#39;s Blog
+        
+    </title>
+
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fonts/Chillax/chillax.css">
+
+    <!--- Inject Part-->
+    
+
+    
+<link rel="stylesheet" href="/css/style.css">
+
+
+    
+        <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/css/build/tailwind.css">
+    
+
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fonts/GeistMono/geist-mono.css">
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fonts/Geist/geist.css">
+    <!--- Font Part-->
+    
+    
+    
+        <link href="" rel="stylesheet">
+    
+    
+        <link href="" rel="stylesheet">
+    
+    
+        <link href="" rel="stylesheet">
+    
+    
+        <script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/anime.min.js" ></script>
+    
+
+    <script id="hexo-configurations">
+    window.config = {"hostname":"chyyl.netlify.app","root":"/","language":"zh-Hans"};
+    window.theme = {"articles":{"style":{"font_size":"16px","line_height":1.5,"image_border_radius":"14px","image_alignment":"center","image_caption":false,"link_icon":true,"delete_mask":false,"title_alignment":"left","headings_top_spacing":{"h1":"3.2rem","h2":"2.4rem","h3":"1.9rem","h4":"1.6rem","h5":"1.4rem","h6":"1.3rem"}},"word_count":{"enable":true,"count":true,"min2read":true},"author_label":{"enable":true,"auto":false,"list":[]},"code_block":{"copy":true,"style":"mac","highlight_theme":{"light":"github","dark":"vs2015"},"font":{"enable":false,"family":null,"url":null}},"toc":{"enable":true,"max_depth":3,"number":false,"expand":true,"init_open":true},"copyright":{"enable":true,"default":"cc_by_nc_sa"},"lazyload":true,"pangu_js":false,"recommendation":{"enable":false,"title":"推荐阅读","limit":3,"mobile_limit":2,"placeholder":"/images/wallhaven-wqery6-light.webp","skip_dirs":[]}},"colors":{"primary":"#A31F34","secondary":null,"default_mode":"light"},"global":{"fonts":{"chinese":{"enable":true,"family":null,"url":null},"english":{"enable":true,"family":null,"url":null},"title":{"enable":true,"family":null,"url":null}},"content_max_width":"1000px","sidebar_width":"210px","hover":{"shadow":true,"scale":false},"scroll_progress":{"bar":true,"percentage":true},"website_counter":{"url":"https://cn.vercount.one/js","enable":true,"site_pv":true,"site_uv":true,"post_pv":true},"single_page":true,"preloader":{"enable":true,"custom_message":null},"side_tools":{"gear_rotation":true,"auto_expand":false},"open_graph":{"enable":true,"image":"/images/redefine-og.webp","description":"Hexo Theme Redefine, Redefine Your Hexo Journey."},"google_analytics":{"enable":false,"id":null}},"home_banner":{"enable":true,"style":"fixed","image":{"light":"/images/wallhaven-wqery6-light.webp","dark":"/images/wallhaven-wqery6-dark.webp"},"title":"Learn, Share, and Grow","subtitle":{"text":[],"hitokoto":{"enable":true,"show_author":true,"api":"https://v1.hitokoto.cn"},"typing_speed":100,"backing_speed":80,"starting_delay":500,"backing_delay":1500,"loop":true,"smart_backspace":true},"text_color":{"light":"#fff","dark":"#d1d1b6"},"text_style":{"title_size":"2.8rem","subtitle_size":"1.5rem","line_height":1.2},"custom_font":{"enable":false,"family":null,"url":null},"social_links":{"enable":false,"style":"default","links":[{"icon":"fa-brands fa-github","url":null},{"icon":"fa-brands fa-twitter","url":null},{"icon":"fa-solid fa-at","url":"you@example.com"},{"icon":"fa-brands fa-telegram","url":null},{"icon":"/images/custom-icon.svg","url":null}],"qrs":[{"icon":"fa-brands fa-weixin","qr":null},{"icon":"/images/custom-icon.svg","qr":null}]}},"plugins":{"feed":{"enable":true},"aplayer":{"enable":false,"type":"fixed","audios":[{"name":null,"artist":null,"url":null,"cover":null,"lrc":null}]},"mermaid":{"enable":true,"version":"11.4.1","theme":{"light":"default","dark":"dark"}}},"version":"2.9.0","navbar":{"auto_hide":false,"color":{"left":"#f78736","right":"#367df7","transparency":35},"width":{"home":"1200px","pages":"1000px"},"links":{"Home":{"path":"/","icon":"fa-regular fa-house"},"Archives":{"path":"/archives","icon":"fa-regular fa-archive"}},"search":{"enable":true,"preload":true}},"page_templates":{"friends_column":2,"tags_style":"blur","masonry":{"batch_size":12,"initial_batch_size":24}},"home":{"sidebar":{"enable":true,"position":"left","first_item":"menu","announcement":null,"show_on_mobile":true,"links":{"Archives":{"path":"/archives","icon":"fa-regular fa-archive"},"Tags":{"path":"/tags","icon":"fa-regular fa-tags"},"Categories":{"path":"/categories","icon":"fa-regular fa-folder"}}},"article_date_format":"auto","excerpt_length":200,"categories":{"enable":true,"limit":3},"tags":{"enable":true,"limit":3}},"footer":{"runtime":true,"icon":"<i class=\"fa-solid fa-heart fa-beat\" style=\"--fa-animation-duration: 0.5s; color: #f54545\"></i>","start":"2024/06/01 00:00:00","statistics":true,"customize":null,"icp":{"enable":false,"number":null,"url":null}},"footerStart":"2024/06/01 00:00:00","mermaid":{"style":{"light":"default","dark":"dark"}}};
+    window.lang_ago = {"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days ago","week":"%s weeks ago","month":"%s months ago","year":"%s years ago"};
+    window.i18n = {"search":"Search...","toc":"On this page","prev":"Prev","next":"Next","prev_posts":"Prev posts","next_posts":"Next posts","page":"Page %d","recent_posts":"Recent Posts","share":"Share","powered_by":"POWERED BY %s","theme":"THEME","rss_feed":"RSS Feed","category":"Category","categories":"Categories","tag":"Tag","tags":"Tags","post":"Post","posts":"Posts","tagcloud":"Tag Cloud","comment":"Comment","comments":"Comments","home":"Home","archive":"Archive","archives":"Archives","top":"TOP","sticky":"Sticky","go-back-home":"Go Back Home","masonry_loading":"Loading photos...","image_viewer":"Image viewer","close":"Close","exif":{"title":"EXIF","cards":{"camera":"Camera","lens":"Lens","exposure":"Exposure","other":"Other"},"fields":{"make":"Brand","model":"Model","date_taken":"Date taken","lens_model":"Lens","focal_length":"Focal length","focus_mode":"Focus mode","shutter":"Shutter","aperture":"Aperture","iso":"ISO","exposure_program":"Exposure program","exposure_compensation":"Exposure compensation","metering_mode":"Metering mode","flash":"Flash","white_balance":"White balance","latitude":"Latitude","longitude":"Longitude","altitude":"Altitude"},"status":{"loading":"Loading...","no_exif":"No EXIF available","library_missing":"EXIF library not loaded","image_source_missing":"Image source unavailable","unavailable":"EXIF unavailable (blocked by CORS or missing metadata)","flag_unavailable":"EXIF unavailable"}},"about":"About","changelog":"Changelog","links":"Links","link":"Link","friends":"Friends","friend":"Friend","timeline":"Timeline","shuoshuo":"Shuoshuo","bookmarks":"Bookmarks","site_uv":"VISITOR COUNT","site_pv":"TOTAL PAGE VIEWS","read_more":"Read more","wordcount":"Words","min2read":"Mins","status":"Status","runtime":"Blog up for","days":"days","hours":"hrs","minutes":"Min","seconds":"Sec","optimized_by":"and Optimized by Evan","rights":"All Rights Reserved","site_posts":"%s posts in total","site_wordcount":"%s words in total","copyright":{"author":"Author","title":"Title","link":"Link","create_time":"Created at","update_time":"Updated at","license_title":"License","license_content":"This work is licensed under %s.","all_rights_reserved":"All Rights Reserved &#169; %s","public_domain":"This work is in the public domain."},"ago":{"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days ago","week":"%s weeks ago","month":"%s months ago","year":"%s years ago"},"create_time":"Created","update_time":"Updated","expired":"This post is written %s days ago, and the content may not be up to date."};
+    window.data = {"masonry":false};
+  </script>
+    
+    <!--- Fontawesome Part-->
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fontawesome/fontawesome.min.css">
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fontawesome/brands.min.css">
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fontawesome/solid.min.css">
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fontawesome/regular.min.css">
+    
+    
+    
+    
+<meta name="generator" content="Hexo 8.1.2"><link rel="alternate" href="/atom.xml" title="Chyyl's Blog" type="application/atom+xml">
+</head>
+
+
+<body>
+	<div class="progress-bar-container">
+	
+	<span class="scroll-progress-bar"></span>
+	
+
+	
+	<span class="pjax-progress-bar"></span>
+	<!--        <span class="swup-progress-icon">-->
+	<!--            <i class="fa-solid fa-circle-notch fa-spin"></i>-->
+	<!--        </span>-->
+	
+</div>
+
+<style>
+    :root {
+        --preloader-background-color: #fff;
+        --preloader-text-color: #000;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --preloader-background-color: #202124;
+            --preloader-text-color: #fff;
+        }
+    }
+
+    @media (prefers-color-scheme: light) {
+        :root {
+            --preloader-background-color: #fff;
+            --preloader-text-color: #000;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .ml13 {
+            font-size: 2.6rem !important; /* Adjust this value as needed */
+        }
+    }
+
+    .preloader {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem; /* Tailwind 'gap-4' is 1rem */
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        padding: 12px;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh; /* 'h-screen' is 100% of the viewport height */
+        background-color: var(--preloader-background-color);
+        z-index: 1100; /* 'z-[1100]' sets the z-index */
+        transition: opacity 0.2s ease-in-out;
+    }
+
+    .ml13 {
+        font-size: 3.2rem;
+        /* text-transform: uppercase; */
+        color: var(--preloader-text-color);
+        letter-spacing: -1px;
+        font-weight: 500;
+        font-family: 'Chillax-Variable', sans-serif;
+        text-align: center;
+    }
+
+    .ml13 .word {
+        display: inline-flex;
+        flex-wrap: wrap;
+        white-space: nowrap;
+    }
+
+    .ml13 .letter {
+        display: inline-block;
+        line-height: 1em;
+    }
+</style>
+
+<div class="preloader">
+    <h2 class="ml13">
+        ChyyL&#39;s Blog
+    </h2>
+    <script>
+        var textWrapper = document.querySelector('.ml13');
+        // Split text into words
+        var words = textWrapper.textContent.trim().split(' ');
+
+        // Clear the existing content
+        textWrapper.innerHTML = '';
+
+        // Wrap each word and its letters in spans
+        words.forEach(function(word) {
+            var wordSpan = document.createElement('span');
+            wordSpan.classList.add('word');
+            wordSpan.innerHTML = word.replace(/\S/g, "<span class='letter'>$&</span>");
+            textWrapper.appendChild(wordSpan);
+            textWrapper.appendChild(document.createTextNode(' ')); // Add space between words
+        });
+
+        var animation = anime.timeline({ loop: true })
+            .add({
+                targets: '.ml13 .letter',
+                translateY: [20, 0],
+                translateZ: 0,
+                opacity: [0, 1],
+                filter: ['blur(5px)', 'blur(0px)'],
+                easing: "easeOutExpo",
+                duration: 1200,
+                delay: (el, i) => 300 + 20 * i,
+            })
+            .add({
+                targets: '.ml13 .letter',
+                translateY: [0, -20],
+                opacity: [1, 0],
+                filter: ['blur(0px)', 'blur(5px)'],
+                easing: "easeInExpo",
+                duration: 1000,
+                delay: (el, i) => 15 * i,
+                complete: function() {
+                    hidePreloader();
+                }
+            }, '-=700');
+
+
+        let themeStatus = JSON.parse(localStorage.getItem('REDEFINE-THEME-STATUS'))?.isDark;
+
+        // If the theme status is not found in local storage, check the preferred color scheme
+        if (themeStatus === undefined || themeStatus === null) {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                themeStatus = 'dark';
+            } else {
+                themeStatus = 'light';
+            }
+        }
+
+        // Now you can use the themeStatus variable in your code
+        if (themeStatus) {
+            document.documentElement.style.setProperty('--preloader-background-color', '#202124');
+            document.documentElement.style.setProperty('--preloader-text-color', '#fff');
+        } else {
+            document.documentElement.style.setProperty('--preloader-background-color', '#fff');
+            document.documentElement.style.setProperty('--preloader-text-color', '#000');
+        }
+
+        window.addEventListener('load', function () {
+            setTimeout(hidePreloader, 5000); // Call hidePreloader after 5000 milliseconds if not already called by animation
+        });
+
+        function hidePreloader() {
+            var preloader = document.querySelector('.preloader');
+            preloader.style.opacity = '0';
+            setTimeout(function () {
+                preloader.style.display = 'none';
+            }, 200);
+        }
+    </script>
+</div>
+
+<main class="page-container" id="swup">
+
+	
+
+	<div class="main-content-container flex flex-col justify-between min-h-dvh">
+		<div class="main-content-header">
+			<header class="navbar-container px-6 md:px-12">
+    <div class="navbar-content transition-navbar ">
+        <div class="left">
+            
+                <a class="logo-image h-8 w-8 sm:w-10 sm:h-10 mr-3" href="/">
+                    <img src="https://avatars.githubusercontent.com/u/115130037?v=4" class="w-full h-full rounded-xs">
+                </a>
+            
+            <a class="logo-title" href="/">
+                
+                ChyyL&#39;s Blog
+                
+            </a>
+        </div>
+
+        <div class="right">
+            <!-- PC -->
+            <div class="desktop">
+                <ul class="navbar-list">
+                    
+                        
+                            
+
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class=""
+                                   href="/"
+                                        >
+                                    <i class="fa-regular fa-house fa-fw"></i>
+                                    ACCUEIL
+                                    
+                                </a>
+
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                        
+                            
+
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class=""
+                                   href="/archives"
+                                        >
+                                    <i class="fa-regular fa-archive fa-fw"></i>
+                                    ARCHIVES
+                                    
+                                </a>
+
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                    
+                        <li class="navbar-item search search-popup-trigger">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </li>
+                    
+                </ul>
+            </div>
+            <!-- Mobile -->
+            <div class="mobile">
+                
+                    <div class="icon-item search search-popup-trigger"><i class="fa-solid fa-magnifying-glass"></i>
+                    </div>
+                
+                <div class="icon-item navbar-bar">
+                    <div class="navbar-bar-middle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile sheet -->
+    <div class="navbar-drawer h-dvh w-full absolute top-0 left-0 bg-background-color flex flex-col justify-between">
+        <ul class="drawer-navbar-list flex flex-col px-4 justify-center items-start">
+            
+                
+                    
+
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full "
+                           href="/"
+                        >
+                            <span>
+                                ACCUEIL
+                            </span>
+                            
+                                <i class="fa-regular fa-house fa-sm fa-fw"></i>
+                            
+                        </a>
+                        
+
+                        
+                    </li>
+            
+                
+                    
+
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full "
+                           href="/archives"
+                        >
+                            <span>
+                                ARCHIVES
+                            </span>
+                            
+                                <i class="fa-regular fa-archive fa-sm fa-fw"></i>
+                            
+                        </a>
+                        
+
+                        
+                    </li>
+            
+
+            
+            
+                
+                    
+                    
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active"
+                           href="/tags"
+                        >
+                            <span>Tags</span>
+                            <i class="fa-regular fa-tags fa-sm fa-fw"></i>
+                        </a>
+                    </li>
+                
+                    
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active"
+                           href="/categories"
+                        >
+                            <span>Categories</span>
+                            <i class="fa-regular fa-folder fa-sm fa-fw"></i>
+                        </a>
+                    </li>
+                
+            
+        </ul>
+
+        <div class="statistics flex justify-around my-2.5">
+    <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/tags">
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">57</div>
+        <div class="label text-third-text-color text-sm">Tags</div>
+    </a>
+    <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/categories">
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">3</div>
+        <div class="label text-third-text-color text-sm">Catégories</div>
+    </a>
+    <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/archives">
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">15</div>
+        <div class="label text-third-text-color text-sm">Posts</div>
+    </a>
+</div>
+    </div>
+
+    <div class="window-mask"></div>
+
+</header>
+
+
+		</div>
+
+		<div class="main-content-body transition-fade-up">
+			
+
+			<div class="main-content">
+				<div class="post-page-container flex relative justify-between box-border w-full h-full">
+	<div class="article-content-container">
+
+		<div class="article-title relative w-full">
+			
+			<div class="w-full flex items-center pt-6 justify-start">
+				<h1 class="article-title-regular text-second-text-color tracking-tight text-4xl md:text-6xl font-semibold px-2 sm:px-6 md:px-8 py-3">GitHub Actions 实战指南：从第一条流水线到 2026 安全前沿</h1>
+			</div>
+			
+		</div>
+
+		
+		<div class="article-header flex flex-row gap-2 items-center px-2 sm:px-6 md:px-8">
+			<div class="avatar w-[46px] h-[46px] shrink-0 rounded-medium border border-border-color p-px">
+				<img src="https://avatars.githubusercontent.com/u/115130037?v=4">
+			</div>
+			<div class="info flex flex-col justify-between">
+				<div class="author flex items-center">
+					<span class="name text-default-text-color text-lg font-semibold">Chyyl</span>
+					
+					<span class="author-label ml-1.5 text-xs px-2 py-0.5 rounded-small text-third-text-color border border-shadow-color-1">Lv2</span>
+					
+				</div>
+				<div class="meta-info">
+					<div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fa-regular fa-pen-fancy"></i>&nbsp;
+        <span class="desktop">2026-07-11</span>
+        <span class="mobile">2026-07-11</span>
+        <span class="hover-info">Créé</span>
+    </span>
+    
+        <span class="article-date article-meta-item">
+            <i class="fa-regular fa-wrench"></i>&nbsp;
+            <span class="desktop">2026-07-13 11:23:21</span>
+            <span class="mobile">2026-07-13 11:23:21</span>
+            <span class="hover-info">Mis à jour</span>
+        </span>
+    
+
+    
+        <span class="article-categories article-meta-item">
+            <i class="fa-regular fa-folders"></i>&nbsp;
+            <ul>
+                
+                
+                    
+                        
+                        <li>
+                            <a href="/categories/%E6%8A%80%E6%9C%AF%E6%95%99%E7%A8%8B/">技术教程</a>&nbsp;
+                        </li>
+                    
+                    
+                
+            </ul>
+        </span>
+    
+    
+        <span class="article-tags article-meta-item">
+            <i class="fa-regular fa-tags"></i>&nbsp;
+            <ul>
+                
+                    <li>
+                        <a href="/tags/%E6%95%99%E7%A8%8B/">教程</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/GitHub-Actions/">GitHub Actions</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/CI-CD/">CI/CD</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/%E8%87%AA%E5%8A%A8%E5%8C%96/">自动化</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/DevOps/">DevOps</a>&nbsp;
+                    </li>
+                
+            </ul>
+        </span>
+    
+
+    
+    
+    
+    
+        <span class="article-pv article-meta-item">
+            <i class="fa-regular fa-eye"></i>&nbsp;<span id="busuanzi_value_page_pv"></span>
+        </span>
+    
+</div>
+
+				</div>
+			</div>
+		</div>
+		
+
+		
+
+
+		<div class="article-content markdown-body px-2 sm:px-6 md:px-8 pb-8">
+			<blockquote>
+<p>从在仓库里建第一个 YAML 文件开始，到矩阵构建、可复用工作流、OIDC 云端免密部署、2026 安全路线图新特性。一篇覆盖 GitHub Actions 从入门到生产级的完整路径。</p>
+</blockquote>
+<h2 id="一、GitHub-Actions-是什么"><a href="#一、GitHub-Actions-是什么" class="headerlink" title="一、GitHub Actions 是什么"></a>一、GitHub Actions 是什么</h2><p>GitHub Actions 是 GitHub 内置的 CI&#x2F;CD 平台——你在仓库里放一个 YAML 文件，GitHub 就会在代码推送时自动拉起一台虚拟机，按你写的步骤跑测试、构建、部署。</p>
+<p><strong>核心优势：</strong></p>
+<ul>
+<li>与 GitHub 仓库零配置集成，不需要额外注册服务</li>
+<li>公开仓库完全免费，私有仓库有免费额度</li>
+<li>支持 Linux &#x2F; macOS &#x2F; Windows &#x2F; ARM64 四大平台</li>
+<li>marketplace 上万个现成 Action 可直接复用</li>
+<li>2026 年安全路线图加入了依赖锁定、原生出站防火墙等企业级特性</li>
+</ul>
+<h3 id="2026-年定价变化"><a href="#2026-年定价变化" class="headerlink" title="2026 年定价变化"></a>2026 年定价变化</h3><p>⚠️ 2026 年 3 月 GitHub 调整了 Actions 定价：</p>
+<table>
+<thead>
+<tr>
+<th>账号类型</th>
+<th>免费分钟&#x2F;月</th>
+<th>变化</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Free</td>
+<td>2,000</td>
+<td>减少（原 3,000）</td>
+</tr>
+<tr>
+<td>Pro</td>
+<td>3,000</td>
+<td>不变</td>
+</tr>
+<tr>
+<td>Team</td>
+<td>3,000</td>
+<td>不变</td>
+</tr>
+<tr>
+<td>Enterprise</td>
+<td>50,000</td>
+<td>不变</td>
+</tr>
+</tbody></table>
+<ul>
+<li><strong>公开仓库无限免费</strong></li>
+<li>ARM64 (Linux) runner 已对私有仓库开放，纳入免费额度</li>
+<li>macOS runner 费率从 10× 降到 5×（2026 新政）</li>
+<li>自托管 runner 新增 $0.002&#x2F;分钟平台费</li>
+</ul>
+<h2 id="二、核心概念"><a href="#二、核心概念" class="headerlink" title="二、核心概念"></a>二、核心概念</h2><h3 id="2-1-四个基本元素"><a href="#2-1-四个基本元素" class="headerlink" title="2.1 四个基本元素"></a>2.1 四个基本元素</h3><div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Workflow（工作流）</span><br><span class="line">  └── Job（作业）—— 在同一台 runner 上执行的一组步骤</span><br><span class="line">        └── Step（步骤）—— 具体操作</span><br><span class="line">              └── Action（动作）—— 可复用的单元</span><br></pre></td></tr></table></figure></div>
+
+<p>一个比喻：</p>
+<ul>
+<li><strong>Workflow</strong> &#x3D; 一道菜谱</li>
+<li><strong>Job</strong> &#x3D; 一个厨房里完成的一道工序</li>
+<li><strong>Step</strong> &#x3D; 切菜、热油、翻炒这些具体步骤</li>
+<li><strong>Action</strong> &#x3D; “切丁”这个标准动作，可以反复调用</li>
+</ul>
+<h3 id="2-2-文件位置"><a href="#2-2-文件位置" class="headerlink" title="2.2 文件位置"></a>2.2 文件位置</h3><p>所有工作流放在仓库的 <code>.github/workflows/</code> 目录：</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">my-repo/</span><br><span class="line">├── .github/</span><br><span class="line">│   └── workflows/</span><br><span class="line">│       ├── ci.yml          # 持续集成</span><br><span class="line">│       ├── deploy.yml      # 部署</span><br><span class="line">│       └── release.yml     # 发布</span><br><span class="line">├── src/</span><br><span class="line">└── package.json</span><br></pre></td></tr></table></figure></div>
+
+<h2 id="三、入门：第一条流水线"><a href="#三、入门：第一条流水线" class="headerlink" title="三、入门：第一条流水线"></a>三、入门：第一条流水线</h2><h3 id="3-1-Hello-World"><a href="#3-1-Hello-World" class="headerlink" title="3.1 Hello World"></a>3.1 Hello World</h3><p>创建 <code>.github/workflows/hello.yml</code>：</p>
+<div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">Hello</span> <span class="string">World</span></span><br><span class="line"></span><br><span class="line"><span class="attr">on:</span></span><br><span class="line">  <span class="attr">push:</span></span><br><span class="line">    <span class="attr">branches:</span> [<span class="string">main</span>]</span><br><span class="line">  <span class="attr">workflow_dispatch:</span>   <span class="comment"># 允许手动触发</span></span><br><span class="line"></span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">say-hello:</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-latest</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">打招呼</span></span><br><span class="line">        <span class="attr">run:</span> <span class="string">echo</span> <span class="string">&quot;Hello, GitHub Actions!&quot;</span></span><br><span class="line"></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">当前时间</span></span><br><span class="line">        <span class="attr">run:</span> <span class="string">date</span></span><br><span class="line"></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">系统信息</span></span><br><span class="line">        <span class="attr">run:</span> <span class="string">|</span></span><br><span class="line"><span class="string">          echo &quot;OS: $(uname -a)&quot;</span></span><br><span class="line"><span class="string">          echo &quot;CPU: $(nproc) cores&quot;</span></span><br><span class="line"><span class="string">          echo &quot;RAM: $(free -h | grep Mem)&quot;</span></span><br></pre></td></tr></table></figure></div>
+
+<p>推送到 GitHub，在仓库 Actions 标签页就能看到运行结果。</p>
+<h3 id="3-2-触发条件（on）"><a href="#3-2-触发条件（on）" class="headerlink" title="3.2 触发条件（on）"></a>3.2 触发条件（on）</h3><div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">on:</span></span><br><span class="line">  <span class="attr">push:</span></span><br><span class="line">    <span class="attr">branches:</span> [<span class="string">main</span>, <span class="string">&#x27;feature/**&#x27;</span>]   <span class="comment"># 推送到 main 或 feature/ 下任意分支</span></span><br><span class="line">    <span class="attr">paths:</span> [<span class="string">&#x27;src/**&#x27;</span>, <span class="string">&#x27;package.json&#x27;</span>]  <span class="comment"># 仅这些文件变更时触发</span></span><br><span class="line">    <span class="attr">tags:</span> [<span class="string">&#x27;v*&#x27;</span>]                       <span class="comment"># 推送 v 开头的 tag</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">pull_request:</span></span><br><span class="line">    <span class="attr">types:</span> [<span class="string">opened</span>, <span class="string">synchronize</span>, <span class="string">reopened</span>]</span><br><span class="line">    <span class="attr">branches:</span> [<span class="string">main</span>]</span><br><span class="line"></span><br><span class="line">  <span class="attr">schedule:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">cron:</span> <span class="string">&#x27;0 2 * * *&#x27;</span>    <span class="comment"># 每天北京时间 10:00（UTC 2:00）</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">workflow_dispatch:</span>       <span class="comment"># 手动触发</span></span><br><span class="line">    <span class="attr">inputs:</span></span><br><span class="line">      <span class="attr">environment:</span></span><br><span class="line">        <span class="attr">description:</span> <span class="string">&#x27;部署环境&#x27;</span></span><br><span class="line">        <span class="attr">required:</span> <span class="literal">true</span></span><br><span class="line">        <span class="attr">type:</span> <span class="string">choice</span></span><br><span class="line">        <span class="attr">options:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="string">staging</span></span><br><span class="line">          <span class="bullet">-</span> <span class="string">production</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">workflow_run:</span></span><br><span class="line">    <span class="attr">workflows:</span> [<span class="string">&quot;CI&quot;</span>]</span><br><span class="line">    <span class="attr">types:</span> [<span class="string">completed</span>]     <span class="comment"># CI 工作流完成后触发</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">release:</span></span><br><span class="line">    <span class="attr">types:</span> [<span class="string">published</span>]     <span class="comment"># 发布 Release 时</span></span><br></pre></td></tr></table></figure></div>
+
+<h3 id="3-3-Runner-选择"><a href="#3-3-Runner-选择" class="headerlink" title="3.3 Runner 选择"></a>3.3 Runner 选择</h3><div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">test:</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-latest</span>          <span class="comment"># Linux x64（默认）</span></span><br><span class="line">    <span class="comment"># 其他选项：</span></span><br><span class="line">    <span class="comment"># runs-on: ubuntu-24.04         # 指定 Ubuntu 24.04</span></span><br><span class="line">    <span class="comment"># runs-on: ubuntu-24.04-arm     # Linux ARM64</span></span><br><span class="line">    <span class="comment"># runs-on: macos-latest          # macOS (M1)</span></span><br><span class="line">    <span class="comment"># runs-on: macos-13              # macOS Intel</span></span><br><span class="line">    <span class="comment"># runs-on: windows-latest        # Windows Server 2022</span></span><br><span class="line">    <span class="comment"># runs-on: ubuntu-latest-16-cores  # 大规格（付费）</span></span><br><span class="line">    <span class="comment"># runs-on: self-hosted           # 自托管</span></span><br></pre></td></tr></table></figure></div>
+
+<p>Runner 规格对照：</p>
+<table>
+<thead>
+<tr>
+<th>Runner</th>
+<th>CPU</th>
+<th>内存</th>
+<th>磁盘</th>
+<th>计费倍率</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ubuntu-latest (标准)</td>
+<td>4</td>
+<td>16GB</td>
+<td>14GB</td>
+<td>1×</td>
+</tr>
+<tr>
+<td>ubuntu-latest-large</td>
+<td>8</td>
+<td>32GB</td>
+<td>14GB</td>
+<td>2×</td>
+</tr>
+<tr>
+<td>ubuntu-24.04-arm</td>
+<td>4</td>
+<td>16GB</td>
+<td>14GB</td>
+<td>1×</td>
+</tr>
+<tr>
+<td>macos-latest (M1)</td>
+<td>3</td>
+<td>7GB</td>
+<td>14GB</td>
+<td>5×</td>
+</tr>
+<tr>
+<td>windows-latest</td>
+<td>4</td>
+<td>16GB</td>
+<td>14GB</td>
+<td>2×</td>
+</tr>
+</tbody></table>
+<h2 id="四、进阶：真实项目的-CI"><a href="#四、进阶：真实项目的-CI" class="headerlink" title="四、进阶：真实项目的 CI"></a>四、进阶：真实项目的 CI</h2><h3 id="4-1-Node-js-项目完整-CI"><a href="#4-1-Node-js-项目完整-CI" class="headerlink" title="4.1 Node.js 项目完整 CI"></a>4.1 Node.js 项目完整 CI</h3><div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">CI</span></span><br><span class="line"></span><br><span class="line"><span class="attr">on:</span></span><br><span class="line">  <span class="attr">push:</span></span><br><span class="line">    <span class="attr">branches:</span> [<span class="string">main</span>]</span><br><span class="line">  <span class="attr">pull_request:</span></span><br><span class="line">    <span class="attr">branches:</span> [<span class="string">main</span>]</span><br><span class="line"></span><br><span class="line"><span class="comment"># 同一分支新推送取消旧运行</span></span><br><span class="line"><span class="attr">concurrency:</span></span><br><span class="line">  <span class="attr">group:</span> <span class="string">ci-$&#123;&#123;</span> <span class="string">github.ref</span> <span class="string">&#125;&#125;</span></span><br><span class="line">  <span class="attr">cancel-in-progress:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">test:</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-latest</span></span><br><span class="line">    <span class="attr">strategy:</span></span><br><span class="line">      <span class="attr">matrix:</span></span><br><span class="line">        <span class="attr">node-version:</span> [<span class="number">20</span>, <span class="number">22</span>, <span class="number">24</span>]   <span class="comment"># 2026 LTS 覆盖</span></span><br><span class="line"></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/checkout@v4</span>      <span class="comment"># 检出代码</span></span><br><span class="line"></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">设置</span> <span class="string">Node.js</span> <span class="string">$&#123;&#123;</span> <span class="string">matrix.node-version</span> <span class="string">&#125;&#125;</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">actions/setup-node@v4</span></span><br><span class="line">        <span class="attr">with:</span></span><br><span class="line">          <span class="attr">node-version:</span> <span class="string">$&#123;&#123;</span> <span class="string">matrix.node-version</span> <span class="string">&#125;&#125;</span></span><br><span class="line">          <span class="attr">cache:</span> <span class="string">&#x27;npm&#x27;</span>                  <span class="comment"># 自动缓存 npm</span></span><br><span class="line"></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">安装依赖</span></span><br><span class="line">        <span class="attr">run:</span> <span class="string">npm</span> <span class="string">ci</span>                     <span class="comment"># ci 比 install 更严格，适合 CI</span></span><br><span class="line"></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">代码检查</span></span><br><span class="line">        <span class="attr">run:</span> <span class="string">npm</span> <span class="string">run</span> <span class="string">lint</span></span><br><span class="line"></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">单元测试</span></span><br><span class="line">        <span class="attr">run:</span> <span class="string">npm</span> <span class="string">test</span> <span class="string">--</span> <span class="string">--coverage</span></span><br><span class="line"></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">构建</span></span><br><span class="line">        <span class="attr">run:</span> <span class="string">npm</span> <span class="string">run</span> <span class="string">build</span></span><br><span class="line"></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">上传覆盖率</span></span><br><span class="line">        <span class="attr">if:</span> <span class="string">matrix.node-version</span> <span class="string">==</span> <span class="number">22</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">actions/upload-artifact@v4</span></span><br><span class="line">        <span class="attr">with:</span></span><br><span class="line">          <span class="attr">name:</span> <span class="string">coverage-report</span></span><br><span class="line">          <span class="attr">path:</span> <span class="string">coverage/</span></span><br><span class="line">          <span class="attr">retention-days:</span> <span class="number">7</span></span><br></pre></td></tr></table></figure></div>
+
+<h3 id="4-2-Python-项目"><a href="#4-2-Python-项目" class="headerlink" title="4.2 Python 项目"></a>4.2 Python 项目</h3><div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">Python</span> <span class="string">CI</span></span><br><span class="line"></span><br><span class="line"><span class="attr">on:</span> [<span class="string">push</span>, <span class="string">pull_request</span>]</span><br><span class="line"></span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">test:</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-latest</span></span><br><span class="line">    <span class="attr">strategy:</span></span><br><span class="line">      <span class="attr">matrix:</span></span><br><span class="line">        <span class="attr">python-version:</span> [<span class="string">&#x27;3.11&#x27;</span>, <span class="string">&#x27;3.12&#x27;</span>, <span class="string">&#x27;3.13&#x27;</span>]</span><br><span class="line"></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/checkout@v4</span></span><br><span class="line"></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">设置</span> <span class="string">Python</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">actions/setup-python@v5</span></span><br><span class="line">        <span class="attr">with:</span></span><br><span class="line">          <span class="attr">python-version:</span> <span class="string">$&#123;&#123;</span> <span class="string">matrix.python-version</span> <span class="string">&#125;&#125;</span></span><br><span class="line">          <span class="attr">cache:</span> <span class="string">&#x27;pip&#x27;</span></span><br><span class="line"></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">安装依赖</span></span><br><span class="line">        <span class="attr">run:</span> <span class="string">|</span></span><br><span class="line"><span class="string">          python -m pip install --upgrade pip</span></span><br><span class="line"><span class="string">          pip install -e &quot;.[dev]&quot;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Ruff</span> <span class="string">检查</span></span><br><span class="line">        <span class="attr">run:</span> <span class="string">ruff</span> <span class="string">check</span> <span class="string">.</span></span><br><span class="line"></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">类型检查</span></span><br><span class="line">        <span class="attr">run:</span> <span class="string">mypy</span> <span class="string">src/</span></span><br><span class="line"></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">测试</span></span><br><span class="line">        <span class="attr">run:</span> <span class="string">pytest</span> <span class="string">--cov=src</span> <span class="string">--cov-report=xml</span></span><br><span class="line"></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">上传覆盖率到</span> <span class="string">Codecov</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">codecov/codecov-action@v4</span></span><br><span class="line">        <span class="attr">with:</span></span><br><span class="line">          <span class="attr">files:</span> <span class="string">./coverage.xml</span></span><br><span class="line">          <span class="attr">token:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.CODECOV_TOKEN</span> <span class="string">&#125;&#125;</span></span><br></pre></td></tr></table></figure></div>
+
+<h3 id="4-3-矩阵构建（matrix）"><a href="#4-3-矩阵构建（matrix）" class="headerlink" title="4.3 矩阵构建（matrix）"></a>4.3 矩阵构建（matrix）</h3><p>矩阵是一次在多个维度上展开 Job：</p>
+<div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">strategy:</span></span><br><span class="line">  <span class="attr">matrix:</span></span><br><span class="line">    <span class="attr">os:</span> [<span class="string">ubuntu-latest</span>, <span class="string">macos-latest</span>, <span class="string">windows-latest</span>]</span><br><span class="line">    <span class="attr">node:</span> [<span class="number">20</span>, <span class="number">22</span>, <span class="number">24</span>]</span><br><span class="line">    <span class="attr">exclude:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">os:</span> <span class="string">windows-latest</span></span><br><span class="line">        <span class="attr">node:</span> <span class="number">20</span>       <span class="comment"># 排除 Windows + Node 20 组合</span></span><br><span class="line">    <span class="attr">include:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">os:</span> <span class="string">ubuntu-latest</span></span><br><span class="line">        <span class="attr">node:</span> <span class="number">22</span></span><br><span class="line">        <span class="attr">experimental:</span> <span class="literal">true</span>   <span class="comment"># 额外添加变量</span></span><br><span class="line">  <span class="attr">fail-fast:</span> <span class="literal">false</span>            <span class="comment"># 一个失败不取消其他</span></span><br></pre></td></tr></table></figure></div>
+
+<p>上面会生成 3×3 - 1 &#x3D; 8 个并行 Job。</p>
+<h3 id="4-4-缓存与制品"><a href="#4-4-缓存与制品" class="headerlink" title="4.4 缓存与制品"></a>4.4 缓存与制品</h3><p><strong>缓存依赖：</strong></p>
+<div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/cache@v4</span></span><br><span class="line">  <span class="attr">with:</span></span><br><span class="line">    <span class="attr">path:</span> <span class="string">|</span></span><br><span class="line"><span class="string">      ~/.npm</span></span><br><span class="line"><span class="string">      node_modules</span></span><br><span class="line"><span class="string"></span>    <span class="attr">key:</span> <span class="string">$&#123;&#123;</span> <span class="string">runner.os</span> <span class="string">&#125;&#125;-npm-$&#123;&#123;</span> <span class="string">hashFiles(&#x27;package-lock.json&#x27;)</span> <span class="string">&#125;&#125;</span></span><br><span class="line">    <span class="attr">restore-keys:</span> <span class="string">|</span></span><br><span class="line">      <span class="string">$&#123;&#123;</span> <span class="string">runner.os</span> <span class="string">&#125;&#125;-npm-</span></span><br></pre></td></tr></table></figure></div>
+
+<p><strong>上传制品：</strong></p>
+<div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/upload-artifact@v4</span></span><br><span class="line">  <span class="attr">with:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">dist</span></span><br><span class="line">    <span class="attr">path:</span> <span class="string">dist/</span></span><br><span class="line">    <span class="attr">compression-level:</span> <span class="number">6</span></span><br><span class="line">    <span class="attr">retention-days:</span> <span class="number">14</span></span><br><span class="line">    <span class="attr">if-no-files-found:</span> <span class="string">error</span></span><br></pre></td></tr></table></figure></div>
+
+<p><strong>下载制品：</strong></p>
+<div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/download-artifact@v4</span></span><br><span class="line">  <span class="attr">with:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">dist</span></span><br><span class="line">    <span class="attr">path:</span> <span class="string">./dist</span></span><br></pre></td></tr></table></figure></div>
+
+<h3 id="4-5-条件执行"><a href="#4-5-条件执行" class="headerlink" title="4.5 条件执行"></a>4.5 条件执行</h3><div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">steps:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">仅</span> <span class="string">main</span> <span class="string">分支部署</span></span><br><span class="line">    <span class="attr">if:</span> <span class="string">github.ref</span> <span class="string">==</span> <span class="string">&#x27;refs/heads/main&#x27;</span></span><br><span class="line">    <span class="attr">run:</span> <span class="string">deploy.sh</span></span><br><span class="line"></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">仅</span> <span class="string">PR</span> <span class="string">时运行</span></span><br><span class="line">    <span class="attr">if:</span> <span class="string">github.event_name</span> <span class="string">==</span> <span class="string">&#x27;pull_request&#x27;</span></span><br><span class="line">    <span class="attr">run:</span> <span class="string">npm</span> <span class="string">run</span> <span class="string">test:e2e</span></span><br><span class="line"></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">上一步失败时通知</span></span><br><span class="line">    <span class="attr">if:</span> <span class="string">failure()</span></span><br><span class="line">    <span class="attr">run:</span> <span class="string">curl</span> <span class="string">-X</span> <span class="string">POST</span> <span class="string">$SLACK_WEBHOOK</span> <span class="string">-d</span> <span class="string">&#x27;&#123;&quot;text&quot;:&quot;构建失败&quot;&#125;&#x27;</span></span><br><span class="line"></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">跳过文档变更</span></span><br><span class="line">    <span class="attr">if:</span> <span class="type">!contains(github.event.head_commit.message,</span> <span class="string">&#x27;[skip ci]&#x27;</span><span class="string">)</span></span><br><span class="line">    <span class="attr">run:</span> <span class="string">npm</span> <span class="string">test</span></span><br></pre></td></tr></table></figure></div>
+
+<p>常用条件函数：</p>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>always()</code></td>
+<td>总是执行（默认）</td>
+</tr>
+<tr>
+<td><code>success()</code></td>
+<td>之前所有步骤都成功</td>
+</tr>
+<tr>
+<td><code>failure()</code></td>
+<td>之前有步骤失败</td>
+</tr>
+<tr>
+<td><code>cancelled()</code></td>
+<td>工作流被取消</td>
+</tr>
+<tr>
+<td><code>contains(str, substr)</code></td>
+<td>字符串包含</td>
+</tr>
+</tbody></table>
+<h2 id="五、高级：Secrets、环境与部署"><a href="#五、高级：Secrets、环境与部署" class="headerlink" title="五、高级：Secrets、环境与部署"></a>五、高级：Secrets、环境与部署</h2><h3 id="5-1-Secrets-管理"><a href="#5-1-Secrets-管理" class="headerlink" title="5.1 Secrets 管理"></a>5.1 Secrets 管理</h3><p>在仓库 Settings → Secrets and variables → Actions 中添加。</p>
+<div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">steps:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">部署</span></span><br><span class="line">    <span class="attr">env:</span></span><br><span class="line">      <span class="attr">API_KEY:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.API_KEY</span> <span class="string">&#125;&#125;</span></span><br><span class="line">      <span class="attr">DATABASE_URL:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.DATABASE_URL</span> <span class="string">&#125;&#125;</span></span><br><span class="line">    <span class="attr">run:</span> <span class="string">deploy.sh</span></span><br></pre></td></tr></table></figure></div>
+
+<p><strong>环境级 Secrets（区分 staging&#x2F;production）：</strong></p>
+<div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">deploy:</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">production</span>    <span class="comment"># 需要审批</span></span><br><span class="line">      <span class="attr">url:</span> <span class="string">https://myapp.com</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">run:</span> <span class="string">deploy.sh</span></span><br><span class="line">        <span class="attr">env:</span></span><br><span class="line">          <span class="attr">DEPLOY_KEY:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.DEPLOY_KEY</span> <span class="string">&#125;&#125;</span></span><br></pre></td></tr></table></figure></div>
+
+<h3 id="5-2-OIDC-云端免密部署（2026-推荐）"><a href="#5-2-OIDC-云端免密部署（2026-推荐）" class="headerlink" title="5.2 OIDC 云端免密部署（2026 推荐）"></a>5.2 OIDC 云端免密部署（2026 推荐）</h3><p>不再需要把 AWS&#x2F;GCP 密钥存到 Secrets。用 OIDC Token 临时获取权限：</p>
+<div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">permissions:</span></span><br><span class="line">  <span class="attr">id-token:</span> <span class="string">write</span>   <span class="comment"># 必须开启</span></span><br><span class="line">  <span class="attr">contents:</span> <span class="string">read</span></span><br><span class="line"></span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">deploy:</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-latest</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/checkout@v4</span></span><br><span class="line"></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">配置</span> <span class="string">AWS</span> <span class="string">凭证</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">aws-actions/configure-aws-credentials@v4</span></span><br><span class="line">        <span class="attr">with:</span></span><br><span class="line">          <span class="attr">role-to-assume:</span> <span class="string">arn:aws:iam::123456789:role/github-actions</span></span><br><span class="line">          <span class="attr">aws-region:</span> <span class="string">ap-northeast-1</span></span><br><span class="line"></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">部署到</span> <span class="string">S3</span></span><br><span class="line">        <span class="attr">run:</span> <span class="string">aws</span> <span class="string">s3</span> <span class="string">sync</span> <span class="string">./dist</span> <span class="string">s3://my-bucket/</span> <span class="string">--delete</span></span><br></pre></td></tr></table></figure></div>
+
+<h3 id="5-3-可复用工作流（Reusable-Workflows）"><a href="#5-3-可复用工作流（Reusable-Workflows）" class="headerlink" title="5.3 可复用工作流（Reusable Workflows）"></a>5.3 可复用工作流（Reusable Workflows）</h3><p>把通用流程封装成一个工作流，其他仓库直接调用：</p>
+<p><strong>被调用方（<code>.github/workflows/ci-template.yml</code>）：</strong></p>
+<div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">CI</span> <span class="string">Template</span></span><br><span class="line"></span><br><span class="line"><span class="attr">on:</span></span><br><span class="line">  <span class="attr">workflow_call:</span>           <span class="comment"># 表示可被调用</span></span><br><span class="line">    <span class="attr">inputs:</span></span><br><span class="line">      <span class="attr">node-version:</span></span><br><span class="line">        <span class="attr">required:</span> <span class="literal">false</span></span><br><span class="line">        <span class="attr">type:</span> <span class="string">number</span></span><br><span class="line">        <span class="attr">default:</span> <span class="number">22</span></span><br><span class="line">    <span class="attr">secrets:</span></span><br><span class="line">      <span class="attr">NPM_TOKEN:</span></span><br><span class="line">        <span class="attr">required:</span> <span class="literal">false</span></span><br><span class="line"></span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">test:</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-latest</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/checkout@v4</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/setup-node@v4</span></span><br><span class="line">        <span class="attr">with:</span></span><br><span class="line">          <span class="attr">node-version:</span> <span class="string">$&#123;&#123;</span> <span class="string">inputs.node-version</span> <span class="string">&#125;&#125;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">run:</span> <span class="string">npm</span> <span class="string">ci</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">run:</span> <span class="string">npm</span> <span class="string">test</span></span><br></pre></td></tr></table></figure></div>
+
+<p><strong>调用方：</strong></p>
+<div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">ci:</span></span><br><span class="line">    <span class="attr">uses:</span> <span class="string">./.github/workflows/ci-template.yml</span></span><br><span class="line">    <span class="attr">with:</span></span><br><span class="line">      <span class="attr">node-version:</span> <span class="number">22</span></span><br><span class="line">    <span class="attr">secrets:</span></span><br><span class="line">      <span class="attr">NPM_TOKEN:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.NPM_TOKEN</span> <span class="string">&#125;&#125;</span></span><br></pre></td></tr></table></figure></div>
+
+<p>甚至可以跨仓库调用：</p>
+<div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">ci:</span></span><br><span class="line">    <span class="attr">uses:</span> <span class="string">org/shared-workflows/.github/workflows/ci.yml@main</span></span><br></pre></td></tr></table></figure></div>
+
+<h3 id="5-4-Composite-Actions"><a href="#5-4-Composite-Actions" class="headerlink" title="5.4 Composite Actions"></a>5.4 Composite Actions</h3><p>把多步操作封装成一个自定义 Action：</p>
+<p><strong><code>.github/actions/setup-and-install/action.yml</code>：</strong></p>
+<div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">&#x27;Setup and Install&#x27;</span></span><br><span class="line"><span class="attr">description:</span> <span class="string">&#x27;检查代码 + 安装依赖&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">inputs:</span></span><br><span class="line">  <span class="attr">node-version:</span></span><br><span class="line">    <span class="attr">required:</span> <span class="literal">false</span></span><br><span class="line">    <span class="attr">default:</span> <span class="string">&#x27;22&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">runs:</span></span><br><span class="line">  <span class="attr">using:</span> <span class="string">composite</span></span><br><span class="line">  <span class="attr">steps:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/checkout@v4</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/setup-node@v4</span></span><br><span class="line">      <span class="attr">with:</span></span><br><span class="line">        <span class="attr">node-version:</span> <span class="string">$&#123;&#123;</span> <span class="string">inputs.node-version</span> <span class="string">&#125;&#125;</span></span><br><span class="line">        <span class="attr">cache:</span> <span class="string">&#x27;npm&#x27;</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">安装</span></span><br><span class="line">      <span class="attr">shell:</span> <span class="string">bash</span></span><br><span class="line">      <span class="attr">run:</span> <span class="string">npm</span> <span class="string">ci</span></span><br></pre></td></tr></table></figure></div>
+
+<p>使用：</p>
+<div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">steps:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">./.github/actions/setup-and-install</span></span><br><span class="line">    <span class="attr">with:</span></span><br><span class="line">      <span class="attr">node-version:</span> <span class="string">&#x27;24&#x27;</span></span><br></pre></td></tr></table></figure></div>
+
+<h2 id="六、2026-安全路线图新特性"><a href="#六、2026-安全路线图新特性" class="headerlink" title="六、2026 安全路线图新特性"></a>六、2026 安全路线图新特性</h2><h3 id="6-1-依赖锁定（Dependency-Locking）"><a href="#6-1-依赖锁定（Dependency-Locking）" class="headerlink" title="6.1 依赖锁定（Dependency Locking）"></a>6.1 依赖锁定（Dependency Locking）</h3><p>2026 年 GitHub 推出了 workflow 级别的依赖锁定。开启后，所有 Action 引用会被自动锁定到具体 commit SHA：</p>
+<div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 之前（可变）</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/checkout@v4</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 锁定后（自动生成 lockfile）</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/checkout@8e5e7e5cb8c3156cbe153f3146d5f156158094d5</span>  <span class="comment"># v4.2.0</span></span><br></pre></td></tr></table></figure></div>
+
+<p><code>.github/workflows/workflow.lock.yml</code> 自动生成，PR 中可 review 依赖变更。</p>
+<h3 id="6-2-原生出站防火墙（Native-Egress-Firewall）"><a href="#6-2-原生出站防火墙（Native-Egress-Firewall）" class="headerlink" title="6.2 原生出站防火墙（Native Egress Firewall）"></a>6.2 原生出站防火墙（Native Egress Firewall）</h3><p>不再需要第三方代理来限制网络访问：</p>
+<div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">build:</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-latest</span></span><br><span class="line">    <span class="attr">egress-policy:</span> <span class="string">audit</span>   <span class="comment"># 或 block</span></span><br><span class="line">    <span class="attr">allowed-egress:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">github.com:443</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">registry.npmjs.org:443</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">files.pythonhosted.org:443</span></span><br></pre></td></tr></table></figure></div>
+
+<h3 id="6-3-Scoped-Secrets"><a href="#6-3-Scoped-Secrets" class="headerlink" title="6.3 Scoped Secrets"></a>6.3 Scoped Secrets</h3><p>Secrets 可以限定只有特定 Job 能访问：</p>
+<div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">build:</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-latest</span></span><br><span class="line">    <span class="comment"># 只能用 BUILD_TOKEN</span></span><br><span class="line">    <span class="attr">environment:</span> <span class="string">build-env</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">deploy:</span></span><br><span class="line">    <span class="attr">needs:</span> <span class="string">build</span></span><br><span class="line">    <span class="attr">environment:</span> <span class="string">deploy-env</span>   <span class="comment"># 只能用 DEPLOY_TOKEN</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">run:</span> <span class="string">deploy.sh</span></span><br><span class="line">        <span class="attr">env:</span></span><br><span class="line">          <span class="attr">KEY:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.DEPLOY_KEY</span> <span class="string">&#125;&#125;</span></span><br></pre></td></tr></table></figure></div>
+
+<h3 id="6-4-确定性执行（Deterministic-Runs）"><a href="#6-4-确定性执行（Deterministic-Runs）" class="headerlink" title="6.4 确定性执行（Deterministic Runs）"></a>6.4 确定性执行（Deterministic Runs）</h3><p>确保每次执行的内容和 PR review 看到的一模一样，防止供应链攻击。</p>
+<h2 id="七、实战场景"><a href="#七、实战场景" class="headerlink" title="七、实战场景"></a>七、实战场景</h2><h3 id="7-1-自动发布到-npm"><a href="#7-1-自动发布到-npm" class="headerlink" title="7.1 自动发布到 npm"></a>7.1 自动发布到 npm</h3><div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">Publish</span></span><br><span class="line"></span><br><span class="line"><span class="attr">on:</span></span><br><span class="line">  <span class="attr">release:</span></span><br><span class="line">    <span class="attr">types:</span> [<span class="string">published</span>]</span><br><span class="line"></span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">publish:</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-latest</span></span><br><span class="line">    <span class="attr">environment:</span> <span class="string">npm-publish</span></span><br><span class="line">    <span class="attr">permissions:</span></span><br><span class="line">      <span class="attr">id-token:</span> <span class="string">write</span>    <span class="comment"># npm provenance</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/checkout@v4</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/setup-node@v4</span></span><br><span class="line">        <span class="attr">with:</span></span><br><span class="line">          <span class="attr">node-version:</span> <span class="number">22</span></span><br><span class="line">          <span class="attr">registry-url:</span> <span class="string">https://registry.npmjs.org</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">run:</span> <span class="string">npm</span> <span class="string">ci</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">run:</span> <span class="string">npm</span> <span class="string">run</span> <span class="string">build</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">run:</span> <span class="string">npm</span> <span class="string">publish</span> <span class="string">--provenance</span> <span class="string">--access</span> <span class="string">public</span></span><br><span class="line">        <span class="attr">env:</span></span><br><span class="line">          <span class="attr">NODE_AUTH_TOKEN:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.NPM_TOKEN</span> <span class="string">&#125;&#125;</span></span><br></pre></td></tr></table></figure></div>
+
+<h3 id="7-2-Docker-镜像构建-推送"><a href="#7-2-Docker-镜像构建-推送" class="headerlink" title="7.2 Docker 镜像构建 + 推送"></a>7.2 Docker 镜像构建 + 推送</h3><div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">Docker</span></span><br><span class="line"></span><br><span class="line"><span class="attr">on:</span></span><br><span class="line">  <span class="attr">push:</span></span><br><span class="line">    <span class="attr">branches:</span> [<span class="string">main</span>]</span><br><span class="line">    <span class="attr">tags:</span> [<span class="string">&#x27;v*&#x27;</span>]</span><br><span class="line"></span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">docker:</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-latest</span></span><br><span class="line">    <span class="attr">permissions:</span></span><br><span class="line">      <span class="attr">contents:</span> <span class="string">read</span></span><br><span class="line">      <span class="attr">packages:</span> <span class="string">write</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/checkout@v4</span></span><br><span class="line"></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">提取</span> <span class="string">tag</span></span><br><span class="line">        <span class="attr">id:</span> <span class="string">meta</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">docker/metadata-action@v5</span></span><br><span class="line">        <span class="attr">with:</span></span><br><span class="line">          <span class="attr">images:</span> <span class="string">ghcr.io/$&#123;&#123;</span> <span class="string">github.repository</span> <span class="string">&#125;&#125;</span></span><br><span class="line">          <span class="attr">tags:</span> <span class="string">|</span></span><br><span class="line"><span class="string">            type=ref,event=branch</span></span><br><span class="line"><span class="string">            type=semver,pattern=&#123;&#123;version&#125;&#125;</span></span><br><span class="line"><span class="string">            type=semver,pattern=&#123;&#123;major&#125;&#125;.&#123;&#123;minor&#125;&#125;</span></span><br><span class="line"><span class="string">            type=sha</span></span><br><span class="line"><span class="string"></span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">登录</span> <span class="string">GHCR</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">docker/login-action@v3</span></span><br><span class="line">        <span class="attr">with:</span></span><br><span class="line">          <span class="attr">registry:</span> <span class="string">ghcr.io</span></span><br><span class="line">          <span class="attr">username:</span> <span class="string">$&#123;&#123;</span> <span class="string">github.actor</span> <span class="string">&#125;&#125;</span></span><br><span class="line">          <span class="attr">password:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.GITHUB_TOKEN</span> <span class="string">&#125;&#125;</span></span><br><span class="line"></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">构建并推送</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">docker/build-push-action@v6</span></span><br><span class="line">        <span class="attr">with:</span></span><br><span class="line">          <span class="attr">context:</span> <span class="string">.</span></span><br><span class="line">          <span class="attr">push:</span> <span class="literal">true</span></span><br><span class="line">          <span class="attr">tags:</span> <span class="string">$&#123;&#123;</span> <span class="string">steps.meta.outputs.tags</span> <span class="string">&#125;&#125;</span></span><br><span class="line">          <span class="attr">labels:</span> <span class="string">$&#123;&#123;</span> <span class="string">steps.meta.outputs.labels</span> <span class="string">&#125;&#125;</span></span><br><span class="line">          <span class="attr">cache-from:</span> <span class="string">type=gha</span></span><br><span class="line">          <span class="attr">cache-to:</span> <span class="string">type=gha,mode=max</span></span><br></pre></td></tr></table></figure></div>
+
+<h3 id="7-3-部署到-Vercel-Netlify"><a href="#7-3-部署到-Vercel-Netlify" class="headerlink" title="7.3 部署到 Vercel&#x2F;Netlify"></a>7.3 部署到 Vercel&#x2F;Netlify</h3><div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">Deploy</span> <span class="string">Preview</span></span><br><span class="line"></span><br><span class="line"><span class="attr">on:</span> <span class="string">pull_request</span></span><br><span class="line"></span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">deploy-preview:</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-latest</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/checkout@v4</span></span><br><span class="line"></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">安装</span> <span class="string">Netlify</span> <span class="string">CLI</span></span><br><span class="line">        <span class="attr">run:</span> <span class="string">npm</span> <span class="string">install</span> <span class="string">-g</span> <span class="string">netlify-cli</span></span><br><span class="line"></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">部署</span> <span class="string">Preview</span></span><br><span class="line">        <span class="attr">run:</span> <span class="string">|</span></span><br><span class="line"><span class="string">          netlify deploy \</span></span><br><span class="line"><span class="string">            --dir=dist \</span></span><br><span class="line"><span class="string">            --alias=pr-$&#123;&#123; github.event.pull_request.number &#125;&#125; \</span></span><br><span class="line"><span class="string">            --message &quot;Preview for PR #$&#123;&#123; github.event.pull_request.number &#125;&#125;&quot;</span></span><br><span class="line"><span class="string"></span>        <span class="attr">env:</span></span><br><span class="line">          <span class="attr">NETLIFY_AUTH_TOKEN:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.NETLIFY_AUTH_TOKEN</span> <span class="string">&#125;&#125;</span></span><br><span class="line">          <span class="attr">NETLIFY_SITE_ID:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.NETLIFY_SITE_ID</span> <span class="string">&#125;&#125;</span></span><br></pre></td></tr></table></figure></div>
+
+<h3 id="7-4-定时健康检查"><a href="#7-4-定时健康检查" class="headerlink" title="7.4 定时健康检查"></a>7.4 定时健康检查</h3><div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">Health</span> <span class="string">Check</span></span><br><span class="line"></span><br><span class="line"><span class="attr">on:</span></span><br><span class="line">  <span class="attr">schedule:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">cron:</span> <span class="string">&#x27;*/15 * * * *&#x27;</span>   <span class="comment"># 每 15 分钟</span></span><br><span class="line"></span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">check:</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-latest</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">检查网站</span></span><br><span class="line">        <span class="attr">run:</span> <span class="string">|</span></span><br><span class="line"><span class="string">          STATUS=$(curl -s -o /dev/null -w &quot;%&#123;http_code&#125;&quot; https://myapp.com/health)</span></span><br><span class="line"><span class="string">          if [ &quot;$STATUS&quot; != &quot;200&quot; ]; then</span></span><br><span class="line"><span class="string">            echo &quot;❌ 健康检查失败: HTTP $STATUS&quot;</span></span><br><span class="line"><span class="string">            curl -X POST $&#123;&#123; secrets.SLACK_WEBHOOK &#125;&#125; \</span></span><br><span class="line"><span class="string">              -H &#x27;Content-Type: application/json&#x27; \</span></span><br><span class="line"><span class="string">              -d &quot;&#123;\&quot;text\&quot;:\&quot;🚨 健康检查失败: HTTP $STATUS\&quot;&#125;&quot;</span></span><br><span class="line"><span class="string">            exit 1</span></span><br><span class="line"><span class="string">          fi</span></span><br><span class="line"><span class="string">          echo &quot;✅ 健康检查通过&quot;</span></span><br></pre></td></tr></table></figure></div>
+
+<h2 id="八、性能优化"><a href="#八、性能优化" class="headerlink" title="八、性能优化"></a>八、性能优化</h2><h3 id="8-1-并行化"><a href="#8-1-并行化" class="headerlink" title="8.1 并行化"></a>8.1 并行化</h3><div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">lint:</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-latest</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/checkout@v4</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">run:</span> <span class="string">npm</span> <span class="string">run</span> <span class="string">lint</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">test:</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-latest</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/checkout@v4</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">run:</span> <span class="string">npm</span> <span class="string">test</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">build:</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-latest</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/checkout@v4</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">run:</span> <span class="string">npm</span> <span class="string">run</span> <span class="string">build</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">deploy:</span></span><br><span class="line">    <span class="attr">needs:</span> [<span class="string">lint</span>, <span class="string">test</span>, <span class="string">build</span>]   <span class="comment"># 等 3 个并行 Job 都完成</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-latest</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">run:</span> <span class="string">deploy.sh</span></span><br></pre></td></tr></table></figure></div>
+
+<h3 id="8-2-Docker-缓存"><a href="#8-2-Docker-缓存" class="headerlink" title="8.2 Docker 缓存"></a>8.2 Docker 缓存</h3><div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">docker/build-push-action@v6</span></span><br><span class="line">  <span class="attr">with:</span></span><br><span class="line">    <span class="attr">cache-from:</span> <span class="string">type=gha</span>        <span class="comment"># GitHub Actions cache</span></span><br><span class="line">    <span class="attr">cache-to:</span> <span class="string">type=gha,mode=max</span></span><br></pre></td></tr></table></figure></div>
+
+<h3 id="8-3-增量测试"><a href="#8-3-增量测试" class="headerlink" title="8.3 增量测试"></a>8.3 增量测试</h3><div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">检测变更范围</span></span><br><span class="line">  <span class="attr">uses:</span> <span class="string">dorny/paths-filter@v3</span></span><br><span class="line">  <span class="attr">id:</span> <span class="string">changes</span></span><br><span class="line">  <span class="attr">with:</span></span><br><span class="line">    <span class="attr">filters:</span> <span class="string">|</span></span><br><span class="line"><span class="string">      frontend:</span></span><br><span class="line"><span class="string">        - &#x27;frontend/**&#x27;</span></span><br><span class="line"><span class="string">      backend:</span></span><br><span class="line"><span class="string">        - &#x27;backend/**&#x27;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">前端测试</span></span><br><span class="line">  <span class="attr">if:</span> <span class="string">steps.changes.outputs.frontend</span> <span class="string">==</span> <span class="string">&#x27;true&#x27;</span></span><br><span class="line">  <span class="attr">run:</span> <span class="string">cd</span> <span class="string">frontend</span> <span class="string">&amp;&amp;</span> <span class="string">npm</span> <span class="string">test</span></span><br><span class="line"></span><br><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">后端测试</span></span><br><span class="line">  <span class="attr">if:</span> <span class="string">steps.changes.outputs.backend</span> <span class="string">==</span> <span class="string">&#x27;true&#x27;</span></span><br><span class="line">  <span class="attr">run:</span> <span class="string">cd</span> <span class="string">backend</span> <span class="string">&amp;&amp;</span> <span class="string">npm</span> <span class="string">test</span></span><br></pre></td></tr></table></figure></div>
+
+<h2 id="九、调试技巧"><a href="#九、调试技巧" class="headerlink" title="九、调试技巧"></a>九、调试技巧</h2><h3 id="8-1-开启-Step-Debug-Log"><a href="#8-1-开启-Step-Debug-Log" class="headerlink" title="8.1 开启 Step Debug Log"></a>8.1 开启 Step Debug Log</h3><p>在仓库 Settings → Secrets 添加：</p>
+<ul>
+<li><code>ACTIONS_STEP_DEBUG</code> &#x3D; <code>true</code></li>
+</ul>
+<p>或临时在 URL 加参数：<code>?logLevel=debug</code></p>
+<h3 id="8-2-SSH-进-Runner-调试"><a href="#8-2-SSH-进-Runner-调试" class="headerlink" title="8.2 SSH 进 Runner 调试"></a>8.2 SSH 进 Runner 调试</h3><div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Setup</span> <span class="string">tmate</span> <span class="string">session</span></span><br><span class="line">  <span class="attr">uses:</span> <span class="string">mxschmitt/action-tmate@v3</span></span><br><span class="line">  <span class="attr">timeout-minutes:</span> <span class="number">30</span></span><br></pre></td></tr></table></figure></div>
+
+<p>运行时会打印 SSH 连接信息，可远程连入 runner 实时调试。</p>
+<h3 id="8-3-常见错误排查"><a href="#8-3-常见错误排查" class="headerlink" title="8.3 常见错误排查"></a>8.3 常见错误排查</h3><table>
+<thead>
+<tr>
+<th>问题</th>
+<th>原因</th>
+<th>解决</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Permission denied</code></td>
+<td>GITHUB_TOKEN 权限不足</td>
+<td>加 <code>permissions:</code> 块</td>
+</tr>
+<tr>
+<td><code>Resource not accessible</code></td>
+<td>同上</td>
+<td>检查 <code>contents: write</code> 等</td>
+</tr>
+<tr>
+<td>Artifact 上传失败</td>
+<td>名称冲突</td>
+<td>v4 不允许跨 Job 同名</td>
+</tr>
+<tr>
+<td>缓存 miss</td>
+<td>key 变化</td>
+<td>检查 hashFiles 参数</td>
+</tr>
+<tr>
+<td>推送 tag 不触发</td>
+<td>tags 规则未匹配</td>
+<td>检查 <code>on.push.tags</code></td>
+</tr>
+</tbody></table>
+<h2 id="十、总结速查"><a href="#十、总结速查" class="headerlink" title="十、总结速查"></a>十、总结速查</h2><table>
+<thead>
+<tr>
+<th>需求</th>
+<th>方案</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>跑测试</td>
+<td><code>actions/checkout</code> + <code>setup-node/python</code> + <code>run: test</code></td>
+</tr>
+<tr>
+<td>多版本测试</td>
+<td><code>strategy.matrix</code></td>
+</tr>
+<tr>
+<td>缓存依赖</td>
+<td><code>actions/cache@v4</code> 或 <code>setup-node: cache: npm</code></td>
+</tr>
+<tr>
+<td>部署到云</td>
+<td>OIDC + 云厂商 Action</td>
+</tr>
+<tr>
+<td>跨仓库复用</td>
+<td>Reusable Workflows</td>
+</tr>
+<tr>
+<td>封装多步操作</td>
+<td>Composite Actions</td>
+</tr>
+<tr>
+<td>密钥管理</td>
+<td>GitHub Secrets + Environment</td>
+</tr>
+<tr>
+<td>安全加固</td>
+<td>依赖锁定 + 出站防火墙 + Scoped Secrets</td>
+</tr>
+<tr>
+<td>定时任务</td>
+<td><code>on.schedule: cron</code></td>
+</tr>
+<tr>
+<td>PR 预览部署</td>
+<td><code>on: pull_request</code> + Netlify&#x2F;Vercel CLI</td>
+</tr>
+</tbody></table>
+<hr>
+<p><strong>相关链接：</strong></p>
+<ul>
+<li>GitHub Actions 官方文档：<a class="link"   target="_blank" rel="noopener" href="https://docs.github.com/actions" >https://docs.github.com/actions<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>Workflow 语法参考：<a class="link"   target="_blank" rel="noopener" href="https://docs.github.com/actions/using-workflows/workflow-syntax-for-github-actions" >https://docs.github.com/actions/using-workflows/workflow-syntax-for-github-actions<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>Actions Marketplace：<a class="link"   target="_blank" rel="noopener" href="https://github.com/marketplace?type=actions" >https://github.com/marketplace?type=actions<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>2026 安全路线图：<a class="link"   target="_blank" rel="noopener" href="https://github.blog/news-insights/product-news/whats-coming-to-our-github-actions-2026-security-roadmap" >https://github.blog/news-insights/product-news/whats-coming-to-our-github-actions-2026-security-roadmap<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>GitHub-hosted Runner 规格：<a class="link"   target="_blank" rel="noopener" href="https://docs.github.com/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners" >https://docs.github.com/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>Starter Workflows：<a class="link"   target="_blank" rel="noopener" href="https://github.com/actions/starter-workflows" >https://github.com/actions/starter-workflows<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+</ul>
+
+		</div>
+
+		
+		<div class="post-copyright-info w-full my-8 px-2 sm:px-6 md:px-8">
+			<div class="article-copyright-info-container">
+    <ul>
+        <li><strong>Titre:</strong> GitHub Actions 实战指南：从第一条流水线到 2026 安全前沿</li>
+        <li><strong>Auteur:</strong> Chyyl</li>
+        <li><strong>Créé à
+                :</strong> 2026-07-11 00:00:00</li>
+        
+            <li>
+                <strong>Mis à jour à
+                    :</strong> 2026-07-13 11:23:21
+            </li>
+        
+        <li>
+            <strong>Lien:</strong> https://chyyl.netlify.app/2026/07/11/github-actions-complete-guide-2026/
+        </li>
+        <li>
+            <strong>
+                Licence:
+            </strong>
+            
+
+            
+                Cette œuvre est sous licence <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY-NC-SA 4.0</a>.
+            
+        </li>
+    </ul>
+</div>
+
+		</div>
+		
+
+		
+		<ul class="post-tags-box text-lg mt-1.5 flex-wrap justify-center flex md:hidden">
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/%E6%95%99%E7%A8%8B/">#教程</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/GitHub-Actions/">#GitHub Actions</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/CI-CD/">#CI/CD</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/%E8%87%AA%E5%8A%A8%E5%8C%96/">#自动化</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/DevOps/">#DevOps</a>&nbsp;
+			</li>
+			
+		</ul>
+		
+
+		
+
+		
+		<div class="article-nav my-8 flex justify-between items-center px-2 sm:px-6 md:px-8">
+			
+			<div class="article-prev border-border-color shadow-redefine-flat shadow-shadow-color-2 rounded-medium px-4 py-2 hover:shadow-redefine-flat-hover hover:shadow-shadow-color-2">
+				<a class="prev" rel="prev" href="/2026/07/11/git-complete-guide-2026/">
+					<span class="left arrow-icon flex justify-center items-center">
+						<i class="fa-solid fa-chevron-left"></i>
+					</span>
+					<span class="title flex justify-center items-center">
+						<span class="post-nav-title-item truncate max-w-48">Git 从零到精通：2026 年最完整的版本控制指南</span>
+						<span class="post-nav-item">Articles précédents</span>
+					</span>
+				</a>
+			</div>
+			
+			
+			<div class="article-next border-border-color shadow-redefine-flat shadow-shadow-color-2 rounded-medium px-4 py-2 hover:shadow-redefine-flat-hover hover:shadow-shadow-color-2">
+				<a class="next" rel="next" href="/2026/07/11/netlify-complete-guide-2026/">
+					<span class="title flex justify-center items-center">
+						<span class="post-nav-title-item truncate max-w-48">Netlify 部署指南：从拖拽上线到边缘函数，2026 年最全教程</span>
+						<span class="post-nav-item">Articles suivants</span>
+					</span>
+					<span class="right arrow-icon flex justify-center items-center">
+						<i class="fa-solid fa-chevron-right"></i>
+					</span>
+				</a>
+			</div>
+			
+		</div>
+		
+
+
+		
+		<div class="comment-container px-2 sm:px-6 md:px-8 pb-8">
+			<div class="comments-container mt-10 w-full ">
+    <div id="comment-anchor" class="w-full h-2.5"></div>
+    <div class="comment-area-title w-full my-1.5 md:my-2.5 text-xl md:text-3xl font-bold">
+        Commentaires
+    </div>
+    
+
+        
+            
+    <div id="waline"></div>
+    <script type="module" data-swup-reload-script>
+      import { init } from '/js/libs/waline.js';
+
+      (function() {
+        const startPath = location.pathname;
+        const startTime = Date.now();
+        const retryDelay = 200;
+        const retryLimit = 5000;
+
+        const runWaline = () => {
+          if (location.pathname !== startPath) {
+            return;
+          }
+
+          const container = document.getElementById('waline');
+          if (!container) {
+            if (Date.now() - startTime < retryLimit) {
+              setTimeout(runWaline, retryDelay);
+            }
+            return;
+          }
+
+          if (window.redefineWalineInstance?.destroy) {
+            window.redefineWalineInstance.destroy();
+          }
+
+          container.innerHTML = '';
+          window.redefineWalineInstance = init({
+            el: '#waline',
+            serverURL: 'https://example.example.com',
+            path: location.pathname,
+            dark: 'body[class~="dark-mode"]',
+            reaction: false,
+            requiredMeta: ['nick', 'mail'],
+            emoji: [],
+                      lang: 'zh-CN',
+          });
+        };
+
+        runWaline();
+      })();
+    </script>
+
+
+
+        
+    
+</div>
+
+		</div>
+		
+	</div>
+
+	
+	<div class="toc-content-container">
+		<div class="post-toc-wrap">
+	<div class="post-toc">
+		<div class="toc-title">Sur cette page</div>
+		<div class="page-title">GitHub Actions 实战指南：从第一条流水线到 2026 安全前沿</div>
+		<ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E3%80%81GitHub-Actions-%E6%98%AF%E4%BB%80%E4%B9%88"><span class="nav-text">一、GitHub Actions 是什么</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2026-%E5%B9%B4%E5%AE%9A%E4%BB%B7%E5%8F%98%E5%8C%96"><span class="nav-text">2026 年定价变化</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5"><span class="nav-text">二、核心概念</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-%E5%9B%9B%E4%B8%AA%E5%9F%BA%E6%9C%AC%E5%85%83%E7%B4%A0"><span class="nav-text">2.1 四个基本元素</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-%E6%96%87%E4%BB%B6%E4%BD%8D%E7%BD%AE"><span class="nav-text">2.2 文件位置</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E5%85%A5%E9%97%A8%EF%BC%9A%E7%AC%AC%E4%B8%80%E6%9D%A1%E6%B5%81%E6%B0%B4%E7%BA%BF"><span class="nav-text">三、入门：第一条流水线</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-Hello-World"><span class="nav-text">3.1 Hello World</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-%E8%A7%A6%E5%8F%91%E6%9D%A1%E4%BB%B6%EF%BC%88on%EF%BC%89"><span class="nav-text">3.2 触发条件（on）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-Runner-%E9%80%89%E6%8B%A9"><span class="nav-text">3.3 Runner 选择</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B%E3%80%81%E8%BF%9B%E9%98%B6%EF%BC%9A%E7%9C%9F%E5%AE%9E%E9%A1%B9%E7%9B%AE%E7%9A%84-CI"><span class="nav-text">四、进阶：真实项目的 CI</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-Node-js-%E9%A1%B9%E7%9B%AE%E5%AE%8C%E6%95%B4-CI"><span class="nav-text">4.1 Node.js 项目完整 CI</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-Python-%E9%A1%B9%E7%9B%AE"><span class="nav-text">4.2 Python 项目</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-3-%E7%9F%A9%E9%98%B5%E6%9E%84%E5%BB%BA%EF%BC%88matrix%EF%BC%89"><span class="nav-text">4.3 矩阵构建（matrix）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-4-%E7%BC%93%E5%AD%98%E4%B8%8E%E5%88%B6%E5%93%81"><span class="nav-text">4.4 缓存与制品</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-5-%E6%9D%A1%E4%BB%B6%E6%89%A7%E8%A1%8C"><span class="nav-text">4.5 条件执行</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94%E3%80%81%E9%AB%98%E7%BA%A7%EF%BC%9ASecrets%E3%80%81%E7%8E%AF%E5%A2%83%E4%B8%8E%E9%83%A8%E7%BD%B2"><span class="nav-text">五、高级：Secrets、环境与部署</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-Secrets-%E7%AE%A1%E7%90%86"><span class="nav-text">5.1 Secrets 管理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-OIDC-%E4%BA%91%E7%AB%AF%E5%85%8D%E5%AF%86%E9%83%A8%E7%BD%B2%EF%BC%882026-%E6%8E%A8%E8%8D%90%EF%BC%89"><span class="nav-text">5.2 OIDC 云端免密部署（2026 推荐）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-3-%E5%8F%AF%E5%A4%8D%E7%94%A8%E5%B7%A5%E4%BD%9C%E6%B5%81%EF%BC%88Reusable-Workflows%EF%BC%89"><span class="nav-text">5.3 可复用工作流（Reusable Workflows）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-4-Composite-Actions"><span class="nav-text">5.4 Composite Actions</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AD%E3%80%812026-%E5%AE%89%E5%85%A8%E8%B7%AF%E7%BA%BF%E5%9B%BE%E6%96%B0%E7%89%B9%E6%80%A7"><span class="nav-text">六、2026 安全路线图新特性</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-1-%E4%BE%9D%E8%B5%96%E9%94%81%E5%AE%9A%EF%BC%88Dependency-Locking%EF%BC%89"><span class="nav-text">6.1 依赖锁定（Dependency Locking）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-2-%E5%8E%9F%E7%94%9F%E5%87%BA%E7%AB%99%E9%98%B2%E7%81%AB%E5%A2%99%EF%BC%88Native-Egress-Firewall%EF%BC%89"><span class="nav-text">6.2 原生出站防火墙（Native Egress Firewall）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-3-Scoped-Secrets"><span class="nav-text">6.3 Scoped Secrets</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-4-%E7%A1%AE%E5%AE%9A%E6%80%A7%E6%89%A7%E8%A1%8C%EF%BC%88Deterministic-Runs%EF%BC%89"><span class="nav-text">6.4 确定性执行（Deterministic Runs）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%83%E3%80%81%E5%AE%9E%E6%88%98%E5%9C%BA%E6%99%AF"><span class="nav-text">七、实战场景</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#7-1-%E8%87%AA%E5%8A%A8%E5%8F%91%E5%B8%83%E5%88%B0-npm"><span class="nav-text">7.1 自动发布到 npm</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-2-Docker-%E9%95%9C%E5%83%8F%E6%9E%84%E5%BB%BA-%E6%8E%A8%E9%80%81"><span class="nav-text">7.2 Docker 镜像构建 + 推送</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-3-%E9%83%A8%E7%BD%B2%E5%88%B0-Vercel-Netlify"><span class="nav-text">7.3 部署到 Vercel&#x2F;Netlify</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-4-%E5%AE%9A%E6%97%B6%E5%81%A5%E5%BA%B7%E6%A3%80%E6%9F%A5"><span class="nav-text">7.4 定时健康检查</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AB%E3%80%81%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96"><span class="nav-text">八、性能优化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#8-1-%E5%B9%B6%E8%A1%8C%E5%8C%96"><span class="nav-text">8.1 并行化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-2-Docker-%E7%BC%93%E5%AD%98"><span class="nav-text">8.2 Docker 缓存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-3-%E5%A2%9E%E9%87%8F%E6%B5%8B%E8%AF%95"><span class="nav-text">8.3 增量测试</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B9%9D%E3%80%81%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7"><span class="nav-text">九、调试技巧</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#8-1-%E5%BC%80%E5%90%AF-Step-Debug-Log"><span class="nav-text">8.1 开启 Step Debug Log</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-2-SSH-%E8%BF%9B-Runner-%E8%B0%83%E8%AF%95"><span class="nav-text">8.2 SSH 进 Runner 调试</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-3-%E5%B8%B8%E8%A7%81%E9%94%99%E8%AF%AF%E6%8E%92%E6%9F%A5"><span class="nav-text">8.3 常见错误排查</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%81%E3%80%81%E6%80%BB%E7%BB%93%E9%80%9F%E6%9F%A5"><span class="nav-text">十、总结速查</span></a></li></ol>
+
+	</div>
+</div>
+	</div>
+	
+</div>
+
+			</div>
+
+			
+		</div>
+
+		<div class="main-content-footer">
+			<footer class="footer mt-5 py-5 h-auto text-base text-third-text-color relative border-t-2 border-t-border-color">
+    <div class="info-container py-3 text-center">
+        
+        <div class="text-center">
+            &copy;
+            
+              <span>2024</span>
+              -
+            
+            2026&nbsp;&nbsp;<i class="fa-solid fa-heart fa-beat" style="--fa-animation-duration: 0.5s; color: #f54545"></i>&nbsp;&nbsp;<a href="/">Chyyl</a>
+            
+                
+                <p class="post-count space-x-0.5">
+                    <span>
+                        15  posts au total
+                    </span>
+                    
+                </p>
+            
+        </div>
+        
+            <script data-swup-reload-script src="https://cn.vercount.one/js"></script>
+            <div class="relative text-center lg:absolute lg:right-[20px] lg:top-1/2 lg:-translate-y-1/2 lg:text-right">
+                
+                    <span id="busuanzi_container_site_uv" class="lg:!block">
+                        <span class="text-sm">VISITEURS</span>
+                        <span id="busuanzi_value_site_uv"></span>
+                    </span>
+                
+                
+                    <span id="busuanzi_container_site_pv" class="lg:!block">
+                        <span class="text-sm">NOMBRE TOTAL DE PAGES VUES</span>
+                        <span id="busuanzi_value_site_pv"></span>
+                    </span>
+                
+            </div>
+        
+        <div class="relative text-center lg:absolute lg:left-[20px] lg:top-1/2 lg:-translate-y-1/2 lg:text-left">
+            <span class="lg:block text-sm">POWERED BY <?xml version="1.0" encoding="utf-8"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg class="relative top-[2px] inline-block align-baseline" version="1.1" id="圖層_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="1rem" height="1rem" viewBox="0 0 512 512" enable-background="new 0 0 512 512" xml:space="preserve"><path fill="#0E83CD" d="M256.4,25.8l-200,115.5L56,371.5l199.6,114.7l200-115.5l0.4-230.2L256.4,25.8z M349,354.6l-18.4,10.7l-18.6-11V275H200v79.6l-18.4,10.7l-18.6-11v-197l18.5-10.6l18.5,10.8V237h112v-79.6l18.5-10.6l18.5,10.8V354.6z"/></svg><a target="_blank" class="text-base" href="https://hexo.io">Hexo</a></span>
+            <span class="text-sm lg:block">THEME&nbsp;<a class="text-base" target="_blank" href="https://github.com/EvanNotFound/hexo-theme-redefine">Redefine v2.9.0</a></span>
+        </div>
+        
+        
+            <div>
+                Blog en ligne depuis <span class="odometer" id="runtime_days" ></span> Jours <span class="odometer" id="runtime_hours"></span> Hrs <span class="odometer" id="runtime_minutes"></span> Min <span class="odometer" id="runtime_seconds"></span> Sec
+            </div>
+        
+        
+            <script data-swup-reload-script>
+                try {
+                    function odometer_init() {
+                    const elements = document.querySelectorAll('.odometer');
+                    elements.forEach(el => {
+                        new Odometer({
+                            el,
+                            format: '( ddd).dd',
+                            duration: 200
+                        });
+                    });
+                    }
+                    odometer_init();
+                } catch (error) {}
+            </script>
+        
+        
+        
+    </div>  
+</footer>
+		</div>
+	</div>
+
+	
+	<div class="post-tools">
+		<div class="post-tools-container">
+	<ul class="article-tools-list">
+		<!-- TOC aside toggle -->
+		
+		<li class="right-bottom-tools page-aside-toggle">
+			<i class="fa-regular fa-outdent"></i>
+		</li>
+		
+
+		<!-- go comment -->
+		
+		<li class="go-comment">
+			<i class="fa-regular fa-comments"></i>
+		</li>
+		
+	</ul>
+</div>
+	</div>
+	
+
+	<div class="right-side-tools-container">
+		<div class="side-tools-container">
+	<ul class="hidden-tools-list">
+		<li class="right-bottom-tools tool-font-adjust-plus flex justify-center items-center">
+			<i class="fa-regular fa-magnifying-glass-plus"></i>
+		</li>
+
+		<li class="right-bottom-tools tool-font-adjust-minus flex justify-center items-center">
+			<i class="fa-regular fa-magnifying-glass-minus"></i>
+		</li>
+
+		<li class="right-bottom-tools tool-dark-light-toggle flex justify-center items-center">
+			<i class="fa-regular fa-moon"></i>
+		</li>
+
+		<!-- rss -->
+		
+		<li class="right-bottom-tools rss flex justify-center items-center">
+			<a class="flex justify-center items-center" href="/atom.xml" target="_blank">
+				<i class="fa-regular fa-rss"></i>
+			</a>
+		</li>
+		
+
+		
+
+		<li class="right-bottom-tools tool-scroll-to-bottom flex justify-center items-center">
+			<i class="fa-regular fa-arrow-down"></i>
+		</li>
+	</ul>
+
+	<ul class="visible-tools-list">
+		<li class="right-bottom-tools toggle-tools-list flex justify-center items-center">
+			<i class="fa-regular fa-cog fa-spin"></i>
+		</li>
+		
+		<li class="right-bottom-tools tool-scroll-to-top flex justify-center items-center">
+			<i class="arrow-up fas fa-arrow-up"></i>
+			<span class="percent"></span>
+		</li>
+		
+		
+	</ul>
+</div>
+	</div>
+
+	<div class="image-viewer-container" role="dialog" aria-modal="true" aria-label="Visionneuse d’images">
+	<button class="image-viewer-close" type="button" aria-label="Fermer">
+		<i class="fa-solid fa-xmark"></i>
+	</button>
+	<button class="image-viewer-prev" type="button" aria-label="Précédent">
+		<i class="fa-solid fa-chevron-left"></i>
+	</button>
+	<div class="image-viewer-frame">
+		<img src="" alt="">
+	</div>
+	<div class="image-viewer-exif-panel hidden absolute left-1/2 bottom-20 -translate-x-1/2 w-[min(92vw,420px)] max-h-[60vh] overflow-hidden rounded-2xl bg-background-color-transparent-80 p-4 text-left shadow-redefine-flat backdrop-blur-md" role="dialog" aria-label="EXIF" aria-hidden="true">
+		<div class="flex items-center justify-between mb-3">
+			<span class="text-sm font-semibold text-first-text-color">EXIF</span>
+			<button class="image-viewer-exif-close flex h-8 w-8 items-center justify-center rounded-full bg-background-color-transparent-80 text-first-text-color transition hover:bg-background-color-transparent-40" type="button" aria-label="Fermer">
+				<i class="fa-solid fa-xmark text-[0.65rem]"></i>
+			</button>
+		</div>
+		<div class="image-viewer-exif-cards grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto pr-1 scrollbar-hide"></div>
+		<template class="image-viewer-exif-card-template">
+			<div class="rounded-lg bg-background-color-transparent-40 px-3 py-2">
+				<div class="image-viewer-exif-card-header flex items-center gap-2 mb-1">
+					<i class="image-viewer-exif-card-icon fa-solid fa-circle-info text-xs text-third-text-color"></i>
+					<div class="image-viewer-exif-card-title text-xs font-semibold text-first-text-color"></div>
+				</div>
+				<div class="image-viewer-exif-card-items flex flex-col gap-1"></div>
+			</div>
+		</template>
+	</div>
+	<button class="image-viewer-exif-toggle flex items-center gap-2 hidden absolute left-1/2 bottom-6 -translate-x-1/2 rounded-full border border-border-color bg-background-color-transparent-80 px-4 py-2 text-first-text-color backdrop-blur-md transition hover:bg-background-color-transparent-40" type="button" aria-label="EXIF" aria-expanded="false">
+		<i class="fa-solid fa-circle-info text-xs"></i>
+		<span class="text-xs font-semibold uppercase tracking-wider">EXIF</span>
+	</button>
+	<button class="image-viewer-next" type="button" aria-label="Suivant">
+		<i class="fa-solid fa-chevron-right"></i>
+	</button>
+</div>
+
+
+	
+	<div class="search-pop-overlay">
+	<div class="popup search-popup">
+		<div class="search-header">
+			<span class="search-input-field-pre">
+				<i class="fa-solid fa-keyboard"></i>
+			</span>
+			<div class="search-input-container">
+				<input autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="recherche..." spellcheck="false" type="search" class="search-input">
+			</div>
+			<span class="popup-btn-close">
+				<i class="fa-solid fa-times"></i>
+			</span>
+		</div>
+		<div id="search-result">
+			<div id="no-result">
+				<i class="fa-solid fa-spinner fa-spin-pulse fa-5x fa-fw"></i>
+			</div>
+		</div>
+	</div>
+</div>
+	
+
+</main>
+
+
+<script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/Swup.min.js" ></script><script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/SwupSlideTheme.min.js" ></script><script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/SwupScriptsPlugin.min.js" ></script><script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/SwupProgressPlugin.min.js" ></script><script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/SwupScrollPlugin.min.js" ></script><script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/SwupPreloadPlugin.min.js" ></script>
+<script>
+    window.swup = new Swup({
+        plugins: [
+            new SwupScriptsPlugin({
+                optin: true,
+            }),
+            new SwupProgressPlugin(),
+            new SwupScrollPlugin({
+                offset: 80,
+            }),
+            new SwupSlideTheme({
+                mainElement: ".main-content-body",
+            }),
+            new SwupPreloadPlugin(),
+        ],
+        containers: ["#swup"],
+    });
+
+    window.dispatchEvent(
+        new CustomEvent("redefine:swup:ready", {
+            detail: {
+                swup: window.swup,
+            },
+        }),
+    );
+</script>
+
+
+
+
+	<script type="module" src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/main.js" ></script>
+
+
+    <script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/odometer.min.js" ></script>
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/assets/odometer-theme-minimal.css">
+
+
+
+
+
+
+  <script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/Typed.min.js" ></script>
+
+
+
+    
+        <script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/mermaid.min.js" ></script>
+    
+
+
+
+
+
+
+<script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/moment-with-locales.min.js" data-swup-reload-script></script>
+
+
+	
+</body>
+
+</html>

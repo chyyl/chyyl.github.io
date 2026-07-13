@@ -1,0 +1,1734 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="keywords" content="Hexo Theme Redefine">
+    
+    
+    <meta name="author" content="Chyyl">
+    
+    <!-- Completely eliminate flash of wrong theme -->
+    <script>
+        (function() {
+            const THEME_KEY = "REDEFINE-THEME-STATUS";
+            const DARK = "dark", LIGHT = "light";
+            
+            // Get preferred theme
+            function getTheme() {
+                try {
+                    const saved = localStorage.getItem(THEME_KEY);
+                    if (saved) {
+                        const { isDark } = JSON.parse(saved);
+                        return isDark ? DARK : LIGHT;
+                    }
+                } catch (e) {}
+                
+                return matchMedia("(prefers-color-scheme: dark)").matches ? DARK : LIGHT;
+            }
+            
+            // Apply theme to document
+            function applyTheme(theme) {
+                const isDark = theme === DARK;
+                const root = document.documentElement;
+                
+                // Set classes for compatibility
+                root.classList.add(theme);
+                root.classList.remove(isDark ? LIGHT : DARK);
+                root.style.colorScheme = theme;
+            }
+            
+            // Initial application
+            const theme = getTheme();
+            applyTheme(theme);
+            
+            // Listen for system preference changes
+            matchMedia("(prefers-color-scheme: dark)").addEventListener("change", ({ matches }) => {
+                // Only update if using system preference (no localStorage entry)
+                if (!localStorage.getItem(THEME_KEY)) {
+                    applyTheme(matches ? DARK : LIGHT);
+                }
+            });
+            
+            // Set body classes ASAP (before DOMContentLoaded)
+            (function() {
+                const addBodyClass = () => {
+                    const b = document.body;
+                    if (!b) return false;
+                    b.classList.add(theme + "-mode");
+                    return true;
+                };
+
+                // Try immediately
+                if (addBodyClass()) return;
+
+                // Observe until body exists
+                const mo = new MutationObserver(() => {
+                    if (addBodyClass()) mo.disconnect();
+                });
+                mo.observe(document.documentElement, { childList: true, subtree: true });
+            })();
+        })();
+    </script>
+    
+    <!-- preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    
+        
+        
+        
+            <link rel="preconnect" href="https://registry.npmmirror.com" crossorigin>
+        
+    
+    <!--- Seo Part-->
+    
+    <link rel="canonical" href="https://chyyl.netlify.app/2026/07/13/search-engine-beginner-guide/"/>
+    <meta name="robots" content="index,follow">
+    <meta name="googlebot" content="index,follow">
+    <meta name="revisit-after" content="1 days">
+    
+    
+        
+        <meta name="description" content="Hexo Theme Redefine, Redefine Your Hexo Journey.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="搜索引擎新手探究：从原理到数据再到实战使用">
+<meta property="og:url" content="https://chyyl.netlify.app/2026/07/13/search-engine-beginner-guide/index.html">
+<meta property="og:site_name" content="Chyyl&#39;s Blog">
+<meta property="og:description" content="Hexo Theme Redefine, Redefine Your Hexo Journey.">
+<meta property="og:locale">
+<meta property="og:image" content="https://chyyl.netlify.app/images/redefine-og.webp">
+<meta property="article:published_time" content="2026-07-12T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-07-13T03:23:26.421Z">
+<meta property="article:author" content="Chyyl">
+<meta property="article:tag" content="BM25">
+<meta property="article:tag" content="PageRank">
+<meta property="article:tag" content="倒排索引">
+<meta property="article:tag" content="向量检索">
+<meta property="article:tag" content="搜索引擎">
+<meta property="article:tag" content="教程">
+<meta property="article:tag" content="爬虫">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://chyyl.netlify.app/images/redefine-og.webp">
+    
+    
+    <!--- Icon Part-->
+    <link rel="icon" type="image/png" href="https://avatars.githubusercontent.com/u/115130037?v=4" sizes="192x192">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://avatars.githubusercontent.com/u/115130037?v=4">
+    <meta name="theme-color" content="#A31F34">
+    <link rel="shortcut icon" href="https://avatars.githubusercontent.com/u/115130037?v=4">
+    <!--- Page Info-->
+    
+    <title>
+        
+            搜索引擎新手探究：从原理到数据再到实战使用 | ChyyL&#39;s Blog
+        
+    </title>
+
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fonts/Chillax/chillax.css">
+
+    <!--- Inject Part-->
+    
+
+    
+<link rel="stylesheet" href="/css/style.css">
+
+
+    
+        <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/css/build/tailwind.css">
+    
+
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fonts/GeistMono/geist-mono.css">
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fonts/Geist/geist.css">
+    <!--- Font Part-->
+    
+    
+    
+        <link href="" rel="stylesheet">
+    
+    
+        <link href="" rel="stylesheet">
+    
+    
+        <link href="" rel="stylesheet">
+    
+    
+        <script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/anime.min.js" ></script>
+    
+
+    <script id="hexo-configurations">
+    window.config = {"hostname":"chyyl.netlify.app","root":"/","language":"zh-Hans"};
+    window.theme = {"articles":{"style":{"font_size":"16px","line_height":1.5,"image_border_radius":"14px","image_alignment":"center","image_caption":false,"link_icon":true,"delete_mask":false,"title_alignment":"left","headings_top_spacing":{"h1":"3.2rem","h2":"2.4rem","h3":"1.9rem","h4":"1.6rem","h5":"1.4rem","h6":"1.3rem"}},"word_count":{"enable":true,"count":true,"min2read":true},"author_label":{"enable":true,"auto":false,"list":[]},"code_block":{"copy":true,"style":"mac","highlight_theme":{"light":"github","dark":"vs2015"},"font":{"enable":false,"family":null,"url":null}},"toc":{"enable":true,"max_depth":3,"number":false,"expand":true,"init_open":true},"copyright":{"enable":true,"default":"cc_by_nc_sa"},"lazyload":true,"pangu_js":false,"recommendation":{"enable":false,"title":"推荐阅读","limit":3,"mobile_limit":2,"placeholder":"/images/wallhaven-wqery6-light.webp","skip_dirs":[]}},"colors":{"primary":"#A31F34","secondary":null,"default_mode":"light"},"global":{"fonts":{"chinese":{"enable":true,"family":null,"url":null},"english":{"enable":true,"family":null,"url":null},"title":{"enable":true,"family":null,"url":null}},"content_max_width":"1000px","sidebar_width":"210px","hover":{"shadow":true,"scale":false},"scroll_progress":{"bar":true,"percentage":true},"website_counter":{"url":"https://cn.vercount.one/js","enable":true,"site_pv":true,"site_uv":true,"post_pv":true},"single_page":true,"preloader":{"enable":true,"custom_message":null},"side_tools":{"gear_rotation":true,"auto_expand":false},"open_graph":{"enable":true,"image":"/images/redefine-og.webp","description":"Hexo Theme Redefine, Redefine Your Hexo Journey."},"google_analytics":{"enable":false,"id":null}},"home_banner":{"enable":true,"style":"fixed","image":{"light":"/images/wallhaven-wqery6-light.webp","dark":"/images/wallhaven-wqery6-dark.webp"},"title":"Learn, Share, and Grow","subtitle":{"text":[],"hitokoto":{"enable":true,"show_author":true,"api":"https://v1.hitokoto.cn"},"typing_speed":100,"backing_speed":80,"starting_delay":500,"backing_delay":1500,"loop":true,"smart_backspace":true},"text_color":{"light":"#fff","dark":"#d1d1b6"},"text_style":{"title_size":"2.8rem","subtitle_size":"1.5rem","line_height":1.2},"custom_font":{"enable":false,"family":null,"url":null},"social_links":{"enable":false,"style":"default","links":[{"icon":"fa-brands fa-github","url":null},{"icon":"fa-brands fa-twitter","url":null},{"icon":"fa-solid fa-at","url":"you@example.com"},{"icon":"fa-brands fa-telegram","url":null},{"icon":"/images/custom-icon.svg","url":null}],"qrs":[{"icon":"fa-brands fa-weixin","qr":null},{"icon":"/images/custom-icon.svg","qr":null}]}},"plugins":{"feed":{"enable":true},"aplayer":{"enable":false,"type":"fixed","audios":[{"name":null,"artist":null,"url":null,"cover":null,"lrc":null}]},"mermaid":{"enable":true,"version":"11.4.1","theme":{"light":"default","dark":"dark"}}},"version":"2.9.0","navbar":{"auto_hide":false,"color":{"left":"#f78736","right":"#367df7","transparency":35},"width":{"home":"1200px","pages":"1000px"},"links":{"Home":{"path":"/","icon":"fa-regular fa-house"},"Archives":{"path":"/archives","icon":"fa-regular fa-archive"}},"search":{"enable":true,"preload":true}},"page_templates":{"friends_column":2,"tags_style":"blur","masonry":{"batch_size":12,"initial_batch_size":24}},"home":{"sidebar":{"enable":true,"position":"left","first_item":"menu","announcement":null,"show_on_mobile":true,"links":{"Archives":{"path":"/archives","icon":"fa-regular fa-archive"},"Tags":{"path":"/tags","icon":"fa-regular fa-tags"},"Categories":{"path":"/categories","icon":"fa-regular fa-folder"}}},"article_date_format":"auto","excerpt_length":200,"categories":{"enable":true,"limit":3},"tags":{"enable":true,"limit":3}},"footer":{"runtime":true,"icon":"<i class=\"fa-solid fa-heart fa-beat\" style=\"--fa-animation-duration: 0.5s; color: #f54545\"></i>","start":"2024/06/01 00:00:00","statistics":true,"customize":null,"icp":{"enable":false,"number":null,"url":null}},"footerStart":"2024/06/01 00:00:00","mermaid":{"style":{"light":"default","dark":"dark"}}};
+    window.lang_ago = {"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days ago","week":"%s weeks ago","month":"%s months ago","year":"%s years ago"};
+    window.i18n = {"search":"Search...","toc":"On this page","prev":"Prev","next":"Next","prev_posts":"Prev posts","next_posts":"Next posts","page":"Page %d","recent_posts":"Recent Posts","share":"Share","powered_by":"POWERED BY %s","theme":"THEME","rss_feed":"RSS Feed","category":"Category","categories":"Categories","tag":"Tag","tags":"Tags","post":"Post","posts":"Posts","tagcloud":"Tag Cloud","comment":"Comment","comments":"Comments","home":"Home","archive":"Archive","archives":"Archives","top":"TOP","sticky":"Sticky","go-back-home":"Go Back Home","masonry_loading":"Loading photos...","image_viewer":"Image viewer","close":"Close","exif":{"title":"EXIF","cards":{"camera":"Camera","lens":"Lens","exposure":"Exposure","other":"Other"},"fields":{"make":"Brand","model":"Model","date_taken":"Date taken","lens_model":"Lens","focal_length":"Focal length","focus_mode":"Focus mode","shutter":"Shutter","aperture":"Aperture","iso":"ISO","exposure_program":"Exposure program","exposure_compensation":"Exposure compensation","metering_mode":"Metering mode","flash":"Flash","white_balance":"White balance","latitude":"Latitude","longitude":"Longitude","altitude":"Altitude"},"status":{"loading":"Loading...","no_exif":"No EXIF available","library_missing":"EXIF library not loaded","image_source_missing":"Image source unavailable","unavailable":"EXIF unavailable (blocked by CORS or missing metadata)","flag_unavailable":"EXIF unavailable"}},"about":"About","changelog":"Changelog","links":"Links","link":"Link","friends":"Friends","friend":"Friend","timeline":"Timeline","shuoshuo":"Shuoshuo","bookmarks":"Bookmarks","site_uv":"VISITOR COUNT","site_pv":"TOTAL PAGE VIEWS","read_more":"Read more","wordcount":"Words","min2read":"Mins","status":"Status","runtime":"Blog up for","days":"days","hours":"hrs","minutes":"Min","seconds":"Sec","optimized_by":"and Optimized by Evan","rights":"All Rights Reserved","site_posts":"%s posts in total","site_wordcount":"%s words in total","copyright":{"author":"Author","title":"Title","link":"Link","create_time":"Created at","update_time":"Updated at","license_title":"License","license_content":"This work is licensed under %s.","all_rights_reserved":"All Rights Reserved &#169; %s","public_domain":"This work is in the public domain."},"ago":{"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days ago","week":"%s weeks ago","month":"%s months ago","year":"%s years ago"},"create_time":"Created","update_time":"Updated","expired":"This post is written %s days ago, and the content may not be up to date."};
+    window.data = {"masonry":false};
+  </script>
+    
+    <!--- Fontawesome Part-->
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fontawesome/fontawesome.min.css">
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fontawesome/brands.min.css">
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fontawesome/solid.min.css">
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fontawesome/regular.min.css">
+    
+    
+    
+    
+<meta name="generator" content="Hexo 8.1.2"><link rel="alternate" href="/atom.xml" title="Chyyl's Blog" type="application/atom+xml">
+</head>
+
+
+<body>
+	<div class="progress-bar-container">
+	
+	<span class="scroll-progress-bar"></span>
+	
+
+	
+	<span class="pjax-progress-bar"></span>
+	<!--        <span class="swup-progress-icon">-->
+	<!--            <i class="fa-solid fa-circle-notch fa-spin"></i>-->
+	<!--        </span>-->
+	
+</div>
+
+<style>
+    :root {
+        --preloader-background-color: #fff;
+        --preloader-text-color: #000;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --preloader-background-color: #202124;
+            --preloader-text-color: #fff;
+        }
+    }
+
+    @media (prefers-color-scheme: light) {
+        :root {
+            --preloader-background-color: #fff;
+            --preloader-text-color: #000;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .ml13 {
+            font-size: 2.6rem !important; /* Adjust this value as needed */
+        }
+    }
+
+    .preloader {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem; /* Tailwind 'gap-4' is 1rem */
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        padding: 12px;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh; /* 'h-screen' is 100% of the viewport height */
+        background-color: var(--preloader-background-color);
+        z-index: 1100; /* 'z-[1100]' sets the z-index */
+        transition: opacity 0.2s ease-in-out;
+    }
+
+    .ml13 {
+        font-size: 3.2rem;
+        /* text-transform: uppercase; */
+        color: var(--preloader-text-color);
+        letter-spacing: -1px;
+        font-weight: 500;
+        font-family: 'Chillax-Variable', sans-serif;
+        text-align: center;
+    }
+
+    .ml13 .word {
+        display: inline-flex;
+        flex-wrap: wrap;
+        white-space: nowrap;
+    }
+
+    .ml13 .letter {
+        display: inline-block;
+        line-height: 1em;
+    }
+</style>
+
+<div class="preloader">
+    <h2 class="ml13">
+        ChyyL&#39;s Blog
+    </h2>
+    <script>
+        var textWrapper = document.querySelector('.ml13');
+        // Split text into words
+        var words = textWrapper.textContent.trim().split(' ');
+
+        // Clear the existing content
+        textWrapper.innerHTML = '';
+
+        // Wrap each word and its letters in spans
+        words.forEach(function(word) {
+            var wordSpan = document.createElement('span');
+            wordSpan.classList.add('word');
+            wordSpan.innerHTML = word.replace(/\S/g, "<span class='letter'>$&</span>");
+            textWrapper.appendChild(wordSpan);
+            textWrapper.appendChild(document.createTextNode(' ')); // Add space between words
+        });
+
+        var animation = anime.timeline({ loop: true })
+            .add({
+                targets: '.ml13 .letter',
+                translateY: [20, 0],
+                translateZ: 0,
+                opacity: [0, 1],
+                filter: ['blur(5px)', 'blur(0px)'],
+                easing: "easeOutExpo",
+                duration: 1200,
+                delay: (el, i) => 300 + 20 * i,
+            })
+            .add({
+                targets: '.ml13 .letter',
+                translateY: [0, -20],
+                opacity: [1, 0],
+                filter: ['blur(0px)', 'blur(5px)'],
+                easing: "easeInExpo",
+                duration: 1000,
+                delay: (el, i) => 15 * i,
+                complete: function() {
+                    hidePreloader();
+                }
+            }, '-=700');
+
+
+        let themeStatus = JSON.parse(localStorage.getItem('REDEFINE-THEME-STATUS'))?.isDark;
+
+        // If the theme status is not found in local storage, check the preferred color scheme
+        if (themeStatus === undefined || themeStatus === null) {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                themeStatus = 'dark';
+            } else {
+                themeStatus = 'light';
+            }
+        }
+
+        // Now you can use the themeStatus variable in your code
+        if (themeStatus) {
+            document.documentElement.style.setProperty('--preloader-background-color', '#202124');
+            document.documentElement.style.setProperty('--preloader-text-color', '#fff');
+        } else {
+            document.documentElement.style.setProperty('--preloader-background-color', '#fff');
+            document.documentElement.style.setProperty('--preloader-text-color', '#000');
+        }
+
+        window.addEventListener('load', function () {
+            setTimeout(hidePreloader, 5000); // Call hidePreloader after 5000 milliseconds if not already called by animation
+        });
+
+        function hidePreloader() {
+            var preloader = document.querySelector('.preloader');
+            preloader.style.opacity = '0';
+            setTimeout(function () {
+                preloader.style.display = 'none';
+            }, 200);
+        }
+    </script>
+</div>
+
+<main class="page-container" id="swup">
+
+	
+
+	<div class="main-content-container flex flex-col justify-between min-h-dvh">
+		<div class="main-content-header">
+			<header class="navbar-container px-6 md:px-12">
+    <div class="navbar-content transition-navbar ">
+        <div class="left">
+            
+                <a class="logo-image h-8 w-8 sm:w-10 sm:h-10 mr-3" href="/">
+                    <img src="https://avatars.githubusercontent.com/u/115130037?v=4" class="w-full h-full rounded-xs">
+                </a>
+            
+            <a class="logo-title" href="/">
+                
+                ChyyL&#39;s Blog
+                
+            </a>
+        </div>
+
+        <div class="right">
+            <!-- PC -->
+            <div class="desktop">
+                <ul class="navbar-list">
+                    
+                        
+                            
+
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class=""
+                                   href="/"
+                                        >
+                                    <i class="fa-regular fa-house fa-fw"></i>
+                                    ACCUEIL
+                                    
+                                </a>
+
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                        
+                            
+
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class=""
+                                   href="/archives"
+                                        >
+                                    <i class="fa-regular fa-archive fa-fw"></i>
+                                    ARCHIVES
+                                    
+                                </a>
+
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                    
+                        <li class="navbar-item search search-popup-trigger">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </li>
+                    
+                </ul>
+            </div>
+            <!-- Mobile -->
+            <div class="mobile">
+                
+                    <div class="icon-item search search-popup-trigger"><i class="fa-solid fa-magnifying-glass"></i>
+                    </div>
+                
+                <div class="icon-item navbar-bar">
+                    <div class="navbar-bar-middle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile sheet -->
+    <div class="navbar-drawer h-dvh w-full absolute top-0 left-0 bg-background-color flex flex-col justify-between">
+        <ul class="drawer-navbar-list flex flex-col px-4 justify-center items-start">
+            
+                
+                    
+
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full "
+                           href="/"
+                        >
+                            <span>
+                                ACCUEIL
+                            </span>
+                            
+                                <i class="fa-regular fa-house fa-sm fa-fw"></i>
+                            
+                        </a>
+                        
+
+                        
+                    </li>
+            
+                
+                    
+
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full "
+                           href="/archives"
+                        >
+                            <span>
+                                ARCHIVES
+                            </span>
+                            
+                                <i class="fa-regular fa-archive fa-sm fa-fw"></i>
+                            
+                        </a>
+                        
+
+                        
+                    </li>
+            
+
+            
+            
+                
+                    
+                    
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active"
+                           href="/tags"
+                        >
+                            <span>Tags</span>
+                            <i class="fa-regular fa-tags fa-sm fa-fw"></i>
+                        </a>
+                    </li>
+                
+                    
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active"
+                           href="/categories"
+                        >
+                            <span>Categories</span>
+                            <i class="fa-regular fa-folder fa-sm fa-fw"></i>
+                        </a>
+                    </li>
+                
+            
+        </ul>
+
+        <div class="statistics flex justify-around my-2.5">
+    <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/tags">
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">57</div>
+        <div class="label text-third-text-color text-sm">Tags</div>
+    </a>
+    <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/categories">
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">3</div>
+        <div class="label text-third-text-color text-sm">Catégories</div>
+    </a>
+    <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/archives">
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">15</div>
+        <div class="label text-third-text-color text-sm">Posts</div>
+    </a>
+</div>
+    </div>
+
+    <div class="window-mask"></div>
+
+</header>
+
+
+		</div>
+
+		<div class="main-content-body transition-fade-up">
+			
+
+			<div class="main-content">
+				<div class="post-page-container flex relative justify-between box-border w-full h-full">
+	<div class="article-content-container">
+
+		<div class="article-title relative w-full">
+			
+			<div class="w-full flex items-center pt-6 justify-start">
+				<h1 class="article-title-regular text-second-text-color tracking-tight text-4xl md:text-6xl font-semibold px-2 sm:px-6 md:px-8 py-3">搜索引擎新手探究：从原理到数据再到实战使用</h1>
+			</div>
+			
+		</div>
+
+		
+		<div class="article-header flex flex-row gap-2 items-center px-2 sm:px-6 md:px-8">
+			<div class="avatar w-[46px] h-[46px] shrink-0 rounded-medium border border-border-color p-px">
+				<img src="https://avatars.githubusercontent.com/u/115130037?v=4">
+			</div>
+			<div class="info flex flex-col justify-between">
+				<div class="author flex items-center">
+					<span class="name text-default-text-color text-lg font-semibold">Chyyl</span>
+					
+					<span class="author-label ml-1.5 text-xs px-2 py-0.5 rounded-small text-third-text-color border border-shadow-color-1">Lv2</span>
+					
+				</div>
+				<div class="meta-info">
+					<div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fa-regular fa-pen-fancy"></i>&nbsp;
+        <span class="desktop">2026-07-13</span>
+        <span class="mobile">2026-07-13</span>
+        <span class="hover-info">Créé</span>
+    </span>
+    
+        <span class="article-date article-meta-item">
+            <i class="fa-regular fa-wrench"></i>&nbsp;
+            <span class="desktop">2026-07-13 11:23:26</span>
+            <span class="mobile">2026-07-13 11:23:26</span>
+            <span class="hover-info">Mis à jour</span>
+        </span>
+    
+
+    
+        <span class="article-categories article-meta-item">
+            <i class="fa-regular fa-folders"></i>&nbsp;
+            <ul>
+                
+                
+                    
+                        
+                        <li>
+                            <a href="/categories/%E6%8A%80%E6%9C%AF%E6%95%99%E7%A8%8B/">技术教程</a>&nbsp;
+                        </li>
+                    
+                    
+                
+            </ul>
+        </span>
+    
+    
+        <span class="article-tags article-meta-item">
+            <i class="fa-regular fa-tags"></i>&nbsp;
+            <ul>
+                
+                    <li>
+                        <a href="/tags/%E6%95%99%E7%A8%8B/">教程</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/%E6%90%9C%E7%B4%A2%E5%BC%95%E6%93%8E/">搜索引擎</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/%E5%80%92%E6%8E%92%E7%B4%A2%E5%BC%95/">倒排索引</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/%E7%88%AC%E8%99%AB/">爬虫</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/PageRank/">PageRank</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/BM25/">BM25</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/%E5%90%91%E9%87%8F%E6%A3%80%E7%B4%A2/">向量检索</a>&nbsp;
+                    </li>
+                
+            </ul>
+        </span>
+    
+
+    
+    
+    
+    
+        <span class="article-pv article-meta-item">
+            <i class="fa-regular fa-eye"></i>&nbsp;<span id="busuanzi_value_page_pv"></span>
+        </span>
+    
+</div>
+
+				</div>
+			</div>
+		</div>
+		
+
+		
+
+
+		<div class="article-content markdown-body px-2 sm:px-6 md:px-8 pb-8">
+			<blockquote>
+<p>你每天用搜索引擎几十次，但有没有想过：输入几个词，为什么 0.3 秒就能从千亿网页中找到答案？这篇从零开始，讲清楚搜索引擎的爬虫抓取、索引构建、排序算法、数据处理全流程，再带你动手写一个迷你搜索引擎。</p>
+</blockquote>
+<h2 id="一、搜索引擎是什么"><a href="#一、搜索引擎是什么" class="headerlink" title="一、搜索引擎是什么"></a>一、搜索引擎是什么</h2><h3 id="1-1-定义"><a href="#1-1-定义" class="headerlink" title="1.1 定义"></a>1.1 定义</h3><p>搜索引擎是一个系统：用户输入查询词，系统从预先构建的网页索引中快速找出相关页面，按相关性排序后返回结果。</p>
+<p>核心流程：</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">【离线阶段】</span><br><span class="line">互联网网页 → 爬虫抓取 → 解析内容 → 分词 → 建立倒排索引</span><br><span class="line"></span><br><span class="line">【在线阶段】</span><br><span class="line">用户查询 → 分词 → 查倒排索引 → 召回候选 → 排序 → 返回结果</span><br></pre></td></tr></table></figure></div>
+
+<h3 id="1-2-搜索引擎的三个核心组件"><a href="#1-2-搜索引擎的三个核心组件" class="headerlink" title="1.2 搜索引擎的三个核心组件"></a>1.2 搜索引擎的三个核心组件</h3><table>
+<thead>
+<tr>
+<th>组件</th>
+<th>作用</th>
+<th>关键技术</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>爬虫（Crawler）</td>
+<td>从互联网抓取网页</td>
+<td>URL 队列、去重、礼貌策略、增量爬取</td>
+</tr>
+<tr>
+<td>索引器（Indexer）</td>
+<td>把网页组织成可快速检索的数据结构</td>
+<td>倒排索引、分词、压缩</td>
+</tr>
+<tr>
+<td>查询处理器（Query Processor）</td>
+<td>接收查询，检索并排序返回</td>
+<td>召回、排序算法（PageRank &#x2F; BM25 &#x2F; 向量）</td>
+</tr>
+</tbody></table>
+<h3 id="1-3-搜索-vs-数据库查询"><a href="#1-3-搜索-vs-数据库查询" class="headerlink" title="1.3 搜索 vs 数据库查询"></a>1.3 搜索 vs 数据库查询</h3><p>很多人会问：为什么不直接用 SQL 的 <code>LIKE &#39;%关键词%&#39;</code> 搜索？</p>
+<table>
+<thead>
+<tr>
+<th>对比</th>
+<th>SQL LIKE</th>
+<th>搜索引擎</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>速度</td>
+<td>全表扫描，O(n)</td>
+<td>倒排索引，O(1) 查找</td>
+</tr>
+<tr>
+<td>相关性</td>
+<td>有或没有，没有排序</td>
+<td>按相关性排序</td>
+</tr>
+<tr>
+<td>模糊匹配</td>
+<td>不支持</td>
+<td>支持同义词、拼写纠错</td>
+</tr>
+<tr>
+<td>分词</td>
+<td>无</td>
+<td>中英文分词</td>
+</tr>
+<tr>
+<td>规模</td>
+<td>百万级</td>
+<td>千亿级</td>
+</tr>
+</tbody></table>
+<h2 id="二、爬虫：数据从哪来"><a href="#二、爬虫：数据从哪来" class="headerlink" title="二、爬虫：数据从哪来"></a>二、爬虫：数据从哪来</h2><h3 id="2-1-爬虫基本原理"><a href="#2-1-爬虫基本原理" class="headerlink" title="2.1 爬虫基本原理"></a>2.1 爬虫基本原理</h3><p>爬虫（也叫 Spider &#x2F; Bot）是一个程序：给定一批种子 URL，不断从网上下载网页，从中提取新的 URL，加入队列继续下载，循环往复。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">种子 URL 队列</span><br><span class="line">   ↓</span><br><span class="line">取一个 URL → 下载网页 → 解析内容</span><br><span class="line">   ↓                    ↓</span><br><span class="line">提取新 URL          存储网页内容</span><br><span class="line">   ↓                    ↓</span><br><span class="line">加入队列          去重 → 存入原始库</span><br></pre></td></tr></table></figure></div>
+
+<h3 id="2-2-核心问题"><a href="#2-2-核心问题" class="headerlink" title="2.2 核心问题"></a>2.2 核心问题</h3><p><strong>问题 1：怎么知道哪些页面已经爬过？</strong></p>
+<p>用<strong>布隆过滤器（Bloom Filter）</strong>。它是一个空间效率极高的概率数据结构：</p>
+<ul>
+<li>将 URL 通过多个哈希函数映射到一个比特数组</li>
+<li>查询时检查比特位：全为 1 → 可能已爬过（有假阳性）；有为 0 → 肯定没爬过</li>
+<li>100 亿 URL 只需约 12GB 内存</li>
+</ul>
+<p><strong>问题 2：怎么选择下一个要爬的 URL？</strong></p>
+<p>不是先来先爬。搜索引擎用<strong>优先级队列</strong>：</p>
+<ul>
+<li>首页质量高的网站优先</li>
+<li>更新频繁的页面优先</li>
+<li>新发现的 URL 优先级低于已知重要页面</li>
+</ul>
+<p><strong>问题 3：怎么避免把对方网站爬崩？</strong></p>
+<p>遵守<strong>礼貌策略（Politeness）</strong>：</p>
+<ul>
+<li>同一域名同时只有一个连接</li>
+<li>每次请求间隔至少 1-2 秒</li>
+<li>遵守 <code>robots.txt</code> 协议（声明哪些页面可以爬）</li>
+</ul>
+<p><strong>问题 4：怎么发现新内容？</strong></p>
+<p>两种策略：</p>
+<ul>
+<li><strong>增量爬取</strong>：已知页面定期重新爬，发现变化</li>
+<li><strong>深度优先 vs 广度优先</strong>：一般用广度优先，先覆盖更多网站</li>
+</ul>
+<h3 id="2-3-一个简单爬虫示例（Python）"><a href="#2-3-一个简单爬虫示例（Python）" class="headerlink" title="2.3 一个简单爬虫示例（Python）"></a>2.3 一个简单爬虫示例（Python）</h3><div class="code-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">from</span> urllib.parse <span class="keyword">import</span> urljoin, urlparse</span><br><span class="line"><span class="keyword">from</span> bs4 <span class="keyword">import</span> BeautifulSoup</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">SimpleCrawler</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, seed_urls, max_pages=<span class="number">100</span></span>):</span><br><span class="line">        <span class="variable language_">self</span>.queue = <span class="built_in">list</span>(seed_urls)</span><br><span class="line">        <span class="variable language_">self</span>.visited = <span class="built_in">set</span>()</span><br><span class="line">        <span class="variable language_">self</span>.max_pages = max_pages</span><br><span class="line">        <span class="variable language_">self</span>.pages = &#123;&#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">crawl</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">while</span> <span class="variable language_">self</span>.queue <span class="keyword">and</span> <span class="built_in">len</span>(<span class="variable language_">self</span>.visited) &lt; <span class="variable language_">self</span>.max_pages:</span><br><span class="line">            url = <span class="variable language_">self</span>.queue.pop(<span class="number">0</span>)</span><br><span class="line">            <span class="keyword">if</span> url <span class="keyword">in</span> <span class="variable language_">self</span>.visited:</span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line">            </span><br><span class="line">            <span class="comment"># 礼貌延迟</span></span><br><span class="line">            time.sleep(<span class="number">1</span>)</span><br><span class="line">            </span><br><span class="line">            <span class="keyword">try</span>:</span><br><span class="line">                resp = requests.get(url, timeout=<span class="number">10</span>)</span><br><span class="line">                <span class="keyword">if</span> resp.status_code != <span class="number">200</span>:</span><br><span class="line">                    <span class="keyword">continue</span></span><br><span class="line">                resp.encoding = resp.apparent_encoding</span><br><span class="line">            <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">                <span class="built_in">print</span>(<span class="string">f&quot;Error fetching <span class="subst">&#123;url&#125;</span>: <span class="subst">&#123;e&#125;</span>&quot;</span>)</span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line">            </span><br><span class="line">            <span class="variable language_">self</span>.visited.add(url)</span><br><span class="line">            <span class="variable language_">self</span>.pages[url] = resp.text</span><br><span class="line">            </span><br><span class="line">            <span class="comment"># 提取页面中的链接</span></span><br><span class="line">            soup = BeautifulSoup(resp.text, <span class="string">&#x27;html.parser&#x27;</span>)</span><br><span class="line">            <span class="keyword">for</span> a_tag <span class="keyword">in</span> soup.find_all(<span class="string">&#x27;a&#x27;</span>, href=<span class="literal">True</span>):</span><br><span class="line">                new_url = urljoin(url, a_tag[<span class="string">&#x27;href&#x27;</span>])</span><br><span class="line">                <span class="comment"># 只爬同域名</span></span><br><span class="line">                <span class="keyword">if</span> urlparse(new_url).netloc == urlparse(url).netloc:</span><br><span class="line">                    <span class="keyword">if</span> new_url <span class="keyword">not</span> <span class="keyword">in</span> <span class="variable language_">self</span>.visited:</span><br><span class="line">                        <span class="variable language_">self</span>.queue.append(new_url)</span><br><span class="line">            </span><br><span class="line">            <span class="built_in">print</span>(<span class="string">f&quot;[<span class="subst">&#123;<span class="built_in">len</span>(self.visited)&#125;</span>/<span class="subst">&#123;self.max_pages&#125;</span>] <span class="subst">&#123;url&#125;</span>&quot;</span>)</span><br><span class="line">        </span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;Crawled <span class="subst">&#123;<span class="built_in">len</span>(self.visited)&#125;</span> pages&quot;</span>)</span><br><span class="line">        <span class="keyword">return</span> <span class="variable language_">self</span>.pages</span><br><span class="line"></span><br><span class="line"><span class="comment"># 使用</span></span><br><span class="line">crawler = SimpleCrawler(</span><br><span class="line">    seed_urls=[<span class="string">&quot;https://example.com&quot;</span>],</span><br><span class="line">    max_pages=<span class="number">50</span></span><br><span class="line">)</span><br><span class="line">pages = crawler.crawl()</span><br></pre></td></tr></table></figure></div>
+
+<h3 id="2-4-真实搜索引擎的爬虫规模"><a href="#2-4-真实搜索引擎的爬虫规模" class="headerlink" title="2.4 真实搜索引擎的爬虫规模"></a>2.4 真实搜索引擎的爬虫规模</h3><table>
+<thead>
+<tr>
+<th>搜索引擎</th>
+<th>爬虫名称</th>
+<th>已索引网页数</th>
+<th>机器人</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Google</td>
+<td>Googlebot</td>
+<td>超过 1000 亿</td>
+<td>分布式，百万台机器</td>
+</tr>
+<tr>
+<td>Bing</td>
+<td>Bingbot</td>
+<td>数百亿</td>
+<td>分布式</td>
+</tr>
+<tr>
+<td>百度</td>
+<td>Baiduspider</td>
+<td>数千亿（中文为主）</td>
+<td>分布式</td>
+</tr>
+<tr>
+<td>DuckDuckGo</td>
+<td>DuckDuckBot</td>
+<td>数十亿</td>
+<td>主要爬第三方 API</td>
+</tr>
+</tbody></table>
+<p>Google 的爬虫每天处理约 200 亿个页面，新发现的页面从爬取到索引平均需要几小时到几天。</p>
+<h2 id="三、倒排索引：搜索引擎的心脏"><a href="#三、倒排索引：搜索引擎的心脏" class="headerlink" title="三、倒排索引：搜索引擎的心脏"></a>三、倒排索引：搜索引擎的心脏</h2><h3 id="3-1-正排索引-vs-倒排索引"><a href="#3-1-正排索引-vs-倒排索引" class="headerlink" title="3.1 正排索引 vs 倒排索引"></a>3.1 正排索引 vs 倒排索引</h3><p><strong>正排索引</strong>（文档 → 词）：</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">文档 1: &quot;搜索引擎 倒排索引 原理&quot;</span><br><span class="line">文档 2: &quot;倒排索引 是 搜索引擎 的 核心&quot;</span><br><span class="line">文档 3: &quot;PageRank 排序 算法&quot;</span><br></pre></td></tr></table></figure></div>
+
+<p>查”倒排索引”需要扫描所有文档 → 太慢。</p>
+<p><strong>倒排索引</strong>（词 → 文档）：</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">搜索引擎 → [文档1, 文档2]</span><br><span class="line">倒排索引 → [文档1, 文档2]</span><br><span class="line">原理     → [文档1]</span><br><span class="line">是       → [文档2]</span><br><span class="line">的       → [文档2]</span><br><span class="line">核心     → [文档2]</span><br><span class="line">PageRank → [文档3]</span><br><span class="line">排序     → [文档3]</span><br><span class="line">算法     → [文档3]</span><br></pre></td></tr></table></figure></div>
+
+<p>查”倒排索引”直接得到 <code>[文档1, 文档2]</code> → O(1) 查找。</p>
+<h3 id="3-2-倒排索引的完整结构"><a href="#3-2-倒排索引的完整结构" class="headerlink" title="3.2 倒排索引的完整结构"></a>3.2 倒排索引的完整结构</h3><p>真实的倒排索引不只记录”哪个文档包含这个词”，还记录很多附加信息：</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">词条（Term）</span><br><span class="line">  └── 倒排表（Posting List）</span><br><span class="line">        ├── 文档 ID: 1</span><br><span class="line">        │   ├── 词频（TF）: 3</span><br><span class="line">        │   ├── 位置: [12, 45, 89]</span><br><span class="line">        │   └── 字段: 标题 / 正文 / 锚文本</span><br><span class="line">        ├── 文档 ID: 2</span><br><span class="line">        │   ├── 词频: 1</span><br><span class="line">        │   ├── 位置: [34]</span><br><span class="line">        │   └── 字段: 正文</span><br><span class="line">        └── ...</span><br></pre></td></tr></table></figure></div>
+
+<ul>
+<li><strong>词频（TF）</strong>：这个词在文档中出现几次。出现越多越相关</li>
+<li><strong>位置（Position）</strong>：出现的位置。用于短语查询和 proximity 搜索</li>
+<li><strong>字段（Field）</strong>：出现在标题、正文还是 URL 中。标题中出现权重更高</li>
+</ul>
+<h3 id="3-3-构建倒排索引"><a href="#3-3-构建倒排索引" class="headerlink" title="3.3 构建倒排索引"></a>3.3 构建倒排索引</h3><p>完整步骤：</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">原始文档</span><br><span class="line">  ↓</span><br><span class="line">[1. 解析] → 去掉 HTML 标签，提取正文</span><br><span class="line">  ↓</span><br><span class="line">[2. 分词] → 切分成一个个词</span><br><span class="line">  ↓</span><br><span class="line">[3. 规范化] → 小写化、去停用词、词干提取</span><br><span class="line">  ↓</span><br><span class="line">[4. 统计] → 记录词频、位置</span><br><span class="line">  ↓</span><br><span class="line">[5. 排序合并] → 按词条排序，合并同一词的倒排表</span><br><span class="line">  ↓</span><br><span class="line">[6. 压缩] → 对倒排表做压缩存储</span><br><span class="line">  ↓</span><br><span class="line">倒排索引</span><br></pre></td></tr></table></figure></div>
+
+<h3 id="3-4-分词"><a href="#3-4-分词" class="headerlink" title="3.4 分词"></a>3.4 分词</h3><p><strong>英文分词</strong>：按空格和标点切分即可。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&quot;Hello, World!&quot; → [&quot;hello&quot;, &quot;world&quot;]</span><br></pre></td></tr></table></figure></div>
+
+<p>再做<strong>词干提取（Stemming）</strong>：</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">running → run</span><br><span class="line">happily → happy</span><br><span class="line">cats → cat</span><br></pre></td></tr></table></figure></div>
+
+<p><strong>中文分词</strong>：没有空格分隔，需要专门的分词工具。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&quot;搜索引擎倒排索引原理&quot; </span><br><span class="line">→ [&quot;搜索引擎&quot;, &quot;倒排索引&quot;, &quot;原理&quot;]</span><br></pre></td></tr></table></figure></div>
+
+<p>常用中文分词工具：</p>
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>语言</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>jieba</td>
+<td>Python</td>
+<td>最流行，简单好用</td>
+</tr>
+<tr>
+<td>HanLP</td>
+<td>Java&#x2F;Python</td>
+<td>功能全面，精度高</td>
+</tr>
+<tr>
+<td>IK Analyzer</td>
+<td>Java</td>
+<td>Elasticsearch 常用</td>
+</tr>
+<tr>
+<td>ansj</td>
+<td>Java</td>
+<td>速度快</td>
+</tr>
+<tr>
+<td>pkuseg</td>
+<td>Python</td>
+<td>学术精度高</td>
+</tr>
+</tbody></table>
+<p>jieba 分词示例：</p>
+<div class="code-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> jieba</span><br><span class="line"></span><br><span class="line">text = <span class="string">&quot;搜索引擎使用倒排索引来快速检索文档&quot;</span></span><br><span class="line">words = jieba.cut(text, cut_all=<span class="literal">False</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">list</span>(words))</span><br><span class="line"><span class="comment"># [&#x27;搜索引擎&#x27;, &#x27;使用&#x27;, &#x27;倒排索引&#x27;, &#x27;来&#x27;, &#x27;快速&#x27;, &#x27;检索&#x27;, &#x27;文档&#x27;]</span></span><br></pre></td></tr></table></figure></div>
+
+<h3 id="3-5-停用词"><a href="#3-5-停用词" class="headerlink" title="3.5 停用词"></a>3.5 停用词</h3><p>有些词出现频率极高但没有实际含义，索引它们浪费空间：</p>
+<p>英文：<code>the, is, at, which, on, a, an, of, to, in</code></p>
+<p>中文：<code>的, 了, 是, 在, 有, 和, 就, 也</code></p>
+<p>这些词叫<strong>停用词（Stop Words）</strong>，通常在建索引时直接丢弃。</p>
+<p>但注意：短语查询（如 “to be or not to be”）需要保留停用词才能精确匹配，所以现代搜索引擎通常还是索引停用词，只是给它们很低的权重。</p>
+<h3 id="3-6-索引压缩"><a href="#3-6-索引压缩" class="headerlink" title="3.6 索引压缩"></a>3.6 索引压缩</h3><p>千亿网页的倒排索引如果不压缩，需要 PB 级存储。常用压缩技术：</p>
+<p><strong>可变长度编码（Varint Encoding）</strong>：</p>
+<p>文档 ID 之间通常差距不大，存”差值”而不是绝对值：</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">原始: [1, 5, 8, 12, 20]</span><br><span class="line">差值: [1, 4, 3, 4, 8]  → 小数字用更少的字节</span><br></pre></td></tr></table></figure></div>
+
+<p><strong>位图压缩（Roaring Bitmaps）</strong>：</p>
+<p>把倒排表表示为位图，文档 ID 对应的比特位设为 1：</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">倒排表 [1, 5, 8] → 位图: 10001010</span><br></pre></td></tr></table></figure></div>
+
+<p>集合运算（交集&#x2F;并集）变成位运算，极快。</p>
+<h2 id="四、排序算法：决定你看到什么"><a href="#四、排序算法：决定你看到什么" class="headerlink" title="四、排序算法：决定你看到什么"></a>四、排序算法：决定你看到什么</h2><p>找到包含查询词的文档只是第一步，关键是<strong>哪些排在前面</strong>。</p>
+<h3 id="4-1-TF-IDF"><a href="#4-1-TF-IDF" class="headerlink" title="4.1 TF-IDF"></a>4.1 TF-IDF</h3><p>最经典的文本相关性评分。</p>
+<p><strong>TF（Term Frequency，词频）</strong>：查询词在文档中出现越多，越相关。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">TF = 词在文档中出现的次数 / 文档总词数</span><br></pre></td></tr></table></figure></div>
+
+<p><strong>IDF（Inverse Document Frequency，逆文档频率）</strong>：查询词在所有文档中越罕见，越有价值。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">IDF = log(总文档数 / 包含该词的文档数)</span><br></pre></td></tr></table></figure></div>
+
+<p>“的”出现在几乎所有文档 → IDF 接近 0 → 权重极低<br>“搜索引擎”只出现在少数文档 → IDF 大 → 权重高</p>
+<p><strong>TF-IDF &#x3D; TF × IDF</strong></p>
+<div class="code-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> math</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">tf_idf</span>(<span class="params">term, doc, all_docs</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;计算 term 在 doc 中的 TF-IDF 值&quot;&quot;&quot;</span></span><br><span class="line">    <span class="comment"># TF</span></span><br><span class="line">    tf = doc.count(term) / <span class="built_in">len</span>(doc.split())</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># IDF</span></span><br><span class="line">    docs_with_term = <span class="built_in">sum</span>(<span class="number">1</span> <span class="keyword">for</span> d <span class="keyword">in</span> all_docs <span class="keyword">if</span> term <span class="keyword">in</span> d)</span><br><span class="line">    idf = math.log(<span class="built_in">len</span>(all_docs) / (<span class="number">1</span> + docs_with_term))</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> tf * idf</span><br><span class="line"></span><br><span class="line">docs = [</span><br><span class="line">    <span class="string">&quot;搜索引擎 倒排索引 原理&quot;</span>,</span><br><span class="line">    <span class="string">&quot;倒排索引 是 搜索引擎 的 核心&quot;</span>,</span><br><span class="line">    <span class="string">&quot;PageRank 排序 算法&quot;</span>,</span><br><span class="line">]</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(tf_idf(<span class="string">&quot;倒排索引&quot;</span>, docs[<span class="number">0</span>], docs))  <span class="comment"># 高权重</span></span><br><span class="line"><span class="built_in">print</span>(tf_idf(<span class="string">&quot;的&quot;</span>, docs[<span class="number">1</span>], docs))         <span class="comment"># 低权重</span></span><br></pre></td></tr></table></figure></div>
+
+<h3 id="4-2-BM25"><a href="#4-2-BM25" class="headerlink" title="4.2 BM25"></a>4.2 BM25</h3><p>TF-IDF 的升级版，目前仍是全文搜索的标准排序算法。</p>
+<p>BM25 对 TF 做了改进：不是线性增长，而是趋于一个上限。一个词在文档中出现 10 次和 100 次，相关性不应该差 10 倍。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">BM25(D, Q) = Σ IDF(qi) × [f(qi, D) × (k1+1)] / [f(qi, D) + k1 × (1 - b + b × |D|/avgdl)]</span><br></pre></td></tr></table></figure></div>
+
+<p>参数：</p>
+<ul>
+<li><code>f(qi, D)</code>：词 qi 在文档 D 中的频率</li>
+<li><code>|D|</code>：文档长度</li>
+<li><code>avgdl</code>：平均文档长度</li>
+<li><code>k1</code>：通常 1.2-2.0，控制 TF 增长速度</li>
+<li><code>b</code>：通常 0.75，控制文档长度归一化强度</li>
+</ul>
+<p><strong>直觉理解</strong>：</p>
+<ul>
+<li>文档越长，同样的词频权重越低（可能只是因为文档长才出现多）</li>
+<li>词频增长到一定程度后不再增加权重（饱和效应）</li>
+<li>相比 TF-IDF，BM25 对长文档更公平</li>
+</ul>
+<p>Elasticsearch &#x2F; Lucene 默认使用 BM25 排序。</p>
+<h3 id="4-3-PageRank"><a href="#4-3-PageRank" class="headerlink" title="4.3 PageRank"></a>4.3 PageRank</h3><p>TF-IDF 和 BM25 只看文档内容。但一个被大量网页链接的页面，通常质量更高。这就是 PageRank 的思想。</p>
+<p><strong>核心逻辑</strong>：</p>
+<ul>
+<li>网页 A 链接到网页 B → 相当于 A 给 B 投了一票</li>
+<li>来自高质量页面的链接权重更高</li>
+<li>PageRank 是一个<strong>网页级别</strong>的全局评分，与查询词无关</li>
+</ul>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">PR(A) = (1-d) + d × Σ [PR(Ti) / L(Ti)]</span><br></pre></td></tr></table></figure></div>
+
+<ul>
+<li><code>d</code>：阻尼因子（通常 0.85），表示用户有 85% 概率继续点击链接</li>
+<li><code>Ti</code>：所有链接到 A 的页面</li>
+<li><code>L(Ti)</code>：页面 Ti 的出链数</li>
+</ul>
+<p><strong>直觉理解</strong>：</p>
+<p>想象用户随机点击链接浏览网页。PageRank 就是用户停留在某个页面的概率。被很多页面链接的页面，停留概率高；来自重要页面的链接，贡献更大。</p>
+<p>Google 最初靠 PageRank 大幅提升搜索质量。但现代搜索引擎早已不只使用 PageRank，而是结合了数百种信号。</p>
+<h3 id="4-4-现代排序：多信号融合"><a href="#4-4-现代排序：多信号融合" class="headerlink" title="4.4 现代排序：多信号融合"></a>4.4 现代排序：多信号融合</h3><p>2026 年的搜索引擎排序综合几百种信号：</p>
+<table>
+<thead>
+<tr>
+<th>信号类型</th>
+<th>具体因素</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>内容相关性</td>
+<td>BM25 分数、词频、位置、字段权重</td>
+</tr>
+<tr>
+<td>页面质量</td>
+<td>PageRank、链接数、域名权重</td>
+</tr>
+<tr>
+<td>新鲜度</td>
+<td>发布时间、更新频率</td>
+</tr>
+<tr>
+<td>用户体验</td>
+<td>点击率、停留时间、跳出率</td>
+</tr>
+<tr>
+<td>上下文</td>
+<td>用户位置、语言、搜索历史</td>
+</tr>
+<tr>
+<td>页面体验</td>
+<td>加载速度、移动端适配、HTTPS</td>
+</tr>
+<tr>
+<td>结构化数据</td>
+<td>Schema.org 标记</td>
+</tr>
+<tr>
+<td>个性化</td>
+<td>用户画像、兴趣偏好</td>
+</tr>
+</tbody></table>
+<p>最终排序通常用<strong>学习排序（Learning to Rank, LTR）</strong>：用机器学习模型综合所有信号给出最终分数。</p>
+<h3 id="4-5-向量检索与语义搜索"><a href="#4-5-向量检索与语义搜索" class="headerlink" title="4.5 向量检索与语义搜索"></a>4.5 向量检索与语义搜索</h3><p>传统搜索是关键词匹配：搜”手机”找不到只写了”智能手机”的页面。</p>
+<p><strong>向量检索</strong>解决了这个问题：</p>
+<ol>
+<li>用 Embedding 模型把每个文档转成一个向量（如 768 维）</li>
+<li>用同样模型把查询转成向量</li>
+<li>计算两个向量的余弦相似度，越接近越相关</li>
+</ol>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">文档: &quot;苹果公司发布了新款智能手机&quot; → [0.12, -0.34, 0.56, ...] (768维)</span><br><span class="line">查询: &quot;手机&quot; → [0.15, -0.30, 0.50, ...] (768维)</span><br><span class="line">相似度 = cos(文档向量, 查询向量) = 0.92 → 高度相关</span><br></pre></td></tr></table></figure></div>
+
+<p>即使文档中没有出现”手机”这个词，但向量空间中它们语义接近，仍能匹配。</p>
+<p><strong>混合搜索（Hybrid Search）</strong>：</p>
+<p>现代搜索引擎同时用关键词检索（BM25）和向量检索，取两者的并集后用 LTR 重排：</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">查询 → [BM25 召回 top-1000] ─┐</span><br><span class="line">                              ├→ 融合排序 → 最终结果</span><br><span class="line">     → [向量召回 top-1000] ──┘</span><br></pre></td></tr></table></figure></div>
+
+<p>这就是 Google 的 Neural Matching、百度的小蜜智能匹配背后的思路。</p>
+<h2 id="五、数据处理全流程"><a href="#五、数据处理全流程" class="headerlink" title="五、数据处理全流程"></a>五、数据处理全流程</h2><h3 id="5-1-网页解析"><a href="#5-1-网页解析" class="headerlink" title="5.1 网页解析"></a>5.1 网页解析</h3><p>爬虫下载的原始 HTML 需要解析：</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">原始 HTML</span><br><span class="line">  ↓</span><br><span class="line">[去标签] → 去掉 &lt;script&gt; &lt;style&gt; &lt;nav&gt; 等</span><br><span class="line">  ↓</span><br><span class="line">[正文提取] → 识别主体内容（用 Readability / Boilerplate 算法）</span><br><span class="line">  ↓</span><br><span class="line">[结构化提取] → 提取标题、meta 描述、发布时间、作者等</span><br><span class="line">  ↓</span><br><span class="line">[链接分析] → 提取出链、锚文本</span><br><span class="line">  ↓</span><br><span class="line">[去重] → SimHash 判断是否与已索引页面重复</span><br><span class="line">  ↓</span><br><span class="line">清洗后的文档</span><br></pre></td></tr></table></figure></div>
+
+<h3 id="5-2-去重"><a href="#5-2-去重" class="headerlink" title="5.2 去重"></a>5.2 去重</h3><p>互联网上大量页面是复制粘贴的。搜索引擎需要对内容去重：</p>
+<p><strong>SimHash 算法</strong>：</p>
+<ol>
+<li>对文档分词，每个词算一个哈希值</li>
+<li>加权合并所有词的哈希值 → 得到一个 64 位指纹</li>
+<li>两个文档的 SimHash 汉明距离 ≤ 3 → 判定为近似重复</li>
+</ol>
+<p>SimHash 的优势：计算快，且相似文档的指纹也相似（不像 MD5 完全不同）。</p>
+<h3 id="5-3-数据更新策略"><a href="#5-3-数据更新策略" class="headerlink" title="5.3 数据更新策略"></a>5.3 数据更新策略</h3><p>网页会变化，索引需要更新：</p>
+<table>
+<thead>
+<tr>
+<th>更新类型</th>
+<th>策略</th>
+<th>周期</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>新页面</td>
+<td>爬虫发现后尽快索引</td>
+<td>小时-天</td>
+</tr>
+<tr>
+<td>已有页面更新</td>
+<td>重新爬取，增量更新索引</td>
+<td>天-周</td>
+</tr>
+<tr>
+<td>页面删除</td>
+<td>标记为已删除</td>
+<td>天</td>
+</tr>
+<tr>
+<td>索引重建</td>
+<td>全量重建（极少）</td>
+<td>月-年</td>
+</tr>
+</tbody></table>
+<p>Google 的 Caffeine 索引系统实现了近实时索引：新页面爬取后几秒内可被搜索到。</p>
+<h2 id="六、动手写一个迷你搜索引擎"><a href="#六、动手写一个迷你搜索引擎" class="headerlink" title="六、动手写一个迷你搜索引擎"></a>六、动手写一个迷你搜索引擎</h2><p>用 Python + 200 行代码实现一个完整的搜索引擎：爬取 → 索引 → 搜索。</p>
+<h3 id="6-1-完整代码"><a href="#6-1-完整代码" class="headerlink" title="6.1 完整代码"></a>6.1 完整代码</h3><div class="code-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">mini_search.py — 迷你搜索引擎</span></span><br><span class="line"><span class="string">功能：爬取网页 → 构建倒排索引 → BM25 搜索</span></span><br><span class="line"><span class="string">&quot;&quot;&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">from</span> bs4 <span class="keyword">import</span> BeautifulSoup</span><br><span class="line"><span class="keyword">from</span> urllib.parse <span class="keyword">import</span> urljoin, urlparse</span><br><span class="line"><span class="keyword">from</span> collections <span class="keyword">import</span> defaultdict, Counter</span><br><span class="line"><span class="keyword">import</span> math</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">import</span> jieba</span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">MiniSearchEngine</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="variable language_">self</span>.documents = &#123;&#125;        <span class="comment"># doc_id → &#123;url, title, content, tokens&#125;</span></span><br><span class="line">        <span class="variable language_">self</span>.inverted_index = defaultdict(<span class="built_in">list</span>)  <span class="comment"># term → [(doc_id, tf, positions)]</span></span><br><span class="line">        <span class="variable language_">self</span>.doc_count = <span class="number">0</span></span><br><span class="line">        <span class="variable language_">self</span>.avg_doc_len = <span class="number">0</span></span><br><span class="line">        <span class="variable language_">self</span>.bm25_k1 = <span class="number">1.5</span></span><br><span class="line">        <span class="variable language_">self</span>.bm25_b = <span class="number">0.75</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment"># ========== 爬虫部分 ==========</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">crawl</span>(<span class="params">self, seed_urls, max_pages=<span class="number">50</span></span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;从种子 URL 开始爬取&quot;&quot;&quot;</span></span><br><span class="line">        queue = <span class="built_in">list</span>(seed_urls)</span><br><span class="line">        visited = <span class="built_in">set</span>()</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">while</span> queue <span class="keyword">and</span> <span class="built_in">len</span>(visited) &lt; max_pages:</span><br><span class="line">            url = queue.pop(<span class="number">0</span>)</span><br><span class="line">            <span class="keyword">if</span> url <span class="keyword">in</span> visited:</span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line">            </span><br><span class="line">            time.sleep(<span class="number">0.5</span>)  <span class="comment"># 礼貌延迟</span></span><br><span class="line">            </span><br><span class="line">            <span class="keyword">try</span>:</span><br><span class="line">                resp = requests.get(url, timeout=<span class="number">10</span>)</span><br><span class="line">                resp.encoding = resp.apparent_encoding</span><br><span class="line">                <span class="keyword">if</span> resp.status_code != <span class="number">200</span>:</span><br><span class="line">                    <span class="keyword">continue</span></span><br><span class="line">            <span class="keyword">except</span>:</span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line">            </span><br><span class="line">            <span class="comment"># 解析页面</span></span><br><span class="line">            soup = BeautifulSoup(resp.text, <span class="string">&#x27;html.parser&#x27;</span>)</span><br><span class="line">            </span><br><span class="line">            <span class="comment"># 提取标题</span></span><br><span class="line">            title = soup.title.string <span class="keyword">if</span> soup.title <span class="keyword">else</span> <span class="string">&quot;&quot;</span></span><br><span class="line">            </span><br><span class="line">            <span class="comment"># 提取正文（去掉 script/style/nav）</span></span><br><span class="line">            <span class="keyword">for</span> tag <span class="keyword">in</span> soup([<span class="string">&#x27;script&#x27;</span>, <span class="string">&#x27;style&#x27;</span>, <span class="string">&#x27;nav&#x27;</span>, <span class="string">&#x27;footer&#x27;</span>, <span class="string">&#x27;header&#x27;</span>]):</span><br><span class="line">                tag.decompose()</span><br><span class="line">            content = soup.get_text(separator=<span class="string">&#x27; &#x27;</span>, strip=<span class="literal">True</span>)</span><br><span class="line">            </span><br><span class="line">            <span class="keyword">if</span> <span class="built_in">len</span>(content) &lt; <span class="number">100</span>:</span><br><span class="line">                <span class="keyword">continue</span>  <span class="comment"># 内容太少，跳过</span></span><br><span class="line">            </span><br><span class="line">            <span class="comment"># 存储文档</span></span><br><span class="line">            doc_id = <span class="variable language_">self</span>.doc_count</span><br><span class="line">            <span class="variable language_">self</span>.documents[doc_id] = &#123;</span><br><span class="line">                <span class="string">&#x27;url&#x27;</span>: url,</span><br><span class="line">                <span class="string">&#x27;title&#x27;</span>: title,</span><br><span class="line">                <span class="string">&#x27;content&#x27;</span>: content[:<span class="number">5000</span>],  <span class="comment"># 截断</span></span><br><span class="line">            &#125;</span><br><span class="line">            <span class="variable language_">self</span>.doc_count += <span class="number">1</span></span><br><span class="line">            visited.add(url)</span><br><span class="line">            </span><br><span class="line">            <span class="comment"># 提取新链接</span></span><br><span class="line">            <span class="keyword">for</span> a <span class="keyword">in</span> soup.find_all(<span class="string">&#x27;a&#x27;</span>, href=<span class="literal">True</span>):</span><br><span class="line">                new_url = urljoin(url, a[<span class="string">&#x27;href&#x27;</span>])</span><br><span class="line">                <span class="keyword">if</span> urlparse(new_url).netloc == urlparse(url).netloc:</span><br><span class="line">                    <span class="keyword">if</span> new_url <span class="keyword">not</span> <span class="keyword">in</span> visited:</span><br><span class="line">                        queue.append(new_url)</span><br><span class="line">            </span><br><span class="line">            <span class="built_in">print</span>(<span class="string">f&quot;[<span class="subst">&#123;<span class="built_in">len</span>(visited)&#125;</span>/<span class="subst">&#123;max_pages&#125;</span>] <span class="subst">&#123;url[:<span class="number">80</span>]&#125;</span>&quot;</span>)</span><br><span class="line">        </span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;\n爬取完成：<span class="subst">&#123;<span class="built_in">len</span>(visited)&#125;</span> 个页面&quot;</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># ========== 索引部分 ==========</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">tokenize</span>(<span class="params">self, text</span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;分词：中文用 jieba，英文按空格&quot;&quot;&quot;</span></span><br><span class="line">        <span class="comment"># jieba 同时处理中英文</span></span><br><span class="line">        words = jieba.cut(text.lower())</span><br><span class="line">        <span class="comment"># 过滤停用词和单字符</span></span><br><span class="line">        stop_words = &#123;<span class="string">&#x27;的&#x27;</span>, <span class="string">&#x27;了&#x27;</span>, <span class="string">&#x27;是&#x27;</span>, <span class="string">&#x27;在&#x27;</span>, <span class="string">&#x27;有&#x27;</span>, <span class="string">&#x27;和&#x27;</span>, <span class="string">&#x27;就&#x27;</span>, <span class="string">&#x27;也&#x27;</span>, <span class="string">&#x27;都&#x27;</span>, <span class="string">&#x27;而&#x27;</span>, <span class="string">&#x27;及&#x27;</span>, <span class="string">&#x27;与&#x27;</span>, <span class="string">&#x27;或&#x27;</span>, <span class="string">&#x27;a&#x27;</span>, <span class="string">&#x27;an&#x27;</span>, <span class="string">&#x27;the&#x27;</span>, <span class="string">&#x27;is&#x27;</span>, <span class="string">&#x27;at&#x27;</span>, <span class="string">&#x27;in&#x27;</span>, <span class="string">&#x27;on&#x27;</span>, <span class="string">&#x27;to&#x27;</span>, <span class="string">&#x27;of&#x27;</span>, <span class="string">&#x27;for&#x27;</span>&#125;</span><br><span class="line">        <span class="keyword">return</span> [w <span class="keyword">for</span> w <span class="keyword">in</span> words <span class="keyword">if</span> <span class="built_in">len</span>(w) &gt; <span class="number">1</span> <span class="keyword">or</span> w.isalpha()]</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">build_index</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;构建倒排索引&quot;&quot;&quot;</span></span><br><span class="line">        total_len = <span class="number">0</span></span><br><span class="line">        </span><br><span class="line">        <span class="keyword">for</span> doc_id, doc <span class="keyword">in</span> <span class="variable language_">self</span>.documents.items():</span><br><span class="line">            <span class="comment"># 合并标题和正文（标题权重更高，重复几次）</span></span><br><span class="line">            text = (doc[<span class="string">&#x27;title&#x27;</span>] + <span class="string">&#x27; &#x27;</span>) * <span class="number">3</span> + doc[<span class="string">&#x27;content&#x27;</span>]</span><br><span class="line">            tokens = <span class="variable language_">self</span>.tokenize(text)</span><br><span class="line">            </span><br><span class="line">            doc[<span class="string">&#x27;tokens&#x27;</span>] = tokens</span><br><span class="line">            doc[<span class="string">&#x27;length&#x27;</span>] = <span class="built_in">len</span>(tokens)</span><br><span class="line">            total_len += <span class="built_in">len</span>(tokens)</span><br><span class="line">            </span><br><span class="line">            <span class="comment"># 统计词频和位置</span></span><br><span class="line">            term_positions = defaultdict(<span class="built_in">list</span>)</span><br><span class="line">            <span class="keyword">for</span> position, term <span class="keyword">in</span> <span class="built_in">enumerate</span>(tokens):</span><br><span class="line">                term_positions[term].append(position)</span><br><span class="line">            </span><br><span class="line">            <span class="comment"># 写入倒排索引</span></span><br><span class="line">            <span class="keyword">for</span> term, positions <span class="keyword">in</span> term_positions.items():</span><br><span class="line">                <span class="variable language_">self</span>.inverted_index[term].append(&#123;</span><br><span class="line">                    <span class="string">&#x27;doc_id&#x27;</span>: doc_id,</span><br><span class="line">                    <span class="string">&#x27;tf&#x27;</span>: <span class="built_in">len</span>(positions),</span><br><span class="line">                    <span class="string">&#x27;positions&#x27;</span>: positions</span><br><span class="line">                &#125;)</span><br><span class="line">        </span><br><span class="line">        <span class="variable language_">self</span>.avg_doc_len = total_len / <span class="built_in">max</span>(<span class="number">1</span>, <span class="variable language_">self</span>.doc_count)</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;索引构建完成：<span class="subst">&#123;self.doc_count&#125;</span> 个文档，<span class="subst">&#123;<span class="built_in">len</span>(self.inverted_index)&#125;</span> 个词条&quot;</span>)</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;平均文档长度：<span class="subst">&#123;self.avg_doc_len:<span class="number">.0</span>f&#125;</span> 词&quot;</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># ========== 搜索部分 ==========</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">bm25_score</span>(<span class="params">self, term, doc_id</span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;计算单个词在单个文档中的 BM25 分数&quot;&quot;&quot;</span></span><br><span class="line">        <span class="comment"># 查倒排表</span></span><br><span class="line">        postings = <span class="variable language_">self</span>.inverted_index.get(term, [])</span><br><span class="line">        posting = <span class="built_in">next</span>((p <span class="keyword">for</span> p <span class="keyword">in</span> postings <span class="keyword">if</span> p[<span class="string">&#x27;doc_id&#x27;</span>] == doc_id), <span class="literal">None</span>)</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> posting:</span><br><span class="line">            <span class="keyword">return</span> <span class="number">0</span></span><br><span class="line">        </span><br><span class="line">        tf = posting[<span class="string">&#x27;tf&#x27;</span>]</span><br><span class="line">        doc_len = <span class="variable language_">self</span>.documents[doc_id][<span class="string">&#x27;length&#x27;</span>]</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># IDF</span></span><br><span class="line">        df = <span class="built_in">len</span>(postings)  <span class="comment"># 包含该词的文档数</span></span><br><span class="line">        idf = math.log((<span class="variable language_">self</span>.doc_count - df + <span class="number">0.5</span>) / (df + <span class="number">0.5</span>) + <span class="number">1</span>)</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># BM25 公式</span></span><br><span class="line">        numerator = tf * (<span class="variable language_">self</span>.bm25_k1 + <span class="number">1</span>)</span><br><span class="line">        denominator = tf + <span class="variable language_">self</span>.bm25_k1 * (<span class="number">1</span> - <span class="variable language_">self</span>.bm25_b + <span class="variable language_">self</span>.bm25_b * doc_len / <span class="variable language_">self</span>.avg_doc_len)</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">return</span> idf * (numerator / denominator)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">search</span>(<span class="params">self, query, top_k=<span class="number">10</span></span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;搜索&quot;&quot;&quot;</span></span><br><span class="line">        query_terms = <span class="variable language_">self</span>.tokenize(query)</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 召回：找出包含任意查询词的文档</span></span><br><span class="line">        candidate_docs = <span class="built_in">set</span>()</span><br><span class="line">        <span class="keyword">for</span> term <span class="keyword">in</span> query_terms:</span><br><span class="line">            <span class="keyword">for</span> posting <span class="keyword">in</span> <span class="variable language_">self</span>.inverted_index.get(term, []):</span><br><span class="line">                candidate_docs.add(posting[<span class="string">&#x27;doc_id&#x27;</span>])</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 打分</span></span><br><span class="line">        scores = []</span><br><span class="line">        <span class="keyword">for</span> doc_id <span class="keyword">in</span> candidate_docs:</span><br><span class="line">            score = <span class="built_in">sum</span>(<span class="variable language_">self</span>.bm25_score(term, doc_id) <span class="keyword">for</span> term <span class="keyword">in</span> query_terms)</span><br><span class="line">            scores.append((doc_id, score))</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 排序</span></span><br><span class="line">        scores.sort(key=<span class="keyword">lambda</span> x: x[<span class="number">1</span>], reverse=<span class="literal">True</span>)</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 返回结果</span></span><br><span class="line">        results = []</span><br><span class="line">        <span class="keyword">for</span> doc_id, score <span class="keyword">in</span> scores[:top_k]:</span><br><span class="line">            doc = <span class="variable language_">self</span>.documents[doc_id]</span><br><span class="line">            results.append(&#123;</span><br><span class="line">                <span class="string">&#x27;title&#x27;</span>: doc[<span class="string">&#x27;title&#x27;</span>],</span><br><span class="line">                <span class="string">&#x27;url&#x27;</span>: doc[<span class="string">&#x27;url&#x27;</span>],</span><br><span class="line">                <span class="string">&#x27;score&#x27;</span>: <span class="built_in">round</span>(score, <span class="number">4</span>),</span><br><span class="line">                <span class="string">&#x27;snippet&#x27;</span>: doc[<span class="string">&#x27;content&#x27;</span>][:<span class="number">200</span>] + <span class="string">&#x27;...&#x27;</span>,</span><br><span class="line">            &#125;)</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">return</span> results</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># ========== 持久化 ==========</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">save</span>(<span class="params">self, path=<span class="string">&#x27;mini_search_index.json&#x27;</span></span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;保存索引&quot;&quot;&quot;</span></span><br><span class="line">        data = &#123;</span><br><span class="line">            <span class="string">&#x27;documents&#x27;</span>: &#123;<span class="built_in">str</span>(k): v <span class="keyword">for</span> k, v <span class="keyword">in</span> <span class="variable language_">self</span>.documents.items()&#125;,</span><br><span class="line">            <span class="string">&#x27;inverted_index&#x27;</span>: <span class="built_in">dict</span>(<span class="variable language_">self</span>.inverted_index),</span><br><span class="line">            <span class="string">&#x27;doc_count&#x27;</span>: <span class="variable language_">self</span>.doc_count,</span><br><span class="line">            <span class="string">&#x27;avg_doc_len&#x27;</span>: <span class="variable language_">self</span>.avg_doc_len,</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">with</span> <span class="built_in">open</span>(path, <span class="string">&#x27;w&#x27;</span>, encoding=<span class="string">&#x27;utf-8&#x27;</span>) <span class="keyword">as</span> f:</span><br><span class="line">            json.dump(data, f, ensure_ascii=<span class="literal">False</span>, indent=<span class="number">2</span>)</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;索引已保存到 <span class="subst">&#123;path&#125;</span>&quot;</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">load</span>(<span class="params">self, path=<span class="string">&#x27;mini_search_index.json&#x27;</span></span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;加载索引&quot;&quot;&quot;</span></span><br><span class="line">        <span class="keyword">with</span> <span class="built_in">open</span>(path, <span class="string">&#x27;r&#x27;</span>, encoding=<span class="string">&#x27;utf-8&#x27;</span>) <span class="keyword">as</span> f:</span><br><span class="line">            data = json.load(f)</span><br><span class="line">        <span class="variable language_">self</span>.documents = &#123;<span class="built_in">int</span>(k): v <span class="keyword">for</span> k, v <span class="keyword">in</span> data[<span class="string">&#x27;documents&#x27;</span>].items()&#125;</span><br><span class="line">        <span class="variable language_">self</span>.inverted_index = defaultdict(<span class="built_in">list</span>, data[<span class="string">&#x27;inverted_index&#x27;</span>])</span><br><span class="line">        <span class="variable language_">self</span>.doc_count = data[<span class="string">&#x27;doc_count&#x27;</span>]</span><br><span class="line">        <span class="variable language_">self</span>.avg_doc_len = data[<span class="string">&#x27;avg_doc_len&#x27;</span>]</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;索引已加载：<span class="subst">&#123;self.doc_count&#125;</span> 个文档&quot;</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># ========== 使用示例 ==========</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    engine = MiniSearchEngine()</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 1. 爬取（第一次运行时取消注释）</span></span><br><span class="line">    <span class="comment"># engine.crawl(</span></span><br><span class="line">    <span class="comment">#     seed_urls=[&quot;https://www.python.org/&quot;],</span></span><br><span class="line">    <span class="comment">#     max_pages=30</span></span><br><span class="line">    <span class="comment"># )</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 2. 构建索引</span></span><br><span class="line">    <span class="comment"># engine.build_index()</span></span><br><span class="line">    <span class="comment"># engine.save()</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 或者加载已有索引</span></span><br><span class="line">    engine.load()</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 3. 搜索</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;\n=== 搜索结果 ===&quot;</span>)</span><br><span class="line">    results = engine.search(<span class="string">&quot;Python 教程&quot;</span>, top_k=<span class="number">5</span>)</span><br><span class="line">    <span class="keyword">for</span> i, r <span class="keyword">in</span> <span class="built_in">enumerate</span>(results, <span class="number">1</span>):</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;\n[<span class="subst">&#123;i&#125;</span>] 分数: <span class="subst">&#123;r[<span class="string">&#x27;score&#x27;</span>]&#125;</span>&quot;</span>)</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;    标题: <span class="subst">&#123;r[<span class="string">&#x27;title&#x27;</span>]&#125;</span>&quot;</span>)</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;    URL: <span class="subst">&#123;r[<span class="string">&#x27;url&#x27;</span>]&#125;</span>&quot;</span>)</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;    摘要: <span class="subst">&#123;r[<span class="string">&#x27;snippet&#x27;</span>]&#125;</span>&quot;</span>)</span><br></pre></td></tr></table></figure></div>
+
+<h3 id="6-2-运行效果"><a href="#6-2-运行效果" class="headerlink" title="6.2 运行效果"></a>6.2 运行效果</h3><div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">[1/30] https://www.python.org/</span><br><span class="line">[2/30] https://www.python.org/about/</span><br><span class="line">[3/30] https://www.python.org/doc/</span><br><span class="line">...</span><br><span class="line">爬取完成：30 个页面</span><br><span class="line">索引构建完成：30 个文档，4832 个词条</span><br><span class="line">平均文档长度：412 词</span><br><span class="line"></span><br><span class="line">=== 搜索结果 ===</span><br><span class="line"></span><br><span class="line">[1] 分数: 8.2341</span><br><span class="line">    标题: Python Documentation</span><br><span class="line">    URL: https://www.python.org/doc/</span><br><span class="line">    摘要: Browse the docs online or download a copy...</span><br><span class="line"></span><br><span class="line">[2] 分数: 6.8912</span><br><span class="line">    标题: Python For Beginners</span><br><span class="line">    URL: https://www.python.org/about/gettingstarted/</span><br><span class="line">    摘要: Python is an easy to learn, powerful programming language...</span><br></pre></td></tr></table></figure></div>
+
+<h2 id="七、搜索引擎的数据规模"><a href="#七、搜索引擎的数据规模" class="headerlink" title="七、搜索引擎的数据规模"></a>七、搜索引擎的数据规模</h2><h3 id="7-1-各大搜索引擎数据量"><a href="#7-1-各大搜索引擎数据量" class="headerlink" title="7.1 各大搜索引擎数据量"></a>7.1 各大搜索引擎数据量</h3><table>
+<thead>
+<tr>
+<th>搜索引擎</th>
+<th>索引网页数</th>
+<th>索引大小</th>
+<th>爬虫数量</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Google</td>
+<td>1000+ 亿</td>
+<td>~100 PB</td>
+<td>数百万台机器</td>
+</tr>
+<tr>
+<td>Bing</td>
+<td>~500 亿</td>
+<td>~50 PB</td>
+<td>数十万台</td>
+</tr>
+<tr>
+<td>百度</td>
+<td>~2000 亿（中文为主）</td>
+<td>~80 PB</td>
+<td>数十万台</td>
+</tr>
+<tr>
+<td>DuckDuckGo</td>
+<td>~50 亿</td>
+<td>~5 PB</td>
+<td>数千台（大部分来自 API）</td>
+</tr>
+</tbody></table>
+<h3 id="7-2-Google-的数据处理管线"><a href="#7-2-Google-的数据处理管线" class="headerlink" title="7.2 Google 的数据处理管线"></a>7.2 Google 的数据处理管线</h3><p>Google 用以下系统处理搜索数据：</p>
+<table>
+<thead>
+<tr>
+<th>系统</th>
+<th>功能</th>
+<th>规模</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GoogleBot</td>
+<td>爬虫</td>
+<td>每天处理 ~200 亿页面</td>
+</tr>
+<tr>
+<td>Caffeine</td>
+<td>索引系统</td>
+<td>每秒处理数十万页面</td>
+</tr>
+<tr>
+<td>BERT &#x2F; MUM</td>
+<td>语义理解</td>
+<td>每秒处理数百万查询</td>
+</tr>
+<tr>
+<td>Knowledge Graph</td>
+<td>知识图谱</td>
+<td>800+ 亿实体</td>
+</tr>
+<tr>
+<td>PageRank &#x2F; LTR</td>
+<td>排序</td>
+<td>200+ 信号</td>
+</tr>
+</tbody></table>
+<h3 id="7-3-一个搜索请求的旅程"><a href="#7-3-一个搜索请求的旅程" class="headerlink" title="7.3 一个搜索请求的旅程"></a>7.3 一个搜索请求的旅程</h3><p>从你按下回车到看到结果，0.3 秒内发生了：</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">1. 浏览器发送查询 (5ms)</span><br><span class="line">2. Google 负载均衡选择数据中心 (1ms)</span><br><span class="line">3. 查询理解：纠错、扩展、同义词 (10ms)</span><br><span class="line">4. 倒排索引召回候选文档 (20ms)</span><br><span class="line">5. 向量检索召回候选文档 (30ms)</span><br><span class="line">6. 合并召回结果，初步排序 (10ms)</span><br><span class="line">7. 200+ 信号打分重排 (50ms)</span><br><span class="line">8. 生成摘要、Knowledge Graph (20ms)</span><br><span class="line">9. 个性化排序 (10ms)</span><br><span class="line">10. 返回结果页面 (5ms)</span><br><span class="line"></span><br><span class="line">总计：~160ms</span><br></pre></td></tr></table></figure></div>
+
+<h2 id="八、搜索引擎的使用技巧"><a href="#八、搜索引擎的使用技巧" class="headerlink" title="八、搜索引擎的使用技巧"></a>八、搜索引擎的使用技巧</h2><h3 id="8-1-高级搜索语法"><a href="#8-1-高级搜索语法" class="headerlink" title="8.1 高级搜索语法"></a>8.1 高级搜索语法</h3><table>
+<thead>
+<tr>
+<th>语法</th>
+<th>作用</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>&quot;&quot;</code></td>
+<td>精确匹配短语</td>
+<td><code>&quot;machine learning&quot;</code></td>
+</tr>
+<tr>
+<td><code>site:</code></td>
+<td>限定网站</td>
+<td><code>python site:github.com</code></td>
+</tr>
+<tr>
+<td><code>filetype:</code></td>
+<td>限定文件类型</td>
+<td><code>report filetype:pdf</code></td>
+</tr>
+<tr>
+<td><code>intitle:</code></td>
+<td>标题中包含</td>
+<td><code>intitle:搜索引擎</code></td>
+</tr>
+<tr>
+<td><code>-</code></td>
+<td>排除关键词</td>
+<td><code>苹果 -手机</code></td>
+</tr>
+<tr>
+<td><code>OR</code></td>
+<td>或者</td>
+<td><code>Python OR Java</code></td>
+</tr>
+<tr>
+<td><code>*</code></td>
+<td>通配符</td>
+<td><code>最好的 * 搜索引擎</code></td>
+</tr>
+<tr>
+<td><code>..</code></td>
+<td>数字范围</td>
+<td><code>手机 2024..2026</code></td>
+</tr>
+<tr>
+<td><code>inurl:</code></td>
+<td>URL 中包含</td>
+<td><code>inurl:blog</code></td>
+</tr>
+<tr>
+<td><code>related:</code></td>
+<td>相似网站</td>
+<td><code>related:python.org</code></td>
+</tr>
+</tbody></table>
+<h3 id="8-2-搜索策略"><a href="#8-2-搜索策略" class="headerlink" title="8.2 搜索策略"></a>8.2 搜索策略</h3><p><strong>精准搜索</strong>：</p>
+<ul>
+<li>用引号锁定精确短语</li>
+<li>用 site: 限定到高质量网站</li>
+<li>加年份限制新鲜度</li>
+</ul>
+<p><strong>探索性搜索</strong>：</p>
+<ul>
+<li>用 OR 扩大范围</li>
+<li>用通配符 * 发现意外结果</li>
+<li>从 Wikipedia 开始找背景知识</li>
+</ul>
+<p><strong>学术搜索</strong>：</p>
+<ul>
+<li>Google Scholar（scholar.google.com）</li>
+<li>限定 filetype:pdf 找论文</li>
+<li>用引号搜论文标题</li>
+</ul>
+<h3 id="8-3-隐私搜索"><a href="#8-3-隐私搜索" class="headerlink" title="8.3 隐私搜索"></a>8.3 隐私搜索</h3><p>不想被搜索追踪？</p>
+<table>
+<thead>
+<tr>
+<th>搜索引擎</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>DuckDuckGo</td>
+<td>不追踪、不存储 IP</td>
+</tr>
+<tr>
+<td>SearXNG</td>
+<td>开源元搜索，可自建</td>
+</tr>
+<tr>
+<td>Brave Search</td>
+<td>独立索引，不追踪</td>
+</tr>
+<tr>
+<td>Startpage</td>
+<td>通过 Google 搜索但匿名</td>
+</tr>
+</tbody></table>
+<h2 id="九、自己搭搜索引擎"><a href="#九、自己搭搜索引擎" class="headerlink" title="九、自己搭搜索引擎"></a>九、自己搭搜索引擎</h2><p>想给自己的网站或文档做搜索，不用从零写：</p>
+<h3 id="9-1-Elasticsearch"><a href="#9-1-Elasticsearch" class="headerlink" title="9.1 Elasticsearch"></a>9.1 Elasticsearch</h3><p>最流行的开源搜索引府，基于 Lucene：</p>
+<div class="code-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Docker 启动</span></span><br><span class="line">docker run -d --name elasticsearch \</span><br><span class="line">  -p 9200:9200 \</span><br><span class="line">  -e <span class="string">&quot;discovery.type=single-node&quot;</span> \</span><br><span class="line">  elasticsearch:8</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建索引</span></span><br><span class="line">curl -X PUT http://localhost:9200/my_index</span><br><span class="line"></span><br><span class="line"><span class="comment"># 添加文档</span></span><br><span class="line">curl -X POST http://localhost:9200/my_index/_doc/1 \</span><br><span class="line">  -H <span class="string">&quot;Content-Type: application/json&quot;</span> \</span><br><span class="line">  -d <span class="string">&#x27;&#123;&quot;title&quot;: &quot;搜索引擎入门&quot;, &quot;content&quot;: &quot;倒排索引是核心...&quot;&#125;&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 搜索</span></span><br><span class="line">curl <span class="string">&quot;http://localhost:9200/my_index/_search?q=搜索引擎&quot;</span></span><br></pre></td></tr></table></figure></div>
+
+<h3 id="9-2-Meilisearch"><a href="#9-2-Meilisearch" class="headerlink" title="9.2 Meilisearch"></a>9.2 Meilisearch</h3><p>更轻量，开箱即用：</p>
+<div class="code-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">docker run -d --name meilisearch \</span><br><span class="line">  -p 7700:7700 \</span><br><span class="line">  getmeili/meilisearch</span><br><span class="line"></span><br><span class="line"><span class="comment"># 添加文档</span></span><br><span class="line">curl -X POST http://localhost:7700/indexes/movies/documents \</span><br><span class="line">  -H <span class="string">&quot;Content-Type: application/json&quot;</span> \</span><br><span class="line">  --data-binary @movies.json</span><br><span class="line"></span><br><span class="line"><span class="comment"># 搜索</span></span><br><span class="line">curl <span class="string">&quot;http://localhost:7700/indexes/movies/search?q=hello&quot;</span></span><br></pre></td></tr></table></figure></div>
+
+<h3 id="9-3-Tantivy-Sonic-Zinc"><a href="#9-3-Tantivy-Sonic-Zinc" class="headerlink" title="9.3 Tantivy &#x2F; Sonic &#x2F; Zinc"></a>9.3 Tantivy &#x2F; Sonic &#x2F; Zinc</h3><p>更轻量的选择：</p>
+<table>
+<thead>
+<tr>
+<th>引擎</th>
+<th>语言</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Tantivy</td>
+<td>Rust</td>
+<td>高性能，类 Lucene</td>
+</tr>
+<tr>
+<td>Sonic</td>
+<td>Rust</td>
+<td>极简，只做索引搜索</td>
+</tr>
+<tr>
+<td>Zinc</td>
+<td>Go</td>
+<td>轻量 ES 替代</td>
+</tr>
+<tr>
+<td>Manticore</td>
+<td>C++</td>
+<td>Sphinx 后继者</td>
+</tr>
+</tbody></table>
+<h2 id="十、2026-年搜索引擎趋势"><a href="#十、2026-年搜索引擎趋势" class="headerlink" title="十、2026 年搜索引擎趋势"></a>十、2026 年搜索引擎趋势</h2><h3 id="10-1-AI-搜索"><a href="#10-1-AI-搜索" class="headerlink" title="10.1 AI 搜索"></a>10.1 AI 搜索</h3><p>Google AI Overviews &#x2F; Bing Copilot &#x2F; Perplexity &#x2F; 搜狗明医等都在做 AI 摘要搜索：</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">传统搜索：用户输入关键词 → 返回 10 条蓝色链接</span><br><span class="line">AI 搜索：用户提问 → AI 阅读多个网页 → 生成摘要答案 → 附引用来源</span><br></pre></td></tr></table></figure></div>
+
+<p>底层技术：BM25&#x2F;向量检索召回 → LLM 阅读理解 → 生成答案。这就是 <strong>RAG（Retrieval-Augmented Generation）</strong>。</p>
+<h3 id="10-2-多模态搜索"><a href="#10-2-多模态搜索" class="headerlink" title="10.2 多模态搜索"></a>10.2 多模态搜索</h3><ul>
+<li><strong>图片搜索</strong>：Google Lens &#x2F; 百度识图，用图片搜图片</li>
+<li><strong>视频搜索</strong>：YouTube 视频内搜索（基于字幕和画面理解）</li>
+<li><strong>语音搜索</strong>：语音输入转文字再搜索</li>
+</ul>
+<h3 id="10-3-个性化与信息茧房"><a href="#10-3-个性化与信息茧房" class="headerlink" title="10.3 个性化与信息茧房"></a>10.3 个性化与信息茧房</h3><p>搜索引擎根据你的历史调整结果，可能导致信息茧房。2026 年的趋势是提供更多透明度和控制：</p>
+<ul>
+<li>Google “About this result” 解释为什么显示这条结果</li>
+<li>DuckDuckGo 完全不做个性化</li>
+<li>欧盟 DSA 法案要求搜索引擎公开排序算法的关键参数</li>
+</ul>
+<h2 id="总结速查"><a href="#总结速查" class="headerlink" title="总结速查"></a>总结速查</h2><table>
+<thead>
+<tr>
+<th>概念</th>
+<th>一句话</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>爬虫</td>
+<td>自动下载网页的程序</td>
+</tr>
+<tr>
+<td>倒排索引</td>
+<td>从词反查文档的数据结构，搜索引擎的核心</td>
+</tr>
+<tr>
+<td>分词</td>
+<td>把文本切成有意义的词</td>
+</tr>
+<tr>
+<td>TF-IDF</td>
+<td>词频 × 逆文档频率，衡量词的重要性</td>
+</tr>
+<tr>
+<td>BM25</td>
+<td>TF-IDF 升级版，有饱和效应，全文搜索标准</td>
+</tr>
+<tr>
+<td>PageRank</td>
+<td>根据链接结构算页面权重</td>
+</tr>
+<tr>
+<td>向量检索</td>
+<td>语义级别的相似度搜索</td>
+</tr>
+<tr>
+<td>混合搜索</td>
+<td>BM25 + 向量检索，现代搜索标配</td>
+</tr>
+<tr>
+<td>LTR</td>
+<td>机器学习排序，融合数百种信号</td>
+</tr>
+</tbody></table>
+<hr>
+<p><strong>相关链接：</strong></p>
+<ul>
+<li>Google 搜索工作原理：<a class="link"   target="_blank" rel="noopener" href="https://www.google.com/search/howsearchworks/" >https://www.google.com/search/howsearchworks/<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>Google SEO 新手指南：<a class="link"   target="_blank" rel="noopener" href="https://developers.google.com/search/docs/fundamentals/seo-starter-guide" >https://developers.google.com/search/docs/fundamentals/seo-starter-guide<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>Elasticsearch 文档：<a class="link"   target="_blank" rel="noopener" href="https://www.elastic.co/guide/" >https://www.elastic.co/guide/<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>Meilisearch 文档：<a class="link"   target="_blank" rel="noopener" href="https://www.meilisearch.com/docs" >https://www.meilisearch.com/docs<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>jieba 分词：<a class="link"   target="_blank" rel="noopener" href="https://github.com/fxsjy/jieba" >https://github.com/fxsjy/jieba<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>Pro Git Book 中搜索引擎章节：<a class="link"   target="_blank" rel="noopener" href="https://git-scm.com/book/zh/v2" >https://git-scm.com/book/zh/v2<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>SearXNG 开源元搜索：<a class="link"   target="_blank" rel="noopener" href="https://searxng.github.io/" >https://searxng.github.io/<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+</ul>
+
+		</div>
+
+		
+		<div class="post-copyright-info w-full my-8 px-2 sm:px-6 md:px-8">
+			<div class="article-copyright-info-container">
+    <ul>
+        <li><strong>Titre:</strong> 搜索引擎新手探究：从原理到数据再到实战使用</li>
+        <li><strong>Auteur:</strong> Chyyl</li>
+        <li><strong>Créé à
+                :</strong> 2026-07-13 00:00:00</li>
+        
+            <li>
+                <strong>Mis à jour à
+                    :</strong> 2026-07-13 11:23:26
+            </li>
+        
+        <li>
+            <strong>Lien:</strong> https://chyyl.netlify.app/2026/07/13/search-engine-beginner-guide/
+        </li>
+        <li>
+            <strong>
+                Licence:
+            </strong>
+            
+
+            
+                Cette œuvre est sous licence <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY-NC-SA 4.0</a>.
+            
+        </li>
+    </ul>
+</div>
+
+		</div>
+		
+
+		
+		<ul class="post-tags-box text-lg mt-1.5 flex-wrap justify-center flex md:hidden">
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/%E6%95%99%E7%A8%8B/">#教程</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/%E6%90%9C%E7%B4%A2%E5%BC%95%E6%93%8E/">#搜索引擎</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/%E5%80%92%E6%8E%92%E7%B4%A2%E5%BC%95/">#倒排索引</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/%E7%88%AC%E8%99%AB/">#爬虫</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/PageRank/">#PageRank</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/BM25/">#BM25</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/%E5%90%91%E9%87%8F%E6%A3%80%E7%B4%A2/">#向量检索</a>&nbsp;
+			</li>
+			
+		</ul>
+		
+
+		
+
+		
+		<div class="article-nav my-8 flex justify-between items-center px-2 sm:px-6 md:px-8">
+			
+			<div class="article-prev border-border-color shadow-redefine-flat shadow-shadow-color-2 rounded-medium px-4 py-2 hover:shadow-redefine-flat-hover hover:shadow-shadow-color-2">
+				<a class="prev" rel="prev" href="/2026/07/13/flowise-visual-ai-agent-guide/">
+					<span class="left arrow-icon flex justify-center items-center">
+						<i class="fa-solid fa-chevron-left"></i>
+					</span>
+					<span class="title flex justify-center items-center">
+						<span class="post-nav-title-item truncate max-w-48">Flowise 可视化 AI Agent 构建：从安装到多 Agent 编排完整教程</span>
+						<span class="post-nav-item">Articles précédents</span>
+					</span>
+				</a>
+			</div>
+			
+			
+			<div class="article-next border-border-color shadow-redefine-flat shadow-shadow-color-2 rounded-medium px-4 py-2 hover:shadow-redefine-flat-hover hover:shadow-shadow-color-2">
+				<a class="next" rel="next" href="/2026/07/13/supra-router-llamacpp-router-mode-guide/">
+					<span class="title flex justify-center items-center">
+						<span class="post-nav-title-item truncate max-w-48">Supra-Router-51M + llama.cpp Router 模式：用 51M 小模型智能路由多模型</span>
+						<span class="post-nav-item">Articles suivants</span>
+					</span>
+					<span class="right arrow-icon flex justify-center items-center">
+						<i class="fa-solid fa-chevron-right"></i>
+					</span>
+				</a>
+			</div>
+			
+		</div>
+		
+
+
+		
+		<div class="comment-container px-2 sm:px-6 md:px-8 pb-8">
+			<div class="comments-container mt-10 w-full ">
+    <div id="comment-anchor" class="w-full h-2.5"></div>
+    <div class="comment-area-title w-full my-1.5 md:my-2.5 text-xl md:text-3xl font-bold">
+        Commentaires
+    </div>
+    
+
+        
+            
+    <div id="waline"></div>
+    <script type="module" data-swup-reload-script>
+      import { init } from '/js/libs/waline.js';
+
+      (function() {
+        const startPath = location.pathname;
+        const startTime = Date.now();
+        const retryDelay = 200;
+        const retryLimit = 5000;
+
+        const runWaline = () => {
+          if (location.pathname !== startPath) {
+            return;
+          }
+
+          const container = document.getElementById('waline');
+          if (!container) {
+            if (Date.now() - startTime < retryLimit) {
+              setTimeout(runWaline, retryDelay);
+            }
+            return;
+          }
+
+          if (window.redefineWalineInstance?.destroy) {
+            window.redefineWalineInstance.destroy();
+          }
+
+          container.innerHTML = '';
+          window.redefineWalineInstance = init({
+            el: '#waline',
+            serverURL: 'https://example.example.com',
+            path: location.pathname,
+            dark: 'body[class~="dark-mode"]',
+            reaction: false,
+            requiredMeta: ['nick', 'mail'],
+            emoji: [],
+                      lang: 'zh-CN',
+          });
+        };
+
+        runWaline();
+      })();
+    </script>
+
+
+
+        
+    
+</div>
+
+		</div>
+		
+	</div>
+
+	
+	<div class="toc-content-container">
+		<div class="post-toc-wrap">
+	<div class="post-toc">
+		<div class="toc-title">Sur cette page</div>
+		<div class="page-title">搜索引擎新手探究：从原理到数据再到实战使用</div>
+		<ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E6%90%9C%E7%B4%A2%E5%BC%95%E6%93%8E%E6%98%AF%E4%BB%80%E4%B9%88"><span class="nav-text">一、搜索引擎是什么</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-%E5%AE%9A%E4%B9%89"><span class="nav-text">1.1 定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-%E6%90%9C%E7%B4%A2%E5%BC%95%E6%93%8E%E7%9A%84%E4%B8%89%E4%B8%AA%E6%A0%B8%E5%BF%83%E7%BB%84%E4%BB%B6"><span class="nav-text">1.2 搜索引擎的三个核心组件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-%E6%90%9C%E7%B4%A2-vs-%E6%95%B0%E6%8D%AE%E5%BA%93%E6%9F%A5%E8%AF%A2"><span class="nav-text">1.3 搜索 vs 数据库查询</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E7%88%AC%E8%99%AB%EF%BC%9A%E6%95%B0%E6%8D%AE%E4%BB%8E%E5%93%AA%E6%9D%A5"><span class="nav-text">二、爬虫：数据从哪来</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-%E7%88%AC%E8%99%AB%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86"><span class="nav-text">2.1 爬虫基本原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-%E6%A0%B8%E5%BF%83%E9%97%AE%E9%A2%98"><span class="nav-text">2.2 核心问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%88%AC%E8%99%AB%E7%A4%BA%E4%BE%8B%EF%BC%88Python%EF%BC%89"><span class="nav-text">2.3 一个简单爬虫示例（Python）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-4-%E7%9C%9F%E5%AE%9E%E6%90%9C%E7%B4%A2%E5%BC%95%E6%93%8E%E7%9A%84%E7%88%AC%E8%99%AB%E8%A7%84%E6%A8%A1"><span class="nav-text">2.4 真实搜索引擎的爬虫规模</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E5%80%92%E6%8E%92%E7%B4%A2%E5%BC%95%EF%BC%9A%E6%90%9C%E7%B4%A2%E5%BC%95%E6%93%8E%E7%9A%84%E5%BF%83%E8%84%8F"><span class="nav-text">三、倒排索引：搜索引擎的心脏</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-%E6%AD%A3%E6%8E%92%E7%B4%A2%E5%BC%95-vs-%E5%80%92%E6%8E%92%E7%B4%A2%E5%BC%95"><span class="nav-text">3.1 正排索引 vs 倒排索引</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-%E5%80%92%E6%8E%92%E7%B4%A2%E5%BC%95%E7%9A%84%E5%AE%8C%E6%95%B4%E7%BB%93%E6%9E%84"><span class="nav-text">3.2 倒排索引的完整结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-%E6%9E%84%E5%BB%BA%E5%80%92%E6%8E%92%E7%B4%A2%E5%BC%95"><span class="nav-text">3.3 构建倒排索引</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-%E5%88%86%E8%AF%8D"><span class="nav-text">3.4 分词</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-5-%E5%81%9C%E7%94%A8%E8%AF%8D"><span class="nav-text">3.5 停用词</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-6-%E7%B4%A2%E5%BC%95%E5%8E%8B%E7%BC%A9"><span class="nav-text">3.6 索引压缩</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B%E3%80%81%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%EF%BC%9A%E5%86%B3%E5%AE%9A%E4%BD%A0%E7%9C%8B%E5%88%B0%E4%BB%80%E4%B9%88"><span class="nav-text">四、排序算法：决定你看到什么</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-TF-IDF"><span class="nav-text">4.1 TF-IDF</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-BM25"><span class="nav-text">4.2 BM25</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-3-PageRank"><span class="nav-text">4.3 PageRank</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-4-%E7%8E%B0%E4%BB%A3%E6%8E%92%E5%BA%8F%EF%BC%9A%E5%A4%9A%E4%BF%A1%E5%8F%B7%E8%9E%8D%E5%90%88"><span class="nav-text">4.4 现代排序：多信号融合</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-5-%E5%90%91%E9%87%8F%E6%A3%80%E7%B4%A2%E4%B8%8E%E8%AF%AD%E4%B9%89%E6%90%9C%E7%B4%A2"><span class="nav-text">4.5 向量检索与语义搜索</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94%E3%80%81%E6%95%B0%E6%8D%AE%E5%A4%84%E7%90%86%E5%85%A8%E6%B5%81%E7%A8%8B"><span class="nav-text">五、数据处理全流程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-%E7%BD%91%E9%A1%B5%E8%A7%A3%E6%9E%90"><span class="nav-text">5.1 网页解析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-%E5%8E%BB%E9%87%8D"><span class="nav-text">5.2 去重</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-3-%E6%95%B0%E6%8D%AE%E6%9B%B4%E6%96%B0%E7%AD%96%E7%95%A5"><span class="nav-text">5.3 数据更新策略</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AD%E3%80%81%E5%8A%A8%E6%89%8B%E5%86%99%E4%B8%80%E4%B8%AA%E8%BF%B7%E4%BD%A0%E6%90%9C%E7%B4%A2%E5%BC%95%E6%93%8E"><span class="nav-text">六、动手写一个迷你搜索引擎</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-1-%E5%AE%8C%E6%95%B4%E4%BB%A3%E7%A0%81"><span class="nav-text">6.1 完整代码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-2-%E8%BF%90%E8%A1%8C%E6%95%88%E6%9E%9C"><span class="nav-text">6.2 运行效果</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%83%E3%80%81%E6%90%9C%E7%B4%A2%E5%BC%95%E6%93%8E%E7%9A%84%E6%95%B0%E6%8D%AE%E8%A7%84%E6%A8%A1"><span class="nav-text">七、搜索引擎的数据规模</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#7-1-%E5%90%84%E5%A4%A7%E6%90%9C%E7%B4%A2%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E9%87%8F"><span class="nav-text">7.1 各大搜索引擎数据量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-2-Google-%E7%9A%84%E6%95%B0%E6%8D%AE%E5%A4%84%E7%90%86%E7%AE%A1%E7%BA%BF"><span class="nav-text">7.2 Google 的数据处理管线</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-3-%E4%B8%80%E4%B8%AA%E6%90%9C%E7%B4%A2%E8%AF%B7%E6%B1%82%E7%9A%84%E6%97%85%E7%A8%8B"><span class="nav-text">7.3 一个搜索请求的旅程</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AB%E3%80%81%E6%90%9C%E7%B4%A2%E5%BC%95%E6%93%8E%E7%9A%84%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7"><span class="nav-text">八、搜索引擎的使用技巧</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#8-1-%E9%AB%98%E7%BA%A7%E6%90%9C%E7%B4%A2%E8%AF%AD%E6%B3%95"><span class="nav-text">8.1 高级搜索语法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-2-%E6%90%9C%E7%B4%A2%E7%AD%96%E7%95%A5"><span class="nav-text">8.2 搜索策略</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-3-%E9%9A%90%E7%A7%81%E6%90%9C%E7%B4%A2"><span class="nav-text">8.3 隐私搜索</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B9%9D%E3%80%81%E8%87%AA%E5%B7%B1%E6%90%AD%E6%90%9C%E7%B4%A2%E5%BC%95%E6%93%8E"><span class="nav-text">九、自己搭搜索引擎</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#9-1-Elasticsearch"><span class="nav-text">9.1 Elasticsearch</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-2-Meilisearch"><span class="nav-text">9.2 Meilisearch</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-3-Tantivy-Sonic-Zinc"><span class="nav-text">9.3 Tantivy &#x2F; Sonic &#x2F; Zinc</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%81%E3%80%812026-%E5%B9%B4%E6%90%9C%E7%B4%A2%E5%BC%95%E6%93%8E%E8%B6%8B%E5%8A%BF"><span class="nav-text">十、2026 年搜索引擎趋势</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#10-1-AI-%E6%90%9C%E7%B4%A2"><span class="nav-text">10.1 AI 搜索</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#10-2-%E5%A4%9A%E6%A8%A1%E6%80%81%E6%90%9C%E7%B4%A2"><span class="nav-text">10.2 多模态搜索</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#10-3-%E4%B8%AA%E6%80%A7%E5%8C%96%E4%B8%8E%E4%BF%A1%E6%81%AF%E8%8C%A7%E6%88%BF"><span class="nav-text">10.3 个性化与信息茧房</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%E9%80%9F%E6%9F%A5"><span class="nav-text">总结速查</span></a></li></ol>
+
+	</div>
+</div>
+	</div>
+	
+</div>
+
+			</div>
+
+			
+		</div>
+
+		<div class="main-content-footer">
+			<footer class="footer mt-5 py-5 h-auto text-base text-third-text-color relative border-t-2 border-t-border-color">
+    <div class="info-container py-3 text-center">
+        
+        <div class="text-center">
+            &copy;
+            
+              <span>2024</span>
+              -
+            
+            2026&nbsp;&nbsp;<i class="fa-solid fa-heart fa-beat" style="--fa-animation-duration: 0.5s; color: #f54545"></i>&nbsp;&nbsp;<a href="/">Chyyl</a>
+            
+                
+                <p class="post-count space-x-0.5">
+                    <span>
+                        15  posts au total
+                    </span>
+                    
+                </p>
+            
+        </div>
+        
+            <script data-swup-reload-script src="https://cn.vercount.one/js"></script>
+            <div class="relative text-center lg:absolute lg:right-[20px] lg:top-1/2 lg:-translate-y-1/2 lg:text-right">
+                
+                    <span id="busuanzi_container_site_uv" class="lg:!block">
+                        <span class="text-sm">VISITEURS</span>
+                        <span id="busuanzi_value_site_uv"></span>
+                    </span>
+                
+                
+                    <span id="busuanzi_container_site_pv" class="lg:!block">
+                        <span class="text-sm">NOMBRE TOTAL DE PAGES VUES</span>
+                        <span id="busuanzi_value_site_pv"></span>
+                    </span>
+                
+            </div>
+        
+        <div class="relative text-center lg:absolute lg:left-[20px] lg:top-1/2 lg:-translate-y-1/2 lg:text-left">
+            <span class="lg:block text-sm">POWERED BY <?xml version="1.0" encoding="utf-8"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg class="relative top-[2px] inline-block align-baseline" version="1.1" id="圖層_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="1rem" height="1rem" viewBox="0 0 512 512" enable-background="new 0 0 512 512" xml:space="preserve"><path fill="#0E83CD" d="M256.4,25.8l-200,115.5L56,371.5l199.6,114.7l200-115.5l0.4-230.2L256.4,25.8z M349,354.6l-18.4,10.7l-18.6-11V275H200v79.6l-18.4,10.7l-18.6-11v-197l18.5-10.6l18.5,10.8V237h112v-79.6l18.5-10.6l18.5,10.8V354.6z"/></svg><a target="_blank" class="text-base" href="https://hexo.io">Hexo</a></span>
+            <span class="text-sm lg:block">THEME&nbsp;<a class="text-base" target="_blank" href="https://github.com/EvanNotFound/hexo-theme-redefine">Redefine v2.9.0</a></span>
+        </div>
+        
+        
+            <div>
+                Blog en ligne depuis <span class="odometer" id="runtime_days" ></span> Jours <span class="odometer" id="runtime_hours"></span> Hrs <span class="odometer" id="runtime_minutes"></span> Min <span class="odometer" id="runtime_seconds"></span> Sec
+            </div>
+        
+        
+            <script data-swup-reload-script>
+                try {
+                    function odometer_init() {
+                    const elements = document.querySelectorAll('.odometer');
+                    elements.forEach(el => {
+                        new Odometer({
+                            el,
+                            format: '( ddd).dd',
+                            duration: 200
+                        });
+                    });
+                    }
+                    odometer_init();
+                } catch (error) {}
+            </script>
+        
+        
+        
+    </div>  
+</footer>
+		</div>
+	</div>
+
+	
+	<div class="post-tools">
+		<div class="post-tools-container">
+	<ul class="article-tools-list">
+		<!-- TOC aside toggle -->
+		
+		<li class="right-bottom-tools page-aside-toggle">
+			<i class="fa-regular fa-outdent"></i>
+		</li>
+		
+
+		<!-- go comment -->
+		
+		<li class="go-comment">
+			<i class="fa-regular fa-comments"></i>
+		</li>
+		
+	</ul>
+</div>
+	</div>
+	
+
+	<div class="right-side-tools-container">
+		<div class="side-tools-container">
+	<ul class="hidden-tools-list">
+		<li class="right-bottom-tools tool-font-adjust-plus flex justify-center items-center">
+			<i class="fa-regular fa-magnifying-glass-plus"></i>
+		</li>
+
+		<li class="right-bottom-tools tool-font-adjust-minus flex justify-center items-center">
+			<i class="fa-regular fa-magnifying-glass-minus"></i>
+		</li>
+
+		<li class="right-bottom-tools tool-dark-light-toggle flex justify-center items-center">
+			<i class="fa-regular fa-moon"></i>
+		</li>
+
+		<!-- rss -->
+		
+		<li class="right-bottom-tools rss flex justify-center items-center">
+			<a class="flex justify-center items-center" href="/atom.xml" target="_blank">
+				<i class="fa-regular fa-rss"></i>
+			</a>
+		</li>
+		
+
+		
+
+		<li class="right-bottom-tools tool-scroll-to-bottom flex justify-center items-center">
+			<i class="fa-regular fa-arrow-down"></i>
+		</li>
+	</ul>
+
+	<ul class="visible-tools-list">
+		<li class="right-bottom-tools toggle-tools-list flex justify-center items-center">
+			<i class="fa-regular fa-cog fa-spin"></i>
+		</li>
+		
+		<li class="right-bottom-tools tool-scroll-to-top flex justify-center items-center">
+			<i class="arrow-up fas fa-arrow-up"></i>
+			<span class="percent"></span>
+		</li>
+		
+		
+	</ul>
+</div>
+	</div>
+
+	<div class="image-viewer-container" role="dialog" aria-modal="true" aria-label="Visionneuse d’images">
+	<button class="image-viewer-close" type="button" aria-label="Fermer">
+		<i class="fa-solid fa-xmark"></i>
+	</button>
+	<button class="image-viewer-prev" type="button" aria-label="Précédent">
+		<i class="fa-solid fa-chevron-left"></i>
+	</button>
+	<div class="image-viewer-frame">
+		<img src="" alt="">
+	</div>
+	<div class="image-viewer-exif-panel hidden absolute left-1/2 bottom-20 -translate-x-1/2 w-[min(92vw,420px)] max-h-[60vh] overflow-hidden rounded-2xl bg-background-color-transparent-80 p-4 text-left shadow-redefine-flat backdrop-blur-md" role="dialog" aria-label="EXIF" aria-hidden="true">
+		<div class="flex items-center justify-between mb-3">
+			<span class="text-sm font-semibold text-first-text-color">EXIF</span>
+			<button class="image-viewer-exif-close flex h-8 w-8 items-center justify-center rounded-full bg-background-color-transparent-80 text-first-text-color transition hover:bg-background-color-transparent-40" type="button" aria-label="Fermer">
+				<i class="fa-solid fa-xmark text-[0.65rem]"></i>
+			</button>
+		</div>
+		<div class="image-viewer-exif-cards grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto pr-1 scrollbar-hide"></div>
+		<template class="image-viewer-exif-card-template">
+			<div class="rounded-lg bg-background-color-transparent-40 px-3 py-2">
+				<div class="image-viewer-exif-card-header flex items-center gap-2 mb-1">
+					<i class="image-viewer-exif-card-icon fa-solid fa-circle-info text-xs text-third-text-color"></i>
+					<div class="image-viewer-exif-card-title text-xs font-semibold text-first-text-color"></div>
+				</div>
+				<div class="image-viewer-exif-card-items flex flex-col gap-1"></div>
+			</div>
+		</template>
+	</div>
+	<button class="image-viewer-exif-toggle flex items-center gap-2 hidden absolute left-1/2 bottom-6 -translate-x-1/2 rounded-full border border-border-color bg-background-color-transparent-80 px-4 py-2 text-first-text-color backdrop-blur-md transition hover:bg-background-color-transparent-40" type="button" aria-label="EXIF" aria-expanded="false">
+		<i class="fa-solid fa-circle-info text-xs"></i>
+		<span class="text-xs font-semibold uppercase tracking-wider">EXIF</span>
+	</button>
+	<button class="image-viewer-next" type="button" aria-label="Suivant">
+		<i class="fa-solid fa-chevron-right"></i>
+	</button>
+</div>
+
+
+	
+	<div class="search-pop-overlay">
+	<div class="popup search-popup">
+		<div class="search-header">
+			<span class="search-input-field-pre">
+				<i class="fa-solid fa-keyboard"></i>
+			</span>
+			<div class="search-input-container">
+				<input autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="recherche..." spellcheck="false" type="search" class="search-input">
+			</div>
+			<span class="popup-btn-close">
+				<i class="fa-solid fa-times"></i>
+			</span>
+		</div>
+		<div id="search-result">
+			<div id="no-result">
+				<i class="fa-solid fa-spinner fa-spin-pulse fa-5x fa-fw"></i>
+			</div>
+		</div>
+	</div>
+</div>
+	
+
+</main>
+
+
+<script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/Swup.min.js" ></script><script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/SwupSlideTheme.min.js" ></script><script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/SwupScriptsPlugin.min.js" ></script><script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/SwupProgressPlugin.min.js" ></script><script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/SwupScrollPlugin.min.js" ></script><script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/SwupPreloadPlugin.min.js" ></script>
+<script>
+    window.swup = new Swup({
+        plugins: [
+            new SwupScriptsPlugin({
+                optin: true,
+            }),
+            new SwupProgressPlugin(),
+            new SwupScrollPlugin({
+                offset: 80,
+            }),
+            new SwupSlideTheme({
+                mainElement: ".main-content-body",
+            }),
+            new SwupPreloadPlugin(),
+        ],
+        containers: ["#swup"],
+    });
+
+    window.dispatchEvent(
+        new CustomEvent("redefine:swup:ready", {
+            detail: {
+                swup: window.swup,
+            },
+        }),
+    );
+</script>
+
+
+
+
+	<script type="module" src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/main.js" ></script>
+
+
+    <script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/odometer.min.js" ></script>
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/assets/odometer-theme-minimal.css">
+
+
+
+
+
+
+  <script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/Typed.min.js" ></script>
+
+
+
+    
+        <script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/mermaid.min.js" ></script>
+    
+
+
+
+
+
+
+<script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/moment-with-locales.min.js" data-swup-reload-script></script>
+
+
+	
+</body>
+
+</html>

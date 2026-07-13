@@ -1,0 +1,1496 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="keywords" content="Hexo Theme Redefine">
+    
+    
+    <meta name="author" content="Chyyl">
+    
+    <!-- Completely eliminate flash of wrong theme -->
+    <script>
+        (function() {
+            const THEME_KEY = "REDEFINE-THEME-STATUS";
+            const DARK = "dark", LIGHT = "light";
+            
+            // Get preferred theme
+            function getTheme() {
+                try {
+                    const saved = localStorage.getItem(THEME_KEY);
+                    if (saved) {
+                        const { isDark } = JSON.parse(saved);
+                        return isDark ? DARK : LIGHT;
+                    }
+                } catch (e) {}
+                
+                return matchMedia("(prefers-color-scheme: dark)").matches ? DARK : LIGHT;
+            }
+            
+            // Apply theme to document
+            function applyTheme(theme) {
+                const isDark = theme === DARK;
+                const root = document.documentElement;
+                
+                // Set classes for compatibility
+                root.classList.add(theme);
+                root.classList.remove(isDark ? LIGHT : DARK);
+                root.style.colorScheme = theme;
+            }
+            
+            // Initial application
+            const theme = getTheme();
+            applyTheme(theme);
+            
+            // Listen for system preference changes
+            matchMedia("(prefers-color-scheme: dark)").addEventListener("change", ({ matches }) => {
+                // Only update if using system preference (no localStorage entry)
+                if (!localStorage.getItem(THEME_KEY)) {
+                    applyTheme(matches ? DARK : LIGHT);
+                }
+            });
+            
+            // Set body classes ASAP (before DOMContentLoaded)
+            (function() {
+                const addBodyClass = () => {
+                    const b = document.body;
+                    if (!b) return false;
+                    b.classList.add(theme + "-mode");
+                    return true;
+                };
+
+                // Try immediately
+                if (addBodyClass()) return;
+
+                // Observe until body exists
+                const mo = new MutationObserver(() => {
+                    if (addBodyClass()) mo.disconnect();
+                });
+                mo.observe(document.documentElement, { childList: true, subtree: true });
+            })();
+        })();
+    </script>
+    
+    <!-- preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    
+        
+        
+        
+            <link rel="preconnect" href="https://registry.npmmirror.com" crossorigin>
+        
+    
+    <!--- Seo Part-->
+    
+    <link rel="canonical" href="https://chyyl.netlify.app/2026/07/13/flowise-visual-ai-agent-guide/"/>
+    <meta name="robots" content="index,follow">
+    <meta name="googlebot" content="index,follow">
+    <meta name="revisit-after" content="1 days">
+    
+    
+        
+        <meta name="description" content="Hexo Theme Redefine, Redefine Your Hexo Journey.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Flowise 可视化 AI Agent 构建：从安装到多 Agent 编排完整教程">
+<meta property="og:url" content="https://chyyl.netlify.app/2026/07/13/flowise-visual-ai-agent-guide/index.html">
+<meta property="og:site_name" content="Chyyl&#39;s Blog">
+<meta property="og:description" content="Hexo Theme Redefine, Redefine Your Hexo Journey.">
+<meta property="og:locale">
+<meta property="og:image" content="https://chyyl.netlify.app/images/redefine-og.webp">
+<meta property="article:published_time" content="2026-07-12T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-07-13T03:23:24.592Z">
+<meta property="article:author" content="Chyyl">
+<meta property="article:tag" content="AI Agent">
+<meta property="article:tag" content="Flowise">
+<meta property="article:tag" content="LangChain">
+<meta property="article:tag" content="RAG">
+<meta property="article:tag" content="可视化编程">
+<meta property="article:tag" content="教程">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://chyyl.netlify.app/images/redefine-og.webp">
+    
+    
+    <!--- Icon Part-->
+    <link rel="icon" type="image/png" href="https://avatars.githubusercontent.com/u/115130037?v=4" sizes="192x192">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://avatars.githubusercontent.com/u/115130037?v=4">
+    <meta name="theme-color" content="#A31F34">
+    <link rel="shortcut icon" href="https://avatars.githubusercontent.com/u/115130037?v=4">
+    <!--- Page Info-->
+    
+    <title>
+        
+            Flowise 可视化 AI Agent 构建：从安装到多 Agent 编排完整教程 | ChyyL&#39;s Blog
+        
+    </title>
+
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fonts/Chillax/chillax.css">
+
+    <!--- Inject Part-->
+    
+
+    
+<link rel="stylesheet" href="/css/style.css">
+
+
+    
+        <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/css/build/tailwind.css">
+    
+
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fonts/GeistMono/geist-mono.css">
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fonts/Geist/geist.css">
+    <!--- Font Part-->
+    
+    
+    
+        <link href="" rel="stylesheet">
+    
+    
+        <link href="" rel="stylesheet">
+    
+    
+        <link href="" rel="stylesheet">
+    
+    
+        <script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/anime.min.js" ></script>
+    
+
+    <script id="hexo-configurations">
+    window.config = {"hostname":"chyyl.netlify.app","root":"/","language":"zh-Hans"};
+    window.theme = {"articles":{"style":{"font_size":"16px","line_height":1.5,"image_border_radius":"14px","image_alignment":"center","image_caption":false,"link_icon":true,"delete_mask":false,"title_alignment":"left","headings_top_spacing":{"h1":"3.2rem","h2":"2.4rem","h3":"1.9rem","h4":"1.6rem","h5":"1.4rem","h6":"1.3rem"}},"word_count":{"enable":true,"count":true,"min2read":true},"author_label":{"enable":true,"auto":false,"list":[]},"code_block":{"copy":true,"style":"mac","highlight_theme":{"light":"github","dark":"vs2015"},"font":{"enable":false,"family":null,"url":null}},"toc":{"enable":true,"max_depth":3,"number":false,"expand":true,"init_open":true},"copyright":{"enable":true,"default":"cc_by_nc_sa"},"lazyload":true,"pangu_js":false,"recommendation":{"enable":false,"title":"推荐阅读","limit":3,"mobile_limit":2,"placeholder":"/images/wallhaven-wqery6-light.webp","skip_dirs":[]}},"colors":{"primary":"#A31F34","secondary":null,"default_mode":"light"},"global":{"fonts":{"chinese":{"enable":true,"family":null,"url":null},"english":{"enable":true,"family":null,"url":null},"title":{"enable":true,"family":null,"url":null}},"content_max_width":"1000px","sidebar_width":"210px","hover":{"shadow":true,"scale":false},"scroll_progress":{"bar":true,"percentage":true},"website_counter":{"url":"https://cn.vercount.one/js","enable":true,"site_pv":true,"site_uv":true,"post_pv":true},"single_page":true,"preloader":{"enable":true,"custom_message":null},"side_tools":{"gear_rotation":true,"auto_expand":false},"open_graph":{"enable":true,"image":"/images/redefine-og.webp","description":"Hexo Theme Redefine, Redefine Your Hexo Journey."},"google_analytics":{"enable":false,"id":null}},"home_banner":{"enable":true,"style":"fixed","image":{"light":"/images/wallhaven-wqery6-light.webp","dark":"/images/wallhaven-wqery6-dark.webp"},"title":"Learn, Share, and Grow","subtitle":{"text":[],"hitokoto":{"enable":true,"show_author":true,"api":"https://v1.hitokoto.cn"},"typing_speed":100,"backing_speed":80,"starting_delay":500,"backing_delay":1500,"loop":true,"smart_backspace":true},"text_color":{"light":"#fff","dark":"#d1d1b6"},"text_style":{"title_size":"2.8rem","subtitle_size":"1.5rem","line_height":1.2},"custom_font":{"enable":false,"family":null,"url":null},"social_links":{"enable":false,"style":"default","links":[{"icon":"fa-brands fa-github","url":null},{"icon":"fa-brands fa-twitter","url":null},{"icon":"fa-solid fa-at","url":"you@example.com"},{"icon":"fa-brands fa-telegram","url":null},{"icon":"/images/custom-icon.svg","url":null}],"qrs":[{"icon":"fa-brands fa-weixin","qr":null},{"icon":"/images/custom-icon.svg","qr":null}]}},"plugins":{"feed":{"enable":true},"aplayer":{"enable":false,"type":"fixed","audios":[{"name":null,"artist":null,"url":null,"cover":null,"lrc":null}]},"mermaid":{"enable":true,"version":"11.4.1","theme":{"light":"default","dark":"dark"}}},"version":"2.9.0","navbar":{"auto_hide":false,"color":{"left":"#f78736","right":"#367df7","transparency":35},"width":{"home":"1200px","pages":"1000px"},"links":{"Home":{"path":"/","icon":"fa-regular fa-house"},"Archives":{"path":"/archives","icon":"fa-regular fa-archive"}},"search":{"enable":true,"preload":true}},"page_templates":{"friends_column":2,"tags_style":"blur","masonry":{"batch_size":12,"initial_batch_size":24}},"home":{"sidebar":{"enable":true,"position":"left","first_item":"menu","announcement":null,"show_on_mobile":true,"links":{"Archives":{"path":"/archives","icon":"fa-regular fa-archive"},"Tags":{"path":"/tags","icon":"fa-regular fa-tags"},"Categories":{"path":"/categories","icon":"fa-regular fa-folder"}}},"article_date_format":"auto","excerpt_length":200,"categories":{"enable":true,"limit":3},"tags":{"enable":true,"limit":3}},"footer":{"runtime":true,"icon":"<i class=\"fa-solid fa-heart fa-beat\" style=\"--fa-animation-duration: 0.5s; color: #f54545\"></i>","start":"2024/06/01 00:00:00","statistics":true,"customize":null,"icp":{"enable":false,"number":null,"url":null}},"footerStart":"2024/06/01 00:00:00","mermaid":{"style":{"light":"default","dark":"dark"}}};
+    window.lang_ago = {"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days ago","week":"%s weeks ago","month":"%s months ago","year":"%s years ago"};
+    window.i18n = {"search":"Search...","toc":"On this page","prev":"Prev","next":"Next","prev_posts":"Prev posts","next_posts":"Next posts","page":"Page %d","recent_posts":"Recent Posts","share":"Share","powered_by":"POWERED BY %s","theme":"THEME","rss_feed":"RSS Feed","category":"Category","categories":"Categories","tag":"Tag","tags":"Tags","post":"Post","posts":"Posts","tagcloud":"Tag Cloud","comment":"Comment","comments":"Comments","home":"Home","archive":"Archive","archives":"Archives","top":"TOP","sticky":"Sticky","go-back-home":"Go Back Home","masonry_loading":"Loading photos...","image_viewer":"Image viewer","close":"Close","exif":{"title":"EXIF","cards":{"camera":"Camera","lens":"Lens","exposure":"Exposure","other":"Other"},"fields":{"make":"Brand","model":"Model","date_taken":"Date taken","lens_model":"Lens","focal_length":"Focal length","focus_mode":"Focus mode","shutter":"Shutter","aperture":"Aperture","iso":"ISO","exposure_program":"Exposure program","exposure_compensation":"Exposure compensation","metering_mode":"Metering mode","flash":"Flash","white_balance":"White balance","latitude":"Latitude","longitude":"Longitude","altitude":"Altitude"},"status":{"loading":"Loading...","no_exif":"No EXIF available","library_missing":"EXIF library not loaded","image_source_missing":"Image source unavailable","unavailable":"EXIF unavailable (blocked by CORS or missing metadata)","flag_unavailable":"EXIF unavailable"}},"about":"About","changelog":"Changelog","links":"Links","link":"Link","friends":"Friends","friend":"Friend","timeline":"Timeline","shuoshuo":"Shuoshuo","bookmarks":"Bookmarks","site_uv":"VISITOR COUNT","site_pv":"TOTAL PAGE VIEWS","read_more":"Read more","wordcount":"Words","min2read":"Mins","status":"Status","runtime":"Blog up for","days":"days","hours":"hrs","minutes":"Min","seconds":"Sec","optimized_by":"and Optimized by Evan","rights":"All Rights Reserved","site_posts":"%s posts in total","site_wordcount":"%s words in total","copyright":{"author":"Author","title":"Title","link":"Link","create_time":"Created at","update_time":"Updated at","license_title":"License","license_content":"This work is licensed under %s.","all_rights_reserved":"All Rights Reserved &#169; %s","public_domain":"This work is in the public domain."},"ago":{"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days ago","week":"%s weeks ago","month":"%s months ago","year":"%s years ago"},"create_time":"Created","update_time":"Updated","expired":"This post is written %s days ago, and the content may not be up to date."};
+    window.data = {"masonry":false};
+  </script>
+    
+    <!--- Fontawesome Part-->
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fontawesome/fontawesome.min.css">
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fontawesome/brands.min.css">
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fontawesome/solid.min.css">
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fontawesome/regular.min.css">
+    
+    
+    
+    
+<meta name="generator" content="Hexo 8.1.2"><link rel="alternate" href="/atom.xml" title="Chyyl's Blog" type="application/atom+xml">
+</head>
+
+
+<body>
+	<div class="progress-bar-container">
+	
+	<span class="scroll-progress-bar"></span>
+	
+
+	
+	<span class="pjax-progress-bar"></span>
+	<!--        <span class="swup-progress-icon">-->
+	<!--            <i class="fa-solid fa-circle-notch fa-spin"></i>-->
+	<!--        </span>-->
+	
+</div>
+
+<style>
+    :root {
+        --preloader-background-color: #fff;
+        --preloader-text-color: #000;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --preloader-background-color: #202124;
+            --preloader-text-color: #fff;
+        }
+    }
+
+    @media (prefers-color-scheme: light) {
+        :root {
+            --preloader-background-color: #fff;
+            --preloader-text-color: #000;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .ml13 {
+            font-size: 2.6rem !important; /* Adjust this value as needed */
+        }
+    }
+
+    .preloader {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem; /* Tailwind 'gap-4' is 1rem */
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        padding: 12px;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh; /* 'h-screen' is 100% of the viewport height */
+        background-color: var(--preloader-background-color);
+        z-index: 1100; /* 'z-[1100]' sets the z-index */
+        transition: opacity 0.2s ease-in-out;
+    }
+
+    .ml13 {
+        font-size: 3.2rem;
+        /* text-transform: uppercase; */
+        color: var(--preloader-text-color);
+        letter-spacing: -1px;
+        font-weight: 500;
+        font-family: 'Chillax-Variable', sans-serif;
+        text-align: center;
+    }
+
+    .ml13 .word {
+        display: inline-flex;
+        flex-wrap: wrap;
+        white-space: nowrap;
+    }
+
+    .ml13 .letter {
+        display: inline-block;
+        line-height: 1em;
+    }
+</style>
+
+<div class="preloader">
+    <h2 class="ml13">
+        ChyyL&#39;s Blog
+    </h2>
+    <script>
+        var textWrapper = document.querySelector('.ml13');
+        // Split text into words
+        var words = textWrapper.textContent.trim().split(' ');
+
+        // Clear the existing content
+        textWrapper.innerHTML = '';
+
+        // Wrap each word and its letters in spans
+        words.forEach(function(word) {
+            var wordSpan = document.createElement('span');
+            wordSpan.classList.add('word');
+            wordSpan.innerHTML = word.replace(/\S/g, "<span class='letter'>$&</span>");
+            textWrapper.appendChild(wordSpan);
+            textWrapper.appendChild(document.createTextNode(' ')); // Add space between words
+        });
+
+        var animation = anime.timeline({ loop: true })
+            .add({
+                targets: '.ml13 .letter',
+                translateY: [20, 0],
+                translateZ: 0,
+                opacity: [0, 1],
+                filter: ['blur(5px)', 'blur(0px)'],
+                easing: "easeOutExpo",
+                duration: 1200,
+                delay: (el, i) => 300 + 20 * i,
+            })
+            .add({
+                targets: '.ml13 .letter',
+                translateY: [0, -20],
+                opacity: [1, 0],
+                filter: ['blur(0px)', 'blur(5px)'],
+                easing: "easeInExpo",
+                duration: 1000,
+                delay: (el, i) => 15 * i,
+                complete: function() {
+                    hidePreloader();
+                }
+            }, '-=700');
+
+
+        let themeStatus = JSON.parse(localStorage.getItem('REDEFINE-THEME-STATUS'))?.isDark;
+
+        // If the theme status is not found in local storage, check the preferred color scheme
+        if (themeStatus === undefined || themeStatus === null) {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                themeStatus = 'dark';
+            } else {
+                themeStatus = 'light';
+            }
+        }
+
+        // Now you can use the themeStatus variable in your code
+        if (themeStatus) {
+            document.documentElement.style.setProperty('--preloader-background-color', '#202124');
+            document.documentElement.style.setProperty('--preloader-text-color', '#fff');
+        } else {
+            document.documentElement.style.setProperty('--preloader-background-color', '#fff');
+            document.documentElement.style.setProperty('--preloader-text-color', '#000');
+        }
+
+        window.addEventListener('load', function () {
+            setTimeout(hidePreloader, 5000); // Call hidePreloader after 5000 milliseconds if not already called by animation
+        });
+
+        function hidePreloader() {
+            var preloader = document.querySelector('.preloader');
+            preloader.style.opacity = '0';
+            setTimeout(function () {
+                preloader.style.display = 'none';
+            }, 200);
+        }
+    </script>
+</div>
+
+<main class="page-container" id="swup">
+
+	
+
+	<div class="main-content-container flex flex-col justify-between min-h-dvh">
+		<div class="main-content-header">
+			<header class="navbar-container px-6 md:px-12">
+    <div class="navbar-content transition-navbar ">
+        <div class="left">
+            
+                <a class="logo-image h-8 w-8 sm:w-10 sm:h-10 mr-3" href="/">
+                    <img src="https://avatars.githubusercontent.com/u/115130037?v=4" class="w-full h-full rounded-xs">
+                </a>
+            
+            <a class="logo-title" href="/">
+                
+                ChyyL&#39;s Blog
+                
+            </a>
+        </div>
+
+        <div class="right">
+            <!-- PC -->
+            <div class="desktop">
+                <ul class="navbar-list">
+                    
+                        
+                            
+
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class=""
+                                   href="/"
+                                        >
+                                    <i class="fa-regular fa-house fa-fw"></i>
+                                    ACCUEIL
+                                    
+                                </a>
+
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                        
+                            
+
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class=""
+                                   href="/archives"
+                                        >
+                                    <i class="fa-regular fa-archive fa-fw"></i>
+                                    ARCHIVES
+                                    
+                                </a>
+
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                    
+                        <li class="navbar-item search search-popup-trigger">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </li>
+                    
+                </ul>
+            </div>
+            <!-- Mobile -->
+            <div class="mobile">
+                
+                    <div class="icon-item search search-popup-trigger"><i class="fa-solid fa-magnifying-glass"></i>
+                    </div>
+                
+                <div class="icon-item navbar-bar">
+                    <div class="navbar-bar-middle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile sheet -->
+    <div class="navbar-drawer h-dvh w-full absolute top-0 left-0 bg-background-color flex flex-col justify-between">
+        <ul class="drawer-navbar-list flex flex-col px-4 justify-center items-start">
+            
+                
+                    
+
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full "
+                           href="/"
+                        >
+                            <span>
+                                ACCUEIL
+                            </span>
+                            
+                                <i class="fa-regular fa-house fa-sm fa-fw"></i>
+                            
+                        </a>
+                        
+
+                        
+                    </li>
+            
+                
+                    
+
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full "
+                           href="/archives"
+                        >
+                            <span>
+                                ARCHIVES
+                            </span>
+                            
+                                <i class="fa-regular fa-archive fa-sm fa-fw"></i>
+                            
+                        </a>
+                        
+
+                        
+                    </li>
+            
+
+            
+            
+                
+                    
+                    
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active"
+                           href="/tags"
+                        >
+                            <span>Tags</span>
+                            <i class="fa-regular fa-tags fa-sm fa-fw"></i>
+                        </a>
+                    </li>
+                
+                    
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active"
+                           href="/categories"
+                        >
+                            <span>Categories</span>
+                            <i class="fa-regular fa-folder fa-sm fa-fw"></i>
+                        </a>
+                    </li>
+                
+            
+        </ul>
+
+        <div class="statistics flex justify-around my-2.5">
+    <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/tags">
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">57</div>
+        <div class="label text-third-text-color text-sm">Tags</div>
+    </a>
+    <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/categories">
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">3</div>
+        <div class="label text-third-text-color text-sm">Catégories</div>
+    </a>
+    <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/archives">
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">15</div>
+        <div class="label text-third-text-color text-sm">Posts</div>
+    </a>
+</div>
+    </div>
+
+    <div class="window-mask"></div>
+
+</header>
+
+
+		</div>
+
+		<div class="main-content-body transition-fade-up">
+			
+
+			<div class="main-content">
+				<div class="post-page-container flex relative justify-between box-border w-full h-full">
+	<div class="article-content-container">
+
+		<div class="article-title relative w-full">
+			
+			<div class="w-full flex items-center pt-6 justify-start">
+				<h1 class="article-title-regular text-second-text-color tracking-tight text-4xl md:text-6xl font-semibold px-2 sm:px-6 md:px-8 py-3">Flowise 可视化 AI Agent 构建：从安装到多 Agent 编排完整教程</h1>
+			</div>
+			
+		</div>
+
+		
+		<div class="article-header flex flex-row gap-2 items-center px-2 sm:px-6 md:px-8">
+			<div class="avatar w-[46px] h-[46px] shrink-0 rounded-medium border border-border-color p-px">
+				<img src="https://avatars.githubusercontent.com/u/115130037?v=4">
+			</div>
+			<div class="info flex flex-col justify-between">
+				<div class="author flex items-center">
+					<span class="name text-default-text-color text-lg font-semibold">Chyyl</span>
+					
+					<span class="author-label ml-1.5 text-xs px-2 py-0.5 rounded-small text-third-text-color border border-shadow-color-1">Lv2</span>
+					
+				</div>
+				<div class="meta-info">
+					<div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fa-regular fa-pen-fancy"></i>&nbsp;
+        <span class="desktop">2026-07-13</span>
+        <span class="mobile">2026-07-13</span>
+        <span class="hover-info">Créé</span>
+    </span>
+    
+        <span class="article-date article-meta-item">
+            <i class="fa-regular fa-wrench"></i>&nbsp;
+            <span class="desktop">2026-07-13 11:23:24</span>
+            <span class="mobile">2026-07-13 11:23:24</span>
+            <span class="hover-info">Mis à jour</span>
+        </span>
+    
+
+    
+        <span class="article-categories article-meta-item">
+            <i class="fa-regular fa-folders"></i>&nbsp;
+            <ul>
+                
+                
+                    
+                        
+                        <li>
+                            <a href="/categories/%E6%8A%80%E6%9C%AF%E6%95%99%E7%A8%8B/">技术教程</a>&nbsp;
+                        </li>
+                    
+                    
+                
+            </ul>
+        </span>
+    
+    
+        <span class="article-tags article-meta-item">
+            <i class="fa-regular fa-tags"></i>&nbsp;
+            <ul>
+                
+                    <li>
+                        <a href="/tags/Flowise/">Flowise</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/LangChain/">LangChain</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/RAG/">RAG</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/AI-Agent/">AI Agent</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/%E5%8F%AF%E8%A7%86%E5%8C%96%E7%BC%96%E7%A8%8B/">可视化编程</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/%E6%95%99%E7%A8%8B/">教程</a>&nbsp;
+                    </li>
+                
+            </ul>
+        </span>
+    
+
+    
+    
+    
+    
+        <span class="article-pv article-meta-item">
+            <i class="fa-regular fa-eye"></i>&nbsp;<span id="busuanzi_value_page_pv"></span>
+        </span>
+    
+</div>
+
+				</div>
+			</div>
+		</div>
+		
+
+		
+
+
+		<div class="article-content markdown-body px-2 sm:px-6 md:px-8 pb-8">
+			<blockquote>
+<p>拖拽连线就能搭出一个 RAG 聊天机器人、多 Agent 协作系统、带工具调用的智能客服。Flowise 是目前最成熟的开源可视化 AI 应用构建平台，基于 LangChain，自带 REST API，本地部署完全免费。这篇从安装讲起到多 Agent 编排，由浅入深走完一遍。</p>
+</blockquote>
+<h2 id="一、Flowise-是什么"><a href="#一、Flowise-是什么" class="headerlink" title="一、Flowise 是什么"></a>一、Flowise 是什么</h2><h3 id="1-1-一句话定义"><a href="#1-1-一句话定义" class="headerlink" title="1.1 一句话定义"></a>1.1 一句话定义</h3><p>Flowise 是一个开源的低代码 AI 应用构建平台。你在一个可视化画布上拖拽节点（LLM、向量数据库、文档加载器、记忆模块、工具），用线连起来，就构成了一个可运行的 AI 应用。背后编译成 LangChain 流水线，对外暴露 REST API。</p>
+<h3 id="1-2-为什么选-Flowise"><a href="#1-2-为什么选-Flowise" class="headerlink" title="1.2 为什么选 Flowise"></a>1.2 为什么选 Flowise</h3><table>
+<thead>
+<tr>
+<th>对比维度</th>
+<th>Flowise</th>
+<th>Dify</th>
+<th>n8n</th>
+<th>LangChain 原生代码</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>可视化拖拽</td>
+<td>✅ 画布式</td>
+<td>✅ 表单式</td>
+<td>✅ 流程图式</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>底层框架</td>
+<td>LangChain</td>
+<td>自研</td>
+<td>自研</td>
+<td>LangChain</td>
+</tr>
+<tr>
+<td>多 Agent 编排</td>
+<td>✅ LangGraph 集成</td>
+<td>✅</td>
+<td>✅ 需插件</td>
+<td>✅ 手写</td>
+</tr>
+<tr>
+<td>RAG 支持</td>
+<td>✅ 完整</td>
+<td>✅ 完整</td>
+<td>⚠️ 基础</td>
+<td>✅ 手写</td>
+</tr>
+<tr>
+<td>自带 API</td>
+<td>✅ 每个 Chatflow 自动生成</td>
+<td>✅</td>
+<td>✅ Webhook</td>
+<td>❌ 需自建</td>
+</tr>
+<tr>
+<td>嵌入式聊天</td>
+<td>✅ 一行 JS 嵌入网页</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>MCP 支持</td>
+<td>✅ Client&#x2F;Server 节点</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>⚠️</td>
+</tr>
+<tr>
+<td>本地部署免费</td>
+<td>✅</td>
+<td>✅ 有限制</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>适合人群</td>
+<td>开发者+产品</td>
+<td>非技术优先</td>
+<td>自动化工程师</td>
+<td>开发者</td>
+</tr>
+</tbody></table>
+<p><strong>Flowise 的最佳场景：</strong></p>
+<ul>
+<li>需要 RAG 知识库聊天的客服&#x2F;文档助手</li>
+<li>需要多 Agent 协作的复杂任务流</li>
+<li>想快速原型验证 AI 应用想法</li>
+<li>需要给非技术人员调整 Prompt 和知识库的能力</li>
+<li>需要嵌入式聊天组件挂到网站上</li>
+</ul>
+<h3 id="1-3-三种构建模式"><a href="#1-3-三种构建模式" class="headerlink" title="1.3 三种构建模式"></a>1.3 三种构建模式</h3><p>Flowise v3 提供三种构建器，难度递增：</p>
+<p><strong>Assistant（助手模式）</strong> —— 最简单</p>
+<p>零配置上手。上传文件就是 RAG，勾选工具就能联网搜索，选个模型就能聊天。适合：快速搭一个知识库问答机器人。</p>
+<p><strong>Chatflow（对话流模式）</strong> —— 中等灵活度</p>
+<p>单 Agent 系统，节点自由组合。可以接 Graph RAG、Reranker、自定义 Retriever、多路召回。适合：需要精细控制 RAG 管线的场景。</p>
+<p><strong>Agentflow（智能体流模式）</strong> —— 最强大</p>
+<p>Chatflow 和 Assistant 的超集，支持多 Agent 协作、条件分支、循环、路由。底层集成 LangGraph。适合：多步骤复杂任务、多角色协作、Agentic RAG。</p>
+<h2 id="二、安装部署"><a href="#二、安装部署" class="headerlink" title="二、安装部署"></a>二、安装部署</h2><h3 id="2-1-方式一：Docker-Compose（推荐）"><a href="#2-1-方式一：Docker-Compose（推荐）" class="headerlink" title="2.1 方式一：Docker Compose（推荐）"></a>2.1 方式一：Docker Compose（推荐）</h3><p>生产环境首选，一条命令起 Flowise + Ollama + 向量数据库全套：</p>
+<div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># docker-compose.yml</span></span><br><span class="line"><span class="attr">version:</span> <span class="string">&quot;3.8&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">ollama:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">ollama/ollama:latest</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">ollama</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">unless-stopped</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;11434:11434&quot;</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">ollama_data:/root/.ollama</span></span><br><span class="line">    <span class="comment"># 如有 NVIDIA GPU 取消下面注释</span></span><br><span class="line">    <span class="comment"># deploy:</span></span><br><span class="line">    <span class="comment">#   resources:</span></span><br><span class="line">    <span class="comment">#     reservations:</span></span><br><span class="line">    <span class="comment">#       devices:</span></span><br><span class="line">    <span class="comment">#         - driver: nvidia</span></span><br><span class="line">    <span class="comment">#           count: all</span></span><br><span class="line">    <span class="comment">#           capabilities: [gpu]</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">OLLAMA_NUM_PARALLEL=2</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">OLLAMA_FLASH_ATTENTION=1</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">OLLAMA_KEEP_ALIVE=24h</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">flowise:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">flowiseai/flowise:latest</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">flowise</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">unless-stopped</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;3000:3000&quot;</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">flowise_data:/root/.flowise</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">PORT=3000</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">FLOWISE_USERNAME=admin</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">FLOWISE_PASSWORD=your_password_here</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">DATABASE_TYPE=postgres</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">DATABASE_HOST=postgres</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">DATABASE_PORT=5432</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">DATABASE_USER=flowise</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">DATABASE_PASSWORD=flowise_pass</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">DATABASE_NAME=flowise</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">REDIS_URL=redis://redis:6379</span></span><br><span class="line">    <span class="attr">depends_on:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">postgres</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">redis</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">postgres:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">postgres:16-alpine</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">flowise_postgres</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">unless-stopped</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">POSTGRES_USER=flowise</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">POSTGRES_PASSWORD=flowise_pass</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">POSTGRES_DB=flowise</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">pg_data:/var/lib/postgresql/data</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">redis:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">redis:7-alpine</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">flowise_redis</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">unless-stopped</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">redis_data:/data</span></span><br><span class="line"></span><br><span class="line"><span class="attr">volumes:</span></span><br><span class="line">  <span class="attr">ollama_data:</span></span><br><span class="line">  <span class="attr">flowise_data:</span></span><br><span class="line">  <span class="attr">pg_data:</span></span><br><span class="line">  <span class="attr">redis_data:</span></span><br></pre></td></tr></table></figure></div>
+
+<p>启动：</p>
+<div class="code-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> -p ~/flowise-stack &amp;&amp; <span class="built_in">cd</span> ~/flowise-stack</span><br><span class="line"><span class="comment"># 把上面的内容保存为 docker-compose.yml</span></span><br><span class="line">docker compose up -d</span><br><span class="line"></span><br><span class="line"><span class="comment"># 拉取 Ollama 模型</span></span><br><span class="line">docker <span class="built_in">exec</span> -it ollama ollama pull qwen3:8b</span><br><span class="line">docker <span class="built_in">exec</span> -it ollama ollama pull nomic-embed-text</span><br><span class="line"></span><br><span class="line"><span class="comment"># 浏览器打开</span></span><br><span class="line"><span class="comment"># http://localhost:3000  → Flowise</span></span><br><span class="line"><span class="comment"># http://localhost:11434  → Ollama API</span></span><br></pre></td></tr></table></figure></div>
+
+<h3 id="2-2-方式二：NPX-快速安装（开发体验用）"><a href="#2-2-方式二：NPX-快速安装（开发体验用）" class="headerlink" title="2.2 方式二：NPX 快速安装（开发体验用）"></a>2.2 方式二：NPX 快速安装（开发体验用）</h3><p>不装 Docker，直接 Node.js 跑：</p>
+<div class="code-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 需要 Node.js 18+</span></span><br><span class="line">npx flowise start</span><br><span class="line"></span><br><span class="line"><span class="comment"># 指定端口和认证</span></span><br><span class="line">npx flowise start --PORT=3000 --FLOWISE_USERNAME=admin --FLOWISE_PASSWORD=123456</span><br><span class="line"></span><br><span class="line"><span class="comment"># 浏览器打开 http://localhost:3000</span></span><br></pre></td></tr></table></figure></div>
+
+<h3 id="2-3-方式三：源码编译（贡献-深度定制）"><a href="#2-3-方式三：源码编译（贡献-深度定制）" class="headerlink" title="2.3 方式三：源码编译（贡献&#x2F;深度定制）"></a>2.3 方式三：源码编译（贡献&#x2F;深度定制）</h3><div class="code-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://github.com/FlowiseAI/Flowise.git</span><br><span class="line"><span class="built_in">cd</span> Flowise</span><br><span class="line">npm install -g pnpm</span><br><span class="line">pnpm install</span><br><span class="line">pnpm build</span><br><span class="line">pnpm start</span><br></pre></td></tr></table></figure></div>
+
+<h3 id="2-4-Flowise-Cloud"><a href="#2-4-Flowise-Cloud" class="headerlink" title="2.4 Flowise Cloud"></a>2.4 Flowise Cloud</h3><p>不想自己部署？Flowise 提供托管云服务：</p>
+<ul>
+<li>免费版：3 个 Chatflow，每月 1000 次消息</li>
+<li>Pro 版：$24&#x2F;月，无限 Chatflow，自定义域名</li>
+<li>一键从本地导出导入到云端</li>
+</ul>
+<h2 id="三、界面概览"><a href="#三、界面概览" class="headerlink" title="三、界面概览"></a>三、界面概览</h2><p>启动后打开 <code>http://localhost:3000</code>，左侧菜单：</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">┌─────────────────────────────────────┐</span><br><span class="line">│  Flowise                            │</span><br><span class="line">├─────────────────────────────────────┤</span><br><span class="line">│  📊 Chatflows      → 对话流列表     │</span><br><span class="line">│  🤖 Agentflows     → 智能体流列表   │</span><br><span class="line">│  💬 Assistants     → 助手列表       │</span><br><span class="line">│  📚 Knowledge Base → 知识库管理     │</span><br><span class="line">│  🔧 API Keys       → API 密钥管理   │</span><br><span class="line">│  ⚙️  Settings       → 全局设置       │</span><br><span class="line">│  📈 Analytics      → 使用统计       │</span><br><span class="line">│  🔀 Marketplace    → 模板市场       │</span><br><span class="line">└─────────────────────────────────────┘</span><br></pre></td></tr></table></figure></div>
+
+<p><strong>画布操作：</strong></p>
+<ul>
+<li>左侧节点面板 → 拖拽到画布</li>
+<li>节点上的圆点 → 拖线连接到另一个节点</li>
+<li>右键节点 → 复制&#x2F;删除&#x2F;查看配置</li>
+<li>顶部工具栏 → 保存&#x2F;运行&#x2F;调试&#x2F;导出</li>
+</ul>
+<h2 id="四、入门：搭一个简单聊天机器人"><a href="#四、入门：搭一个简单聊天机器人" class="headerlink" title="四、入门：搭一个简单聊天机器人"></a>四、入门：搭一个简单聊天机器人</h2><h3 id="4-1-创建-Assistant"><a href="#4-1-创建-Assistant" class="headerlink" title="4.1 创建 Assistant"></a>4.1 创建 Assistant</h3><p>最快的方式：</p>
+<ol>
+<li>左侧点 <strong>Assistants</strong> → <strong>Add New</strong></li>
+<li>填名字：”我的第一个助手”</li>
+<li>选择模型：ChatOllama → Model 填 <code>qwen3:8b</code> → Base URL 填 <code>http://host.docker.internal:11434</code></li>
+<li>保存 → 点 <strong>Chat</strong> 图标 → 开始聊天</li>
+</ol>
+<p>就这么简单，你已经有了一个能聊天的 AI 助手。</p>
+<h3 id="4-2-创建-Chatflow"><a href="#4-2-创建-Chatflow" class="headerlink" title="4.2 创建 Chatflow"></a>4.2 创建 Chatflow</h3><p>更灵活的方式：</p>
+<ol>
+<li><p>左侧点 <strong>Chatflows</strong> → <strong>Add New</strong> → 选 <strong>Chatflow</strong></p>
+</li>
+<li><p>画布上会自动出现一个基础模板，包含：</p>
+<ul>
+<li><strong>Chat OpenAI</strong>（或 ChatOllama）节点：LLM 模型</li>
+<li><strong>LLM Chain</strong> 节点：将 Prompt 和 LLM 组合</li>
+<li><strong>Conversational Retrieval QA Chain</strong> 节点：带记忆的问答链</li>
+</ul>
+</li>
+<li><p>双击 <strong>ChatOllama</strong> 节点配置：</p>
+<ul>
+<li>Model: <code>qwen3:8b</code></li>
+<li>Base URL: <code>http://host.docker.internal:11434</code></li>
+<li>Temperature: <code>0.7</code></li>
+</ul>
+</li>
+<li><p>保存 → 点击右下角绿色 <strong>Chat</strong> 图标测试</p>
+</li>
+</ol>
+<h2 id="五、RAG-知识库聊天机器人"><a href="#五、RAG-知识库聊天机器人" class="headerlink" title="五、RAG 知识库聊天机器人"></a>五、RAG 知识库聊天机器人</h2><p>这是 Flowise 最核心的用例：上传文档，让 AI 基于文档回答问题。</p>
+<h3 id="5-1-整体架构"><a href="#5-1-整体架构" class="headerlink" title="5.1 整体架构"></a>5.1 整体架构</h3><div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">用户提问</span><br><span class="line">   ↓</span><br><span class="line">[Conversational Retrieval QA Chain]</span><br><span class="line">   ↓                    ↓                    ↑</span><br><span class="line">[Vector Store]    [Embedding Model]    [Chat LLM]</span><br><span class="line">   ↑                    ↓</span><br><span class="line">[Document Loader] → [Text Splitter] → [Embeddings] → 存入向量库</span><br></pre></td></tr></table></figure></div>
+
+<h3 id="5-2-步骤一：配置-Embedding-模型"><a href="#5-2-步骤一：配置-Embedding-模型" class="headerlink" title="5.2 步骤一：配置 Embedding 模型"></a>5.2 步骤一：配置 Embedding 模型</h3><p>拖一个 <strong>Ollama Embeddings</strong> 节点到画布：</p>
+<ul>
+<li>Model: <code>nomic-embed-text</code></li>
+<li>Base URL: <code>http://host.docker.internal:11434</code></li>
+</ul>
+<h3 id="5-3-步骤三：配置向量数据库"><a href="#5-3-步骤三：配置向量数据库" class="headerlink" title="5.3 步骤三：配置向量数据库"></a>5.3 步骤三：配置向量数据库</h3><p>拖一个 <strong>In-Memory Vector Store</strong> 节点（测试用）或 <strong>Chroma</strong> &#x2F; <strong>Pinecone</strong> &#x2F; <strong>Qdrant</strong> 节点（生产用）：</p>
+<p><strong>Chroma 配置：</strong></p>
+<p>在 docker-compose.yml 中加入 Chroma 服务：</p>
+<div class="code-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">chroma:</span></span><br><span class="line">  <span class="attr">image:</span> <span class="string">chromadb/chroma:latest</span></span><br><span class="line">  <span class="attr">container_name:</span> <span class="string">chroma</span></span><br><span class="line">  <span class="attr">restart:</span> <span class="string">unless-stopped</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&quot;8000:8000&quot;</span></span><br><span class="line">  <span class="attr">volumes:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">chroma_data:/chroma/chroma</span></span><br></pre></td></tr></table></figure></div>
+
+<p>Flowise 中 Chroma 节点配置：</p>
+<ul>
+<li>Collection Name: <code>my_documents</code></li>
+<li>URL: <code>http://chroma:8000</code></li>
+</ul>
+<h3 id="5-4-步骤三：上传文档创建知识库"><a href="#5-4-步骤三：上传文档创建知识库" class="headerlink" title="5.4 步骤三：上传文档创建知识库"></a>5.4 步骤三：上传文档创建知识库</h3><p>方式 A：通过 Flowise 界面上传</p>
+<ol>
+<li>左侧 <strong>Knowledge Base</strong> → <strong>Add New</strong></li>
+<li>拖入 PDF &#x2F; TXT &#x2F; Markdown &#x2F; Word 文件</li>
+<li>选择 Splitter（推荐 Recursive Character Text Splitter）<ul>
+<li>Chunk Size: <code>1000</code></li>
+<li>Chunk Overlap: <code>200</code></li>
+</ul>
+</li>
+<li>选择 Embedding 模型 → 点 <strong>Process</strong></li>
+<li>完成后在 Chatflow 中引用这个 Knowledge Base</li>
+</ol>
+<p>方式 B：在 Chatflow 中用节点</p>
+<p>拖以下节点串联：</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[Document Loader] → [Text Splitter] → [Embeddings] → [Vector Store]</span><br></pre></td></tr></table></figure></div>
+
+<p>支持的 Document Loader：</p>
+<ul>
+<li><strong>PDF File Loader</strong>：加载 PDF</li>
+<li><strong>Text File Loader</strong>：加载 TXT</li>
+<li><strong>Web Page Loader</strong>：输入 URL 抓取网页</li>
+<li><strong>GitHub Repo Loader</strong>：加载 GitHub 仓库文件</li>
+<li><strong>Notion Loader</strong>：从 Notion 拉取</li>
+<li><strong>CSV Loader</strong>：加载表格数据</li>
+</ul>
+<h3 id="5-5-步骤四：构建完整-RAG-Chatflow"><a href="#5-5-步骤四：构建完整-RAG-Chatflow" class="headerlink" title="5.5 步骤四：构建完整 RAG Chatflow"></a>5.5 步骤四：构建完整 RAG Chatflow</h3><p>画布上连接以下节点：</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[ChatOllama] ← [Conversational Retrieval QA Chain] → [Ollama Embeddings]</span><br><span class="line">                         ↓                                    ↓</span><br><span class="line">                  [Memory Buffer]                    [Vector Store (Chroma)]</span><br></pre></td></tr></table></figure></div>
+
+<p>配置 Conversational Retrieval QA Chain：</p>
+<ul>
+<li>LLM: 连接 ChatOllama</li>
+<li>Vector Store: 连接 Chroma</li>
+<li>Embeddings: 连接 Ollama Embeddings</li>
+<li>Memory: 连接 Buffer Memory</li>
+<li>Return Source Documents: <code>true</code>（让 AI 引用来源）</li>
+</ul>
+<p>保存 → 聊天测试：问一个只有文档里才知道的问题，看它是否能正确回答并引用来源。</p>
+<h3 id="5-6-进阶-RAG-优化"><a href="#5-6-进阶-RAG-优化" class="headerlink" title="5.6 进阶 RAG 优化"></a>5.6 进阶 RAG 优化</h3><p><strong>多路召回（Ensemble Retriever）：</strong></p>
+<p>同时用关键词检索（BM25）和向量检索，取两者的并集，提高召回率：</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[BM25 Retriever] ─┐</span><br><span class="line">                   ├→ [Ensemble Retriever] → [RAG Chain]</span><br><span class="line">[Vector Retriever]─┘</span><br></pre></td></tr></table></figure></div>
+
+<p><strong>重排序（Reranker）：</strong></p>
+<p>召回后用 Cross-Encoder 模型重新排序，把最相关的排到前面：</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[Vector Store] → [Retriever] → [Reranker (Cohere/Local)] → [RAG Chain]</span><br></pre></td></tr></table></figure></div>
+
+<p><strong>Graph RAG：</strong></p>
+<p>Flowise v3 新增 Graph RAG 支持，构建知识图谱而非向量索引，适合关系密集型问答：</p>
+<ol>
+<li>拖 <strong>Graph Builder</strong> 节点</li>
+<li>接入 LLM 做实体抽取</li>
+<li>存入图数据库（Neo4j）</li>
+<li>查询时 LLM 生成图查询语句 → 返回子图 → LLM 总结答案</li>
+</ol>
+<h2 id="六、Agent-和工具调用"><a href="#六、Agent-和工具调用" class="headerlink" title="六、Agent 和工具调用"></a>六、Agent 和工具调用</h2><h3 id="6-1-Assistant-模式加工具"><a href="#6-1-Assistant-模式加工具" class="headerlink" title="6.1 Assistant 模式加工具"></a>6.1 Assistant 模式加工具</h3><p>Assistant 模式下，直接在设置里勾选工具：</p>
+<ul>
+<li><strong>Serp API</strong>：联网搜索</li>
+<li><strong>Calculator</strong>：数学计算</li>
+<li><strong>Web Browser</strong>：浏览网页</li>
+<li><strong>Custom Tool</strong>：自定义 HTTP API 调用</li>
+</ul>
+<h3 id="6-2-Chatflow-模式用-Agent-节点"><a href="#6-2-Chatflow-模式用-Agent-节点" class="headerlink" title="6.2 Chatflow 模式用 Agent 节点"></a>6.2 Chatflow 模式用 Agent 节点</h3><p>拖 <strong>Tool Calling Agent</strong> 或 <strong>ReAct Agent</strong> 节点：</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[ChatOllama] ← [Tool Calling Agent] → [Calculator Tool]</span><br><span class="line">                        ↓             → [Serp Search Tool]</span><br><span class="line">                  [Memory Buffer]     → [Custom API Tool]</span><br></pre></td></tr></table></figure></div>
+
+<h3 id="6-3-自定义工具"><a href="#6-3-自定义工具" class="headerlink" title="6.3 自定义工具"></a>6.3 自定义工具</h3><p>拖 <strong>Custom Tool</strong> 节点，用 JavaScript 写工具逻辑：</p>
+<div class="code-container" data-rel="Javascript"><figure class="iseeu highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 工具描述（给 LLM 看的）</span></span><br><span class="line"><span class="keyword">const</span> name = <span class="string">&quot;get_weather&quot;</span>;</span><br><span class="line"><span class="keyword">const</span> description = <span class="string">&quot;获取指定城市的天气信息&quot;</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 工具输入参数 Schema</span></span><br><span class="line"><span class="keyword">const</span> schema = &#123;</span><br><span class="line">  <span class="attr">city</span>: &#123; <span class="attr">type</span>: <span class="string">&quot;string&quot;</span>, <span class="attr">description</span>: <span class="string">&quot;城市名称&quot;</span> &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 工具执行函数</span></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">function</span>(<span class="params">&#123; city &#125;</span>) &#123;</span><br><span class="line">  <span class="keyword">const</span> response = <span class="keyword">await</span> <span class="title function_">fetch</span>(<span class="string">`https://wttr.in/<span class="subst">$&#123;city&#125;</span>?format=3`</span>);</span><br><span class="line">  <span class="keyword">const</span> text = <span class="keyword">await</span> response.<span class="title function_">text</span>();</span><br><span class="line">  <span class="keyword">return</span> text;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>LLM 会根据用户问题自动决定是否调用这个工具。</p>
+<h2 id="七、Agentflow：多-Agent-编排"><a href="#七、Agentflow：多-Agent-编排" class="headerlink" title="七、Agentflow：多 Agent 编排"></a>七、Agentflow：多 Agent 编排</h2><p>Agentflow 是 Flowise v3 的旗舰功能，基于 LangGraph。</p>
+<h3 id="7-1-什么时候用-Agentflow"><a href="#7-1-什么时候用-Agentflow" class="headerlink" title="7.1 什么时候用 Agentflow"></a>7.1 什么时候用 Agentflow</h3><ul>
+<li>需要<strong>多步骤</strong>任务（先搜索 → 再分析 → 再写报告）</li>
+<li>需要<strong>多角色</strong>协作（研究员收集信息 → 写手撰写 → 审校检查）</li>
+<li>需要<strong>条件分支</strong>（简单问题走 SLM，复杂问题走大模型）</li>
+<li>需要<strong>循环</strong>（RAG 结果不好 → 自动改写查询重试）</li>
+</ul>
+<h3 id="7-2-构建一个研究-Agent-团队"><a href="#7-2-构建一个研究-Agent-团队" class="headerlink" title="7.2 构建一个研究 Agent 团队"></a>7.2 构建一个研究 Agent 团队</h3><p>目标：用户提问 → 研究员搜索资料 → 分析师总结 → 写手出报告</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">[Start]</span><br><span class="line">  ↓</span><br><span class="line">[Researcher Agent] ← 联网搜索工具</span><br><span class="line">  ↓</span><br><span class="line">[Analyst Agent] ← 分析+提取要点</span><br><span class="line">  ↓</span><br><span class="line">[Writer Agent] ← 生成报告</span><br><span class="line">  ↓</span><br><span class="line">[End]</span><br></pre></td></tr></table></figure></div>
+
+<p>操作步骤：</p>
+<ol>
+<li>左侧 <strong>Agentflows</strong> → <strong>Add New</strong></li>
+<li>拖 <strong>Start</strong> 节点</li>
+<li>拖三个 <strong>LLM Agent</strong> 节点，分别命名 Researcher &#x2F; Analyst &#x2F; Writer</li>
+<li>每个 Agent 配置不同的 System Prompt 和工具</li>
+<li>用线依次连接</li>
+<li>拖 <strong>End</strong> 节点</li>
+<li>保存 → 运行测试</li>
+</ol>
+<h3 id="7-3-条件路由"><a href="#7-3-条件路由" class="headerlink" title="7.3 条件路由"></a>7.3 条件路由</h3><p>拖 <strong>Conditional Edge</strong> 节点，写 JavaScript 条件：</p>
+<div class="code-container" data-rel="Javascript"><figure class="iseeu highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 根据 Analyst 的输出决定是否需要补充搜索</span></span><br><span class="line"><span class="keyword">if</span> ($analysis.<span class="property">needsMoreResearch</span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="string">&quot;researcher&quot;</span>;  <span class="comment">// 回到研究员</span></span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="string">&quot;writer&quot;</span>;      <span class="comment">// 进入写手</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<h3 id="7-4-Agentic-RAG"><a href="#7-4-Agentic-RAG" class="headerlink" title="7.4 Agentic RAG"></a>7.4 Agentic RAG</h3><p>传统 RAG 是单次的：查一次 → 答。Agentic RAG 让 Agent 自己判断：</p>
+<ol>
+<li>检索到的内容是否相关？</li>
+<li>不相关 → 改写查询重新检索</li>
+<li>相关 → 生成答案</li>
+<li>答案是否完整？</li>
+<li>不完整 → 补充检索</li>
+</ol>
+<p>在 Agentflow 中用循环 + 条件路由实现：</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[Start] → [Retrieve] → [Grade Relevance] →(相关)→ [Generate] → [Grade Answer] →(完整)→ [End]</span><br><span class="line">                          ↑(不相关)                         ↑(不完整)</span><br><span class="line">                          └─ [Rewrite Query] ────────────────┘</span><br></pre></td></tr></table></figure></div>
+
+<h2 id="八、API-调用与部署"><a href="#八、API-调用与部署" class="headerlink" title="八、API 调用与部署"></a>八、API 调用与部署</h2><h3 id="8-1-获取-API-端点"><a href="#8-1-获取-API-端点" class="headerlink" title="8.1 获取 API 端点"></a>8.1 获取 API 端点</h3><p>每个 Chatflow &#x2F; Agentflow 保存后自动生成 API：</p>
+<ol>
+<li>点击 Chatflow 右上角的 <strong>API</strong> 图标</li>
+<li>选择 <strong>Prediction API</strong></li>
+<li>复制 URL：<code>http://localhost:3000/api/v1/prediction/{chatflowId}</code></li>
+</ol>
+<h3 id="8-2-REST-API-调用"><a href="#8-2-REST-API-调用" class="headerlink" title="8.2 REST API 调用"></a>8.2 REST API 调用</h3><div class="code-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 发送消息</span></span><br><span class="line">curl http://localhost:3000/api/v1/prediction/&#123;chatflowId&#125; \</span><br><span class="line">  -H <span class="string">&quot;Content-Type: application/json&quot;</span> \</span><br><span class="line">  -H <span class="string">&quot;Authorization: Bearer your_api_key&quot;</span> \</span><br><span class="line">  -d <span class="string">&#x27;&#123;</span></span><br><span class="line"><span class="string">    &quot;question&quot;: &quot;公司的退货政策是什么？&quot;,</span></span><br><span class="line"><span class="string">    &quot;history&quot;: [],</span></span><br><span class="line"><span class="string">    &quot;overrideConfig&quot;: &#123;</span></span><br><span class="line"><span class="string">      &quot;temperature&quot;: 0.7</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">  &#125;&#x27;</span></span><br></pre></td></tr></table></figure></div>
+
+<p>流式响应：</p>
+<div class="code-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">curl http://localhost:3000/api/v1/prediction/&#123;chatflowId&#125; \</span><br><span class="line">  -H <span class="string">&quot;Content-Type: application/json&quot;</span> \</span><br><span class="line">  -d <span class="string">&#x27;&#123;</span></span><br><span class="line"><span class="string">    &quot;question&quot;: &quot;解释一下 RAG&quot;,</span></span><br><span class="line"><span class="string">    &quot;streaming&quot;: true</span></span><br><span class="line"><span class="string">  &#125;&#x27;</span></span><br></pre></td></tr></table></figure></div>
+
+<h3 id="8-3-Python-SDK"><a href="#8-3-Python-SDK" class="headerlink" title="8.3 Python SDK"></a>8.3 Python SDK</h3><div class="code-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> flowise <span class="keyword">import</span> FlowiseClient</span><br><span class="line"></span><br><span class="line">client = FlowiseClient(base_url=<span class="string">&quot;http://localhost:3000&quot;</span>)</span><br><span class="line"></span><br><span class="line">response = client.create_prediction(</span><br><span class="line">    chatflow_id=<span class="string">&quot;your-chatflow-id&quot;</span>,</span><br><span class="line">    question=<span class="string">&quot;公司的退货政策是什么？&quot;</span>,</span><br><span class="line">    history=[]</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(response[<span class="string">&quot;text&quot;</span>])</span><br></pre></td></tr></table></figure></div>
+
+<h3 id="8-4-嵌入式聊天组件"><a href="#8-4-嵌入式聊天组件" class="headerlink" title="8.4 嵌入式聊天组件"></a>8.4 嵌入式聊天组件</h3><p>在网页中加入一行代码，就能嵌入聊天窗口：</p>
+<div class="code-container" data-rel="Html"><figure class="iseeu highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">&quot;module&quot;</span>&gt;</span><span class="language-javascript"></span></span><br><span class="line"><span class="language-javascript">  <span class="keyword">import</span> <span class="title class_">Chatbot</span> <span class="keyword">from</span> <span class="string">&#x27;https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js&#x27;</span></span></span><br><span class="line"><span class="language-javascript">  </span></span><br><span class="line"><span class="language-javascript">  <span class="title class_">Chatbot</span>.<span class="title function_">init</span>(&#123;</span></span><br><span class="line"><span class="language-javascript">    <span class="attr">chatflowid</span>: <span class="string">&#x27;your-chatflow-id&#x27;</span>,</span></span><br><span class="line"><span class="language-javascript">    <span class="attr">apiHost</span>: <span class="string">&#x27;http://localhost:3000&#x27;</span>,</span></span><br><span class="line"><span class="language-javascript">    <span class="attr">theme</span>: &#123;</span></span><br><span class="line"><span class="language-javascript">      <span class="attr">button</span>: &#123;</span></span><br><span class="line"><span class="language-javascript">        <span class="attr">backgroundColor</span>: <span class="string">&#x27;#2563eb&#x27;</span>,</span></span><br><span class="line"><span class="language-javascript">        <span class="attr">textColor</span>: <span class="string">&#x27;#ffffff&#x27;</span></span></span><br><span class="line"><span class="language-javascript">      &#125;,</span></span><br><span class="line"><span class="language-javascript">      <span class="attr">chatWindow</span>: &#123;</span></span><br><span class="line"><span class="language-javascript">        <span class="attr">welcomeMessage</span>: <span class="string">&#x27;你好！有什么可以帮你的？&#x27;</span>,</span></span><br><span class="line"><span class="language-javascript">        <span class="attr">backgroundColor</span>: <span class="string">&#x27;#ffffff&#x27;</span>,</span></span><br><span class="line"><span class="language-javascript">        <span class="attr">height</span>: <span class="number">600</span></span></span><br><span class="line"><span class="language-javascript">      &#125;</span></span><br><span class="line"><span class="language-javascript">    &#125;</span></span><br><span class="line"><span class="language-javascript">  &#125;)</span></span><br><span class="line"><span class="language-javascript"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure></div>
+
+<h2 id="九、MCP-集成"><a href="#九、MCP-集成" class="headerlink" title="九、MCP 集成"></a>九、MCP 集成</h2><p>Flowise v3 支持 MCP（Model Context Protocol）：</p>
+<h3 id="9-1-MCP-Client-节点"><a href="#9-1-MCP-Client-节点" class="headerlink" title="9.1 MCP Client 节点"></a>9.1 MCP Client 节点</h3><p>拖 <strong>MCP Client</strong> 节点到 Chatflow，配置 MCP Server URL：</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">MCP Server: http://localhost:3001</span><br></pre></td></tr></table></figure></div>
+
+<p>这样 Flowise 就能调用 MCP Server 提供的所有工具，不需要每个工具单独配置。</p>
+<h3 id="9-2-MCP-Server-节点"><a href="#9-2-MCP-Server-节点" class="headerlink" title="9.2 MCP Server 节点"></a>9.2 MCP Server 节点</h3><p>Flowise 也可以作为 MCP Server，把你的 Chatflow 暴露给其他 AI 应用（如 Claude Desktop）调用：</p>
+<ol>
+<li>拖 <strong>MCP Server</strong> 节点</li>
+<li>配置暴露的工具&#x2F;资源</li>
+<li>在 Claude Desktop 配置文件中指向 Flowise 的 MCP 端点</li>
+</ol>
+<h2 id="十、监控与调试"><a href="#十、监控与调试" class="headerlink" title="十、监控与调试"></a>十、监控与调试</h2><h3 id="10-1-执行日志"><a href="#10-1-执行日志" class="headerlink" title="10.1 执行日志"></a>10.1 执行日志</h3><p>每次对话的完整执行链路都会记录：</p>
+<ul>
+<li>每个节点的输入&#x2F;输出</li>
+<li>Token 消耗</li>
+<li>执行时间</li>
+<li>错误信息</li>
+</ul>
+<p>在 Chatflow 详情页 → <strong>Logs</strong> 标签查看。</p>
+<h3 id="10-2-Tracing（追踪）"><a href="#10-2-Tracing（追踪）" class="headerlink" title="10.2 Tracing（追踪）"></a>10.2 Tracing（追踪）</h3><p>Flowise 集成了 LangSmith &#x2F; Langfuse 等观测平台：</p>
+<div class="code-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 环境变量</span></span><br><span class="line">LANGCHAIN_TRACING_V2=<span class="literal">true</span></span><br><span class="line">LANGCHAIN_ENDPOINT=https://api.smith.langchain.com</span><br><span class="line">LANGCHAIN_API_KEY=your_key</span><br></pre></td></tr></table></figure></div>
+
+<p>配置后每次执行都会上报到 LangSmith，可视化查看调用链。</p>
+<h3 id="10-3-常见调试技巧"><a href="#10-3-常见调试技巧" class="headerlink" title="10.3 常见调试技巧"></a>10.3 常见调试技巧</h3><table>
+<thead>
+<tr>
+<th>问题</th>
+<th>排查方向</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>模型不回复</td>
+<td>检查 Ollama 是否运行、模型是否拉取</td>
+</tr>
+<tr>
+<td>RAG 答案不相关</td>
+<td>调整 Chunk Size &#x2F; Overlap、加 Reranker</td>
+</tr>
+<tr>
+<td>超时</td>
+<td>减小 context size、检查网络</td>
+</tr>
+<tr>
+<td>工具不调用</td>
+<td>检查工具描述是否清晰、模型是否支持 function calling</td>
+</tr>
+<tr>
+<td>内存爆</td>
+<td>向量库换持久化存储、限制历史消息长度</td>
+</tr>
+</tbody></table>
+<h2 id="十一、Flowise-vs-竞品选择指南"><a href="#十一、Flowise-vs-竞品选择指南" class="headerlink" title="十一、Flowise vs 竞品选择指南"></a>十一、Flowise vs 竞品选择指南</h2><table>
+<thead>
+<tr>
+<th>你的需求</th>
+<th>推荐</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>快速搭 RAG 聊天机器人</td>
+<td>Flowise Assistant 模式</td>
+</tr>
+<tr>
+<td>精细控制 RAG 管线</td>
+<td>Flowise Chatflow</td>
+</tr>
+<tr>
+<td>多 Agent 协作</td>
+<td>Flowise Agentflow</td>
+</tr>
+<tr>
+<td>非技术人员主导</td>
+<td>Dify（表单式更友好）</td>
+</tr>
+<tr>
+<td>需要复杂自动化流</td>
+<td>n8n + Ollama</td>
+</tr>
+<tr>
+<td>需要完全代码控制</td>
+<td>LangChain &#x2F; LangGraph 原生</td>
+</tr>
+<tr>
+<td>需要工作流+AI混合</td>
+<td>n8n（更偏通用自动化）</td>
+</tr>
+<tr>
+<td>需要嵌入式聊天</td>
+<td>Flowise（自带嵌入组件）</td>
+</tr>
+</tbody></table>
+<h2 id="总结速查"><a href="#总结速查" class="headerlink" title="总结速查"></a>总结速查</h2><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>核心操作</th>
+<th>关键节点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>安装</td>
+<td>Docker Compose 一键起</td>
+<td>Ollama + Flowise + PostgreSQL + Redis</td>
+</tr>
+<tr>
+<td>入门</td>
+<td>Assistant 模式</td>
+<td>ChatOllama + 文件上传</td>
+</tr>
+<tr>
+<td>RAG</td>
+<td>Chatflow 模式</td>
+<td>Document Loader + Text Splitter + Embeddings + Vector Store</td>
+</tr>
+<tr>
+<td>Agent</td>
+<td>Chatflow + 工具</td>
+<td>Tool Calling Agent + Custom Tool</td>
+</tr>
+<tr>
+<td>多 Agent</td>
+<td>Agentflow 模式</td>
+<td>LLM Agent + Conditional Edge + Loop</td>
+</tr>
+<tr>
+<td>部署</td>
+<td>API + 嵌入</td>
+<td>REST API + 嵌入式 JS 组件</td>
+</tr>
+<tr>
+<td>监控</td>
+<td>日志 + Tracing</td>
+<td>LangSmith &#x2F; Langfuse</td>
+</tr>
+</tbody></table>
+<hr>
+<p><strong>相关链接：</strong></p>
+<ul>
+<li>Flowise 官网：<a class="link"   target="_blank" rel="noopener" href="https://flowiseai.com/" >https://flowiseai.com<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>Flowise 文档：<a class="link"   target="_blank" rel="noopener" href="https://docs.flowiseai.com/" >https://docs.flowiseai.com<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>Flowise GitHub：<a class="link"   target="_blank" rel="noopener" href="https://github.com/FlowiseAI/Flowise" >https://github.com/FlowiseAI/Flowise<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>Flowise 模板市场：<a class="link"   target="_blank" rel="noopener" href="https://flowiseai.com/marketplace" >https://flowiseai.com/marketplace<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>LangChain 文档：<a class="link"   target="_blank" rel="noopener" href="https://python.langchain.com/" >https://python.langchain.com<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>LangGraph 文档：<a class="link"   target="_blank" rel="noopener" href="https://langchain-ai.github.io/langgraph/" >https://langchain-ai.github.io/langgraph/<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>MCP 协议：<a class="link"   target="_blank" rel="noopener" href="https://modelcontextprotocol.io/" >https://modelcontextprotocol.io<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+</ul>
+
+		</div>
+
+		
+		<div class="post-copyright-info w-full my-8 px-2 sm:px-6 md:px-8">
+			<div class="article-copyright-info-container">
+    <ul>
+        <li><strong>Titre:</strong> Flowise 可视化 AI Agent 构建：从安装到多 Agent 编排完整教程</li>
+        <li><strong>Auteur:</strong> Chyyl</li>
+        <li><strong>Créé à
+                :</strong> 2026-07-13 00:00:00</li>
+        
+            <li>
+                <strong>Mis à jour à
+                    :</strong> 2026-07-13 11:23:24
+            </li>
+        
+        <li>
+            <strong>Lien:</strong> https://chyyl.netlify.app/2026/07/13/flowise-visual-ai-agent-guide/
+        </li>
+        <li>
+            <strong>
+                Licence:
+            </strong>
+            
+
+            
+                Cette œuvre est sous licence <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY-NC-SA 4.0</a>.
+            
+        </li>
+    </ul>
+</div>
+
+		</div>
+		
+
+		
+		<ul class="post-tags-box text-lg mt-1.5 flex-wrap justify-center flex md:hidden">
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/Flowise/">#Flowise</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/LangChain/">#LangChain</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/RAG/">#RAG</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/AI-Agent/">#AI Agent</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/%E5%8F%AF%E8%A7%86%E5%8C%96%E7%BC%96%E7%A8%8B/">#可视化编程</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/%E6%95%99%E7%A8%8B/">#教程</a>&nbsp;
+			</li>
+			
+		</ul>
+		
+
+		
+
+		
+		<div class="article-nav my-8 flex justify-between items-center px-2 sm:px-6 md:px-8">
+			
+			
+			<div class="article-next border-border-color shadow-redefine-flat shadow-shadow-color-2 rounded-medium px-4 py-2 hover:shadow-redefine-flat-hover hover:shadow-shadow-color-2">
+				<a class="next" rel="next" href="/2026/07/13/search-engine-beginner-guide/">
+					<span class="title flex justify-center items-center">
+						<span class="post-nav-title-item truncate max-w-48">搜索引擎新手探究：从原理到数据再到实战使用</span>
+						<span class="post-nav-item">Articles suivants</span>
+					</span>
+					<span class="right arrow-icon flex justify-center items-center">
+						<i class="fa-solid fa-chevron-right"></i>
+					</span>
+				</a>
+			</div>
+			
+		</div>
+		
+
+
+		
+		<div class="comment-container px-2 sm:px-6 md:px-8 pb-8">
+			<div class="comments-container mt-10 w-full ">
+    <div id="comment-anchor" class="w-full h-2.5"></div>
+    <div class="comment-area-title w-full my-1.5 md:my-2.5 text-xl md:text-3xl font-bold">
+        Commentaires
+    </div>
+    
+
+        
+            
+    <div id="waline"></div>
+    <script type="module" data-swup-reload-script>
+      import { init } from '/js/libs/waline.js';
+
+      (function() {
+        const startPath = location.pathname;
+        const startTime = Date.now();
+        const retryDelay = 200;
+        const retryLimit = 5000;
+
+        const runWaline = () => {
+          if (location.pathname !== startPath) {
+            return;
+          }
+
+          const container = document.getElementById('waline');
+          if (!container) {
+            if (Date.now() - startTime < retryLimit) {
+              setTimeout(runWaline, retryDelay);
+            }
+            return;
+          }
+
+          if (window.redefineWalineInstance?.destroy) {
+            window.redefineWalineInstance.destroy();
+          }
+
+          container.innerHTML = '';
+          window.redefineWalineInstance = init({
+            el: '#waline',
+            serverURL: 'https://example.example.com',
+            path: location.pathname,
+            dark: 'body[class~="dark-mode"]',
+            reaction: false,
+            requiredMeta: ['nick', 'mail'],
+            emoji: [],
+                      lang: 'zh-CN',
+          });
+        };
+
+        runWaline();
+      })();
+    </script>
+
+
+
+        
+    
+</div>
+
+		</div>
+		
+	</div>
+
+	
+	<div class="toc-content-container">
+		<div class="post-toc-wrap">
+	<div class="post-toc">
+		<div class="toc-title">Sur cette page</div>
+		<div class="page-title">Flowise 可视化 AI Agent 构建：从安装到多 Agent 编排完整教程</div>
+		<ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E3%80%81Flowise-%E6%98%AF%E4%BB%80%E4%B9%88"><span class="nav-text">一、Flowise 是什么</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-%E4%B8%80%E5%8F%A5%E8%AF%9D%E5%AE%9A%E4%B9%89"><span class="nav-text">1.1 一句话定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-%E4%B8%BA%E4%BB%80%E4%B9%88%E9%80%89-Flowise"><span class="nav-text">1.2 为什么选 Flowise</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-%E4%B8%89%E7%A7%8D%E6%9E%84%E5%BB%BA%E6%A8%A1%E5%BC%8F"><span class="nav-text">1.3 三种构建模式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E5%AE%89%E8%A3%85%E9%83%A8%E7%BD%B2"><span class="nav-text">二、安装部署</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-%E6%96%B9%E5%BC%8F%E4%B8%80%EF%BC%9ADocker-Compose%EF%BC%88%E6%8E%A8%E8%8D%90%EF%BC%89"><span class="nav-text">2.1 方式一：Docker Compose（推荐）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-%E6%96%B9%E5%BC%8F%E4%BA%8C%EF%BC%9ANPX-%E5%BF%AB%E9%80%9F%E5%AE%89%E8%A3%85%EF%BC%88%E5%BC%80%E5%8F%91%E4%BD%93%E9%AA%8C%E7%94%A8%EF%BC%89"><span class="nav-text">2.2 方式二：NPX 快速安装（开发体验用）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-%E6%96%B9%E5%BC%8F%E4%B8%89%EF%BC%9A%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%EF%BC%88%E8%B4%A1%E7%8C%AE-%E6%B7%B1%E5%BA%A6%E5%AE%9A%E5%88%B6%EF%BC%89"><span class="nav-text">2.3 方式三：源码编译（贡献&#x2F;深度定制）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-4-Flowise-Cloud"><span class="nav-text">2.4 Flowise Cloud</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E7%95%8C%E9%9D%A2%E6%A6%82%E8%A7%88"><span class="nav-text">三、界面概览</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B%E3%80%81%E5%85%A5%E9%97%A8%EF%BC%9A%E6%90%AD%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E8%81%8A%E5%A4%A9%E6%9C%BA%E5%99%A8%E4%BA%BA"><span class="nav-text">四、入门：搭一个简单聊天机器人</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-%E5%88%9B%E5%BB%BA-Assistant"><span class="nav-text">4.1 创建 Assistant</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-%E5%88%9B%E5%BB%BA-Chatflow"><span class="nav-text">4.2 创建 Chatflow</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94%E3%80%81RAG-%E7%9F%A5%E8%AF%86%E5%BA%93%E8%81%8A%E5%A4%A9%E6%9C%BA%E5%99%A8%E4%BA%BA"><span class="nav-text">五、RAG 知识库聊天机器人</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84"><span class="nav-text">5.1 整体架构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-%E6%AD%A5%E9%AA%A4%E4%B8%80%EF%BC%9A%E9%85%8D%E7%BD%AE-Embedding-%E6%A8%A1%E5%9E%8B"><span class="nav-text">5.2 步骤一：配置 Embedding 模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-3-%E6%AD%A5%E9%AA%A4%E4%B8%89%EF%BC%9A%E9%85%8D%E7%BD%AE%E5%90%91%E9%87%8F%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="nav-text">5.3 步骤三：配置向量数据库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-4-%E6%AD%A5%E9%AA%A4%E4%B8%89%EF%BC%9A%E4%B8%8A%E4%BC%A0%E6%96%87%E6%A1%A3%E5%88%9B%E5%BB%BA%E7%9F%A5%E8%AF%86%E5%BA%93"><span class="nav-text">5.4 步骤三：上传文档创建知识库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-5-%E6%AD%A5%E9%AA%A4%E5%9B%9B%EF%BC%9A%E6%9E%84%E5%BB%BA%E5%AE%8C%E6%95%B4-RAG-Chatflow"><span class="nav-text">5.5 步骤四：构建完整 RAG Chatflow</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-6-%E8%BF%9B%E9%98%B6-RAG-%E4%BC%98%E5%8C%96"><span class="nav-text">5.6 进阶 RAG 优化</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AD%E3%80%81Agent-%E5%92%8C%E5%B7%A5%E5%85%B7%E8%B0%83%E7%94%A8"><span class="nav-text">六、Agent 和工具调用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-1-Assistant-%E6%A8%A1%E5%BC%8F%E5%8A%A0%E5%B7%A5%E5%85%B7"><span class="nav-text">6.1 Assistant 模式加工具</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-2-Chatflow-%E6%A8%A1%E5%BC%8F%E7%94%A8-Agent-%E8%8A%82%E7%82%B9"><span class="nav-text">6.2 Chatflow 模式用 Agent 节点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-3-%E8%87%AA%E5%AE%9A%E4%B9%89%E5%B7%A5%E5%85%B7"><span class="nav-text">6.3 自定义工具</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%83%E3%80%81Agentflow%EF%BC%9A%E5%A4%9A-Agent-%E7%BC%96%E6%8E%92"><span class="nav-text">七、Agentflow：多 Agent 编排</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#7-1-%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E7%94%A8-Agentflow"><span class="nav-text">7.1 什么时候用 Agentflow</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-2-%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%A0%94%E7%A9%B6-Agent-%E5%9B%A2%E9%98%9F"><span class="nav-text">7.2 构建一个研究 Agent 团队</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-3-%E6%9D%A1%E4%BB%B6%E8%B7%AF%E7%94%B1"><span class="nav-text">7.3 条件路由</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-4-Agentic-RAG"><span class="nav-text">7.4 Agentic RAG</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AB%E3%80%81API-%E8%B0%83%E7%94%A8%E4%B8%8E%E9%83%A8%E7%BD%B2"><span class="nav-text">八、API 调用与部署</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#8-1-%E8%8E%B7%E5%8F%96-API-%E7%AB%AF%E7%82%B9"><span class="nav-text">8.1 获取 API 端点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-2-REST-API-%E8%B0%83%E7%94%A8"><span class="nav-text">8.2 REST API 调用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-3-Python-SDK"><span class="nav-text">8.3 Python SDK</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-4-%E5%B5%8C%E5%85%A5%E5%BC%8F%E8%81%8A%E5%A4%A9%E7%BB%84%E4%BB%B6"><span class="nav-text">8.4 嵌入式聊天组件</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B9%9D%E3%80%81MCP-%E9%9B%86%E6%88%90"><span class="nav-text">九、MCP 集成</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#9-1-MCP-Client-%E8%8A%82%E7%82%B9"><span class="nav-text">9.1 MCP Client 节点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-2-MCP-Server-%E8%8A%82%E7%82%B9"><span class="nav-text">9.2 MCP Server 节点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%81%E3%80%81%E7%9B%91%E6%8E%A7%E4%B8%8E%E8%B0%83%E8%AF%95"><span class="nav-text">十、监控与调试</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#10-1-%E6%89%A7%E8%A1%8C%E6%97%A5%E5%BF%97"><span class="nav-text">10.1 执行日志</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#10-2-Tracing%EF%BC%88%E8%BF%BD%E8%B8%AA%EF%BC%89"><span class="nav-text">10.2 Tracing（追踪）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#10-3-%E5%B8%B8%E8%A7%81%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7"><span class="nav-text">10.3 常见调试技巧</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%81%E4%B8%80%E3%80%81Flowise-vs-%E7%AB%9E%E5%93%81%E9%80%89%E6%8B%A9%E6%8C%87%E5%8D%97"><span class="nav-text">十一、Flowise vs 竞品选择指南</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%E9%80%9F%E6%9F%A5"><span class="nav-text">总结速查</span></a></li></ol>
+
+	</div>
+</div>
+	</div>
+	
+</div>
+
+			</div>
+
+			
+		</div>
+
+		<div class="main-content-footer">
+			<footer class="footer mt-5 py-5 h-auto text-base text-third-text-color relative border-t-2 border-t-border-color">
+    <div class="info-container py-3 text-center">
+        
+        <div class="text-center">
+            &copy;
+            
+              <span>2024</span>
+              -
+            
+            2026&nbsp;&nbsp;<i class="fa-solid fa-heart fa-beat" style="--fa-animation-duration: 0.5s; color: #f54545"></i>&nbsp;&nbsp;<a href="/">Chyyl</a>
+            
+                
+                <p class="post-count space-x-0.5">
+                    <span>
+                        15  posts au total
+                    </span>
+                    
+                </p>
+            
+        </div>
+        
+            <script data-swup-reload-script src="https://cn.vercount.one/js"></script>
+            <div class="relative text-center lg:absolute lg:right-[20px] lg:top-1/2 lg:-translate-y-1/2 lg:text-right">
+                
+                    <span id="busuanzi_container_site_uv" class="lg:!block">
+                        <span class="text-sm">VISITEURS</span>
+                        <span id="busuanzi_value_site_uv"></span>
+                    </span>
+                
+                
+                    <span id="busuanzi_container_site_pv" class="lg:!block">
+                        <span class="text-sm">NOMBRE TOTAL DE PAGES VUES</span>
+                        <span id="busuanzi_value_site_pv"></span>
+                    </span>
+                
+            </div>
+        
+        <div class="relative text-center lg:absolute lg:left-[20px] lg:top-1/2 lg:-translate-y-1/2 lg:text-left">
+            <span class="lg:block text-sm">POWERED BY <?xml version="1.0" encoding="utf-8"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg class="relative top-[2px] inline-block align-baseline" version="1.1" id="圖層_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="1rem" height="1rem" viewBox="0 0 512 512" enable-background="new 0 0 512 512" xml:space="preserve"><path fill="#0E83CD" d="M256.4,25.8l-200,115.5L56,371.5l199.6,114.7l200-115.5l0.4-230.2L256.4,25.8z M349,354.6l-18.4,10.7l-18.6-11V275H200v79.6l-18.4,10.7l-18.6-11v-197l18.5-10.6l18.5,10.8V237h112v-79.6l18.5-10.6l18.5,10.8V354.6z"/></svg><a target="_blank" class="text-base" href="https://hexo.io">Hexo</a></span>
+            <span class="text-sm lg:block">THEME&nbsp;<a class="text-base" target="_blank" href="https://github.com/EvanNotFound/hexo-theme-redefine">Redefine v2.9.0</a></span>
+        </div>
+        
+        
+            <div>
+                Blog en ligne depuis <span class="odometer" id="runtime_days" ></span> Jours <span class="odometer" id="runtime_hours"></span> Hrs <span class="odometer" id="runtime_minutes"></span> Min <span class="odometer" id="runtime_seconds"></span> Sec
+            </div>
+        
+        
+            <script data-swup-reload-script>
+                try {
+                    function odometer_init() {
+                    const elements = document.querySelectorAll('.odometer');
+                    elements.forEach(el => {
+                        new Odometer({
+                            el,
+                            format: '( ddd).dd',
+                            duration: 200
+                        });
+                    });
+                    }
+                    odometer_init();
+                } catch (error) {}
+            </script>
+        
+        
+        
+    </div>  
+</footer>
+		</div>
+	</div>
+
+	
+	<div class="post-tools">
+		<div class="post-tools-container">
+	<ul class="article-tools-list">
+		<!-- TOC aside toggle -->
+		
+		<li class="right-bottom-tools page-aside-toggle">
+			<i class="fa-regular fa-outdent"></i>
+		</li>
+		
+
+		<!-- go comment -->
+		
+		<li class="go-comment">
+			<i class="fa-regular fa-comments"></i>
+		</li>
+		
+	</ul>
+</div>
+	</div>
+	
+
+	<div class="right-side-tools-container">
+		<div class="side-tools-container">
+	<ul class="hidden-tools-list">
+		<li class="right-bottom-tools tool-font-adjust-plus flex justify-center items-center">
+			<i class="fa-regular fa-magnifying-glass-plus"></i>
+		</li>
+
+		<li class="right-bottom-tools tool-font-adjust-minus flex justify-center items-center">
+			<i class="fa-regular fa-magnifying-glass-minus"></i>
+		</li>
+
+		<li class="right-bottom-tools tool-dark-light-toggle flex justify-center items-center">
+			<i class="fa-regular fa-moon"></i>
+		</li>
+
+		<!-- rss -->
+		
+		<li class="right-bottom-tools rss flex justify-center items-center">
+			<a class="flex justify-center items-center" href="/atom.xml" target="_blank">
+				<i class="fa-regular fa-rss"></i>
+			</a>
+		</li>
+		
+
+		
+
+		<li class="right-bottom-tools tool-scroll-to-bottom flex justify-center items-center">
+			<i class="fa-regular fa-arrow-down"></i>
+		</li>
+	</ul>
+
+	<ul class="visible-tools-list">
+		<li class="right-bottom-tools toggle-tools-list flex justify-center items-center">
+			<i class="fa-regular fa-cog fa-spin"></i>
+		</li>
+		
+		<li class="right-bottom-tools tool-scroll-to-top flex justify-center items-center">
+			<i class="arrow-up fas fa-arrow-up"></i>
+			<span class="percent"></span>
+		</li>
+		
+		
+	</ul>
+</div>
+	</div>
+
+	<div class="image-viewer-container" role="dialog" aria-modal="true" aria-label="Visionneuse d’images">
+	<button class="image-viewer-close" type="button" aria-label="Fermer">
+		<i class="fa-solid fa-xmark"></i>
+	</button>
+	<button class="image-viewer-prev" type="button" aria-label="Précédent">
+		<i class="fa-solid fa-chevron-left"></i>
+	</button>
+	<div class="image-viewer-frame">
+		<img src="" alt="">
+	</div>
+	<div class="image-viewer-exif-panel hidden absolute left-1/2 bottom-20 -translate-x-1/2 w-[min(92vw,420px)] max-h-[60vh] overflow-hidden rounded-2xl bg-background-color-transparent-80 p-4 text-left shadow-redefine-flat backdrop-blur-md" role="dialog" aria-label="EXIF" aria-hidden="true">
+		<div class="flex items-center justify-between mb-3">
+			<span class="text-sm font-semibold text-first-text-color">EXIF</span>
+			<button class="image-viewer-exif-close flex h-8 w-8 items-center justify-center rounded-full bg-background-color-transparent-80 text-first-text-color transition hover:bg-background-color-transparent-40" type="button" aria-label="Fermer">
+				<i class="fa-solid fa-xmark text-[0.65rem]"></i>
+			</button>
+		</div>
+		<div class="image-viewer-exif-cards grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto pr-1 scrollbar-hide"></div>
+		<template class="image-viewer-exif-card-template">
+			<div class="rounded-lg bg-background-color-transparent-40 px-3 py-2">
+				<div class="image-viewer-exif-card-header flex items-center gap-2 mb-1">
+					<i class="image-viewer-exif-card-icon fa-solid fa-circle-info text-xs text-third-text-color"></i>
+					<div class="image-viewer-exif-card-title text-xs font-semibold text-first-text-color"></div>
+				</div>
+				<div class="image-viewer-exif-card-items flex flex-col gap-1"></div>
+			</div>
+		</template>
+	</div>
+	<button class="image-viewer-exif-toggle flex items-center gap-2 hidden absolute left-1/2 bottom-6 -translate-x-1/2 rounded-full border border-border-color bg-background-color-transparent-80 px-4 py-2 text-first-text-color backdrop-blur-md transition hover:bg-background-color-transparent-40" type="button" aria-label="EXIF" aria-expanded="false">
+		<i class="fa-solid fa-circle-info text-xs"></i>
+		<span class="text-xs font-semibold uppercase tracking-wider">EXIF</span>
+	</button>
+	<button class="image-viewer-next" type="button" aria-label="Suivant">
+		<i class="fa-solid fa-chevron-right"></i>
+	</button>
+</div>
+
+
+	
+	<div class="search-pop-overlay">
+	<div class="popup search-popup">
+		<div class="search-header">
+			<span class="search-input-field-pre">
+				<i class="fa-solid fa-keyboard"></i>
+			</span>
+			<div class="search-input-container">
+				<input autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="recherche..." spellcheck="false" type="search" class="search-input">
+			</div>
+			<span class="popup-btn-close">
+				<i class="fa-solid fa-times"></i>
+			</span>
+		</div>
+		<div id="search-result">
+			<div id="no-result">
+				<i class="fa-solid fa-spinner fa-spin-pulse fa-5x fa-fw"></i>
+			</div>
+		</div>
+	</div>
+</div>
+	
+
+</main>
+
+
+<script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/Swup.min.js" ></script><script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/SwupSlideTheme.min.js" ></script><script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/SwupScriptsPlugin.min.js" ></script><script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/SwupProgressPlugin.min.js" ></script><script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/SwupScrollPlugin.min.js" ></script><script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/SwupPreloadPlugin.min.js" ></script>
+<script>
+    window.swup = new Swup({
+        plugins: [
+            new SwupScriptsPlugin({
+                optin: true,
+            }),
+            new SwupProgressPlugin(),
+            new SwupScrollPlugin({
+                offset: 80,
+            }),
+            new SwupSlideTheme({
+                mainElement: ".main-content-body",
+            }),
+            new SwupPreloadPlugin(),
+        ],
+        containers: ["#swup"],
+    });
+
+    window.dispatchEvent(
+        new CustomEvent("redefine:swup:ready", {
+            detail: {
+                swup: window.swup,
+            },
+        }),
+    );
+</script>
+
+
+
+
+	<script type="module" src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/main.js" ></script>
+
+
+    <script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/odometer.min.js" ></script>
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/assets/odometer-theme-minimal.css">
+
+
+
+
+
+
+  <script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/Typed.min.js" ></script>
+
+
+
+    
+        <script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/mermaid.min.js" ></script>
+    
+
+
+
+
+
+
+<script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/moment-with-locales.min.js" data-swup-reload-script></script>
+
+
+	
+</body>
+
+</html>

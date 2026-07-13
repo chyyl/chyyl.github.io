@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="keywords" content="Hexo Theme Redefine">
+    
+    
+    <meta name="author" content="Chyyl">
+    
+    <!-- Completely eliminate flash of wrong theme -->
+    <script>
+        (function() {
+            const THEME_KEY = "REDEFINE-THEME-STATUS";
+            const DARK = "dark", LIGHT = "light";
+            
+            // Get preferred theme
+            function getTheme() {
+                try {
+                    const saved = localStorage.getItem(THEME_KEY);
+                    if (saved) {
+                        const { isDark } = JSON.parse(saved);
+                        return isDark ? DARK : LIGHT;
+                    }
+                } catch (e) {}
+                
+                return matchMedia("(prefers-color-scheme: dark)").matches ? DARK : LIGHT;
+            }
+            
+            // Apply theme to document
+            function applyTheme(theme) {
+                const isDark = theme === DARK;
+                const root = document.documentElement;
+                
+                // Set classes for compatibility
+                root.classList.add(theme);
+                root.classList.remove(isDark ? LIGHT : DARK);
+                root.style.colorScheme = theme;
+            }
+            
+            // Initial application
+            const theme = getTheme();
+            applyTheme(theme);
+            
+            // Listen for system preference changes
+            matchMedia("(prefers-color-scheme: dark)").addEventListener("change", ({ matches }) => {
+                // Only update if using system preference (no localStorage entry)
+                if (!localStorage.getItem(THEME_KEY)) {
+                    applyTheme(matches ? DARK : LIGHT);
+                }
+            });
+            
+            // Set body classes ASAP (before DOMContentLoaded)
+            (function() {
+                const addBodyClass = () => {
+                    const b = document.body;
+                    if (!b) return false;
+                    b.classList.add(theme + "-mode");
+                    return true;
+                };
+
+                // Try immediately
+                if (addBodyClass()) return;
+
+                // Observe until body exists
+                const mo = new MutationObserver(() => {
+                    if (addBodyClass()) mo.disconnect();
+                });
+                mo.observe(document.documentElement, { childList: true, subtree: true });
+            })();
+        })();
+    </script>
+    
+    <!-- preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    
+        
+        
+        
+            <link rel="preconnect" href="https://registry.npmmirror.com" crossorigin>
+        
+    
+    <!--- Seo Part-->
+    
+    <link rel="canonical" href="https://chyyl.netlify.app/2026/07/07/llamacpp-minicpm5-rag-guide/"/>
+    <meta name="robots" content="index,follow">
+    <meta name="googlebot" content="index,follow">
+    <meta name="revisit-after" content="1 days">
+    
+    
+        
+        <meta name="description" content="Hexo Theme Redefine, Redefine Your Hexo Journey.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="llama.cpp + MiniCPM5 + RAG：从原理到落地的完整指南">
+<meta property="og:url" content="https://chyyl.netlify.app/2026/07/07/llamacpp-minicpm5-rag-guide/index.html">
+<meta property="og:site_name" content="Chyyl&#39;s Blog">
+<meta property="og:description" content="Hexo Theme Redefine, Redefine Your Hexo Journey.">
+<meta property="og:locale">
+<meta property="og:image" content="https://chyyl.netlify.app/images/redefine-og.webp">
+<meta property="article:published_time" content="2026-07-06T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-07-07T06:57:53.951Z">
+<meta property="article:author" content="Chyyl">
+<meta property="article:tag" content="MiniCPM5">
+<meta property="article:tag" content="RAG">
+<meta property="article:tag" content="llama.cpp">
+<meta property="article:tag" content="向量数据库">
+<meta property="article:tag" content="本地部署">
+<meta property="article:tag" content="知识库">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://chyyl.netlify.app/images/redefine-og.webp">
+    
+    
+    <!--- Icon Part-->
+    <link rel="icon" type="image/png" href="https://avatars.githubusercontent.com/u/115130037?v=4" sizes="192x192">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://avatars.githubusercontent.com/u/115130037?v=4">
+    <meta name="theme-color" content="#A31F34">
+    <link rel="shortcut icon" href="https://avatars.githubusercontent.com/u/115130037?v=4">
+    <!--- Page Info-->
+    
+    <title>
+        
+            llama.cpp + MiniCPM5 + RAG：从原理到落地的完整指南 | ChyyL&#39;s Blog
+        
+    </title>
+
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fonts/Chillax/chillax.css">
+
+    <!--- Inject Part-->
+    
+
+    
+<link rel="stylesheet" href="/css/style.css">
+
+
+    
+        <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/css/build/tailwind.css">
+    
+
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fonts/GeistMono/geist-mono.css">
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fonts/Geist/geist.css">
+    <!--- Font Part-->
+    
+    
+    
+        <link href="" rel="stylesheet">
+    
+    
+        <link href="" rel="stylesheet">
+    
+    
+        <link href="" rel="stylesheet">
+    
+    
+        <script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/anime.min.js" ></script>
+    
+
+    <script id="hexo-configurations">
+    window.config = {"hostname":"chyyl.netlify.app","root":"/","language":"zh-Hans"};
+    window.theme = {"articles":{"style":{"font_size":"16px","line_height":1.5,"image_border_radius":"14px","image_alignment":"center","image_caption":false,"link_icon":true,"delete_mask":false,"title_alignment":"left","headings_top_spacing":{"h1":"3.2rem","h2":"2.4rem","h3":"1.9rem","h4":"1.6rem","h5":"1.4rem","h6":"1.3rem"}},"word_count":{"enable":true,"count":true,"min2read":true},"author_label":{"enable":true,"auto":false,"list":[]},"code_block":{"copy":true,"style":"mac","highlight_theme":{"light":"github","dark":"vs2015"},"font":{"enable":false,"family":null,"url":null}},"toc":{"enable":true,"max_depth":3,"number":false,"expand":true,"init_open":true},"copyright":{"enable":true,"default":"cc_by_nc_sa"},"lazyload":true,"pangu_js":false,"recommendation":{"enable":false,"title":"推荐阅读","limit":3,"mobile_limit":2,"placeholder":"/images/wallhaven-wqery6-light.webp","skip_dirs":[]}},"colors":{"primary":"#A31F34","secondary":null,"default_mode":"light"},"global":{"fonts":{"chinese":{"enable":true,"family":null,"url":null},"english":{"enable":true,"family":null,"url":null},"title":{"enable":true,"family":null,"url":null}},"content_max_width":"1000px","sidebar_width":"210px","hover":{"shadow":true,"scale":false},"scroll_progress":{"bar":true,"percentage":true},"website_counter":{"url":"https://cn.vercount.one/js","enable":true,"site_pv":true,"site_uv":true,"post_pv":true},"single_page":true,"preloader":{"enable":true,"custom_message":null},"side_tools":{"gear_rotation":true,"auto_expand":false},"open_graph":{"enable":true,"image":"/images/redefine-og.webp","description":"Hexo Theme Redefine, Redefine Your Hexo Journey."},"google_analytics":{"enable":false,"id":null}},"home_banner":{"enable":true,"style":"fixed","image":{"light":"/images/wallhaven-wqery6-light.webp","dark":"/images/wallhaven-wqery6-dark.webp"},"title":"Learn, Share, and Grow","subtitle":{"text":[],"hitokoto":{"enable":true,"show_author":true,"api":"https://v1.hitokoto.cn"},"typing_speed":100,"backing_speed":80,"starting_delay":500,"backing_delay":1500,"loop":true,"smart_backspace":true},"text_color":{"light":"#fff","dark":"#d1d1b6"},"text_style":{"title_size":"2.8rem","subtitle_size":"1.5rem","line_height":1.2},"custom_font":{"enable":false,"family":null,"url":null},"social_links":{"enable":false,"style":"default","links":[{"icon":"fa-brands fa-github","url":null},{"icon":"fa-brands fa-twitter","url":null},{"icon":"fa-solid fa-at","url":"you@example.com"},{"icon":"fa-brands fa-telegram","url":null},{"icon":"/images/custom-icon.svg","url":null}],"qrs":[{"icon":"fa-brands fa-weixin","qr":null},{"icon":"/images/custom-icon.svg","qr":null}]}},"plugins":{"feed":{"enable":true},"aplayer":{"enable":false,"type":"fixed","audios":[{"name":null,"artist":null,"url":null,"cover":null,"lrc":null}]},"mermaid":{"enable":true,"version":"11.4.1","theme":{"light":"default","dark":"dark"}}},"version":"2.9.0","navbar":{"auto_hide":false,"color":{"left":"#f78736","right":"#367df7","transparency":35},"width":{"home":"1200px","pages":"1000px"},"links":{"Home":{"path":"/","icon":"fa-regular fa-house"},"Archives":{"path":"/archives","icon":"fa-regular fa-archive"}},"search":{"enable":true,"preload":true}},"page_templates":{"friends_column":2,"tags_style":"blur","masonry":{"batch_size":12,"initial_batch_size":24}},"home":{"sidebar":{"enable":true,"position":"left","first_item":"menu","announcement":null,"show_on_mobile":true,"links":{"Archives":{"path":"/archives","icon":"fa-regular fa-archive"},"Tags":{"path":"/tags","icon":"fa-regular fa-tags"},"Categories":{"path":"/categories","icon":"fa-regular fa-folder"}}},"article_date_format":"auto","excerpt_length":200,"categories":{"enable":true,"limit":3},"tags":{"enable":true,"limit":3}},"footer":{"runtime":true,"icon":"<i class=\"fa-solid fa-heart fa-beat\" style=\"--fa-animation-duration: 0.5s; color: #f54545\"></i>","start":"2024/06/01 00:00:00","statistics":true,"customize":null,"icp":{"enable":false,"number":null,"url":null}},"footerStart":"2024/06/01 00:00:00","mermaid":{"style":{"light":"default","dark":"dark"}}};
+    window.lang_ago = {"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days ago","week":"%s weeks ago","month":"%s months ago","year":"%s years ago"};
+    window.i18n = {"search":"Search...","toc":"On this page","prev":"Prev","next":"Next","prev_posts":"Prev posts","next_posts":"Next posts","page":"Page %d","recent_posts":"Recent Posts","share":"Share","powered_by":"POWERED BY %s","theme":"THEME","rss_feed":"RSS Feed","category":"Category","categories":"Categories","tag":"Tag","tags":"Tags","post":"Post","posts":"Posts","tagcloud":"Tag Cloud","comment":"Comment","comments":"Comments","home":"Home","archive":"Archive","archives":"Archives","top":"TOP","sticky":"Sticky","go-back-home":"Go Back Home","masonry_loading":"Loading photos...","image_viewer":"Image viewer","close":"Close","exif":{"title":"EXIF","cards":{"camera":"Camera","lens":"Lens","exposure":"Exposure","other":"Other"},"fields":{"make":"Brand","model":"Model","date_taken":"Date taken","lens_model":"Lens","focal_length":"Focal length","focus_mode":"Focus mode","shutter":"Shutter","aperture":"Aperture","iso":"ISO","exposure_program":"Exposure program","exposure_compensation":"Exposure compensation","metering_mode":"Metering mode","flash":"Flash","white_balance":"White balance","latitude":"Latitude","longitude":"Longitude","altitude":"Altitude"},"status":{"loading":"Loading...","no_exif":"No EXIF available","library_missing":"EXIF library not loaded","image_source_missing":"Image source unavailable","unavailable":"EXIF unavailable (blocked by CORS or missing metadata)","flag_unavailable":"EXIF unavailable"}},"about":"About","changelog":"Changelog","links":"Links","link":"Link","friends":"Friends","friend":"Friend","timeline":"Timeline","shuoshuo":"Shuoshuo","bookmarks":"Bookmarks","site_uv":"VISITOR COUNT","site_pv":"TOTAL PAGE VIEWS","read_more":"Read more","wordcount":"Words","min2read":"Mins","status":"Status","runtime":"Blog up for","days":"days","hours":"hrs","minutes":"Min","seconds":"Sec","optimized_by":"and Optimized by Evan","rights":"All Rights Reserved","site_posts":"%s posts in total","site_wordcount":"%s words in total","copyright":{"author":"Author","title":"Title","link":"Link","create_time":"Created at","update_time":"Updated at","license_title":"License","license_content":"This work is licensed under %s.","all_rights_reserved":"All Rights Reserved &#169; %s","public_domain":"This work is in the public domain."},"ago":{"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days ago","week":"%s weeks ago","month":"%s months ago","year":"%s years ago"},"create_time":"Created","update_time":"Updated","expired":"This post is written %s days ago, and the content may not be up to date."};
+    window.data = {"masonry":false};
+  </script>
+    
+    <!--- Fontawesome Part-->
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fontawesome/fontawesome.min.css">
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fontawesome/brands.min.css">
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fontawesome/solid.min.css">
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/fontawesome/regular.min.css">
+    
+    
+    
+    
+<meta name="generator" content="Hexo 8.1.2"><link rel="alternate" href="/atom.xml" title="Chyyl's Blog" type="application/atom+xml">
+</head>
+
+
+<body>
+	<div class="progress-bar-container">
+	
+	<span class="scroll-progress-bar"></span>
+	
+
+	
+	<span class="pjax-progress-bar"></span>
+	<!--        <span class="swup-progress-icon">-->
+	<!--            <i class="fa-solid fa-circle-notch fa-spin"></i>-->
+	<!--        </span>-->
+	
+</div>
+
+<style>
+    :root {
+        --preloader-background-color: #fff;
+        --preloader-text-color: #000;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --preloader-background-color: #202124;
+            --preloader-text-color: #fff;
+        }
+    }
+
+    @media (prefers-color-scheme: light) {
+        :root {
+            --preloader-background-color: #fff;
+            --preloader-text-color: #000;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .ml13 {
+            font-size: 2.6rem !important; /* Adjust this value as needed */
+        }
+    }
+
+    .preloader {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem; /* Tailwind 'gap-4' is 1rem */
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        padding: 12px;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh; /* 'h-screen' is 100% of the viewport height */
+        background-color: var(--preloader-background-color);
+        z-index: 1100; /* 'z-[1100]' sets the z-index */
+        transition: opacity 0.2s ease-in-out;
+    }
+
+    .ml13 {
+        font-size: 3.2rem;
+        /* text-transform: uppercase; */
+        color: var(--preloader-text-color);
+        letter-spacing: -1px;
+        font-weight: 500;
+        font-family: 'Chillax-Variable', sans-serif;
+        text-align: center;
+    }
+
+    .ml13 .word {
+        display: inline-flex;
+        flex-wrap: wrap;
+        white-space: nowrap;
+    }
+
+    .ml13 .letter {
+        display: inline-block;
+        line-height: 1em;
+    }
+</style>
+
+<div class="preloader">
+    <h2 class="ml13">
+        ChyyL&#39;s Blog
+    </h2>
+    <script>
+        var textWrapper = document.querySelector('.ml13');
+        // Split text into words
+        var words = textWrapper.textContent.trim().split(' ');
+
+        // Clear the existing content
+        textWrapper.innerHTML = '';
+
+        // Wrap each word and its letters in spans
+        words.forEach(function(word) {
+            var wordSpan = document.createElement('span');
+            wordSpan.classList.add('word');
+            wordSpan.innerHTML = word.replace(/\S/g, "<span class='letter'>$&</span>");
+            textWrapper.appendChild(wordSpan);
+            textWrapper.appendChild(document.createTextNode(' ')); // Add space between words
+        });
+
+        var animation = anime.timeline({ loop: true })
+            .add({
+                targets: '.ml13 .letter',
+                translateY: [20, 0],
+                translateZ: 0,
+                opacity: [0, 1],
+                filter: ['blur(5px)', 'blur(0px)'],
+                easing: "easeOutExpo",
+                duration: 1200,
+                delay: (el, i) => 300 + 20 * i,
+            })
+            .add({
+                targets: '.ml13 .letter',
+                translateY: [0, -20],
+                opacity: [1, 0],
+                filter: ['blur(0px)', 'blur(5px)'],
+                easing: "easeInExpo",
+                duration: 1000,
+                delay: (el, i) => 15 * i,
+                complete: function() {
+                    hidePreloader();
+                }
+            }, '-=700');
+
+
+        let themeStatus = JSON.parse(localStorage.getItem('REDEFINE-THEME-STATUS'))?.isDark;
+
+        // If the theme status is not found in local storage, check the preferred color scheme
+        if (themeStatus === undefined || themeStatus === null) {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                themeStatus = 'dark';
+            } else {
+                themeStatus = 'light';
+            }
+        }
+
+        // Now you can use the themeStatus variable in your code
+        if (themeStatus) {
+            document.documentElement.style.setProperty('--preloader-background-color', '#202124');
+            document.documentElement.style.setProperty('--preloader-text-color', '#fff');
+        } else {
+            document.documentElement.style.setProperty('--preloader-background-color', '#fff');
+            document.documentElement.style.setProperty('--preloader-text-color', '#000');
+        }
+
+        window.addEventListener('load', function () {
+            setTimeout(hidePreloader, 5000); // Call hidePreloader after 5000 milliseconds if not already called by animation
+        });
+
+        function hidePreloader() {
+            var preloader = document.querySelector('.preloader');
+            preloader.style.opacity = '0';
+            setTimeout(function () {
+                preloader.style.display = 'none';
+            }, 200);
+        }
+    </script>
+</div>
+
+<main class="page-container" id="swup">
+
+	
+
+	<div class="main-content-container flex flex-col justify-between min-h-dvh">
+		<div class="main-content-header">
+			<header class="navbar-container px-6 md:px-12">
+    <div class="navbar-content transition-navbar ">
+        <div class="left">
+            
+                <a class="logo-image h-8 w-8 sm:w-10 sm:h-10 mr-3" href="/">
+                    <img src="https://avatars.githubusercontent.com/u/115130037?v=4" class="w-full h-full rounded-xs">
+                </a>
+            
+            <a class="logo-title" href="/">
+                
+                ChyyL&#39;s Blog
+                
+            </a>
+        </div>
+
+        <div class="right">
+            <!-- PC -->
+            <div class="desktop">
+                <ul class="navbar-list">
+                    
+                        
+                            
+
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class=""
+                                   href="/"
+                                        >
+                                    <i class="fa-regular fa-house fa-fw"></i>
+                                    ACCUEIL
+                                    
+                                </a>
+
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                        
+                            
+
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class=""
+                                   href="/archives"
+                                        >
+                                    <i class="fa-regular fa-archive fa-fw"></i>
+                                    ARCHIVES
+                                    
+                                </a>
+
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                    
+                        <li class="navbar-item search search-popup-trigger">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </li>
+                    
+                </ul>
+            </div>
+            <!-- Mobile -->
+            <div class="mobile">
+                
+                    <div class="icon-item search search-popup-trigger"><i class="fa-solid fa-magnifying-glass"></i>
+                    </div>
+                
+                <div class="icon-item navbar-bar">
+                    <div class="navbar-bar-middle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile sheet -->
+    <div class="navbar-drawer h-dvh w-full absolute top-0 left-0 bg-background-color flex flex-col justify-between">
+        <ul class="drawer-navbar-list flex flex-col px-4 justify-center items-start">
+            
+                
+                    
+
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full "
+                           href="/"
+                        >
+                            <span>
+                                ACCUEIL
+                            </span>
+                            
+                                <i class="fa-regular fa-house fa-sm fa-fw"></i>
+                            
+                        </a>
+                        
+
+                        
+                    </li>
+            
+                
+                    
+
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full "
+                           href="/archives"
+                        >
+                            <span>
+                                ARCHIVES
+                            </span>
+                            
+                                <i class="fa-regular fa-archive fa-sm fa-fw"></i>
+                            
+                        </a>
+                        
+
+                        
+                    </li>
+            
+
+            
+            
+                
+                    
+                    
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active"
+                           href="/tags"
+                        >
+                            <span>Tags</span>
+                            <i class="fa-regular fa-tags fa-sm fa-fw"></i>
+                        </a>
+                    </li>
+                
+                    
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active"
+                           href="/categories"
+                        >
+                            <span>Categories</span>
+                            <i class="fa-regular fa-folder fa-sm fa-fw"></i>
+                        </a>
+                    </li>
+                
+            
+        </ul>
+
+        <div class="statistics flex justify-around my-2.5">
+    <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/tags">
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">57</div>
+        <div class="label text-third-text-color text-sm">Tags</div>
+    </a>
+    <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/categories">
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">3</div>
+        <div class="label text-third-text-color text-sm">Catégories</div>
+    </a>
+    <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/archives">
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">15</div>
+        <div class="label text-third-text-color text-sm">Posts</div>
+    </a>
+</div>
+    </div>
+
+    <div class="window-mask"></div>
+
+</header>
+
+
+		</div>
+
+		<div class="main-content-body transition-fade-up">
+			
+
+			<div class="main-content">
+				<div class="post-page-container flex relative justify-between box-border w-full h-full">
+	<div class="article-content-container">
+
+		<div class="article-title relative w-full">
+			
+			<div class="w-full flex items-center pt-6 justify-start">
+				<h1 class="article-title-regular text-second-text-color tracking-tight text-4xl md:text-6xl font-semibold px-2 sm:px-6 md:px-8 py-3">llama.cpp + MiniCPM5 + RAG：从原理到落地的完整指南</h1>
+			</div>
+			
+		</div>
+
+		
+		<div class="article-header flex flex-row gap-2 items-center px-2 sm:px-6 md:px-8">
+			<div class="avatar w-[46px] h-[46px] shrink-0 rounded-medium border border-border-color p-px">
+				<img src="https://avatars.githubusercontent.com/u/115130037?v=4">
+			</div>
+			<div class="info flex flex-col justify-between">
+				<div class="author flex items-center">
+					<span class="name text-default-text-color text-lg font-semibold">Chyyl</span>
+					
+					<span class="author-label ml-1.5 text-xs px-2 py-0.5 rounded-small text-third-text-color border border-shadow-color-1">Lv2</span>
+					
+				</div>
+				<div class="meta-info">
+					<div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fa-regular fa-pen-fancy"></i>&nbsp;
+        <span class="desktop">2026-07-07</span>
+        <span class="mobile">2026-07-07</span>
+        <span class="hover-info">Créé</span>
+    </span>
+    
+        <span class="article-date article-meta-item">
+            <i class="fa-regular fa-wrench"></i>&nbsp;
+            <span class="desktop">2026-07-07 14:57:53</span>
+            <span class="mobile">2026-07-07 14:57:53</span>
+            <span class="hover-info">Mis à jour</span>
+        </span>
+    
+
+    
+        <span class="article-categories article-meta-item">
+            <i class="fa-regular fa-folders"></i>&nbsp;
+            <ul>
+                
+                
+                    
+                        
+                        <li>
+                            <a href="/categories/%E6%8A%80%E6%9C%AF%E5%AE%9E%E6%93%8D/">技术实操</a>&nbsp;
+                        </li>
+                    
+                    
+                
+            </ul>
+        </span>
+    
+    
+        <span class="article-tags article-meta-item">
+            <i class="fa-regular fa-tags"></i>&nbsp;
+            <ul>
+                
+                    <li>
+                        <a href="/tags/RAG/">RAG</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/llama-cpp/">llama.cpp</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/MiniCPM5/">MiniCPM5</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/%E5%90%91%E9%87%8F%E6%95%B0%E6%8D%AE%E5%BA%93/">向量数据库</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/%E6%9C%AC%E5%9C%B0%E9%83%A8%E7%BD%B2/">本地部署</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/%E7%9F%A5%E8%AF%86%E5%BA%93/">知识库</a>&nbsp;
+                    </li>
+                
+            </ul>
+        </span>
+    
+
+    
+    
+    
+    
+        <span class="article-pv article-meta-item">
+            <i class="fa-regular fa-eye"></i>&nbsp;<span id="busuanzi_value_page_pv"></span>
+        </span>
+    
+</div>
+
+				</div>
+			</div>
+		</div>
+		
+
+		
+
+
+		<div class="article-content markdown-body px-2 sm:px-6 md:px-8 pb-8">
+			<blockquote>
+<p>本地大模型 + 私有知识库，是 2026 年最实用的 AI 落地方案之一。不依赖云端 API，数据不出机器，还能针对你的文档精准问答。这篇文章用三块内容把整条链路讲透：RAG 是什么、怎么把文档变成向量数据库、怎么跟 llama.cpp + MiniCPM5 快速接起来。全程本地，零 API 费用。</p>
+</blockquote>
+<h2 id="一、什么是-RAG：原理与效率"><a href="#一、什么是-RAG：原理与效率" class="headerlink" title="一、什么是 RAG：原理与效率"></a>一、什么是 RAG：原理与效率</h2><h3 id="1-1-一句话说清楚"><a href="#1-1-一句话说清楚" class="headerlink" title="1.1 一句话说清楚"></a>1.1 一句话说清楚</h3><p><strong>RAG（Retrieval-Augmented Generation，检索增强生成）</strong> &#x3D; 先从你的文档里检索相关内容，再把检索到的内容塞进大模型的上下文，让模型基于这些内容回答问题。</p>
+<p>打个比方：大模型像是一个聪明的学生，知识渊博但没看过你的课本。RAG 就是考试前临时把你的课本翻到相关页码，摊在他面前——他靠自己的理解力答题，但答案有据可查。</p>
+<h3 id="1-2-为什么需要-RAG"><a href="#1-2-为什么需要-RAG" class="headerlink" title="1.2 为什么需要 RAG"></a>1.2 为什么需要 RAG</h3><p>大模型有三个先天缺陷，RAG 逐个解决：</p>
+<table>
+<thead>
+<tr>
+<th>大模型的问题</th>
+<th>RAG 怎么解决</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>知识截止</strong>：训练数据有截止日期，不知道最新信息</td>
+<td>文档随时更新，检索到就能用</td>
+</tr>
+<tr>
+<td><strong>幻觉</strong>：不知道的事会编造，说得还很自信</td>
+<td>检索到的文档作为事实依据，模型”看着答”</td>
+</tr>
+<tr>
+<td><strong>不懂你的私有数据</strong>：没见过你的内部文档&#x2F;代码&#x2F;笔记</td>
+<td>你的文档就是知识源，模型不需要”记住”</td>
+</tr>
+</tbody></table>
+<p>另一个方案是微调（Fine-tuning），但对比一下：</p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>RAG</th>
+<th>微调</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>数据更新</strong></td>
+<td>随时增删文档，即时生效</td>
+<td>重新训练，数小时到数天</td>
+</tr>
+<tr>
+<td><strong>成本</strong></td>
+<td>一次性建库，查询成本极低</td>
+<td>训练成本高（GPU 时间 + 数据标注）</td>
+</tr>
+<tr>
+<td><strong>可解释性</strong></td>
+<td>能看到检索到了哪些文档</td>
+<td>黑箱，无法追溯答案来源</td>
+</tr>
+<tr>
+<td><strong>适合场景</strong></td>
+<td>文档问答、知识库、动态数据</td>
+<td>固定风格&#x2F;领域深度适配</td>
+</tr>
+<tr>
+<td><strong>幻觉控制</strong></td>
+<td>好，有文档兜底</td>
+<td>一般，模型仍可能编造</td>
+</tr>
+</tbody></table>
+<p><strong>结论：90% 的”让 AI 懂我的文档”需求，RAG 是正确答案。</strong> 微调适合改变模型行为风格，RAG 适合给模型补充知识。</p>
+<h3 id="1-3-RAG-的完整原理"><a href="#1-3-RAG-的完整原理" class="headerlink" title="1.3 RAG 的完整原理"></a>1.3 RAG 的完整原理</h3><p>RAG 系统分两个阶段：</p>
+<h4 id="阶段一：建库（离线，做一次）"><a href="#阶段一：建库（离线，做一次）" class="headerlink" title="阶段一：建库（离线，做一次）"></a>阶段一：建库（离线，做一次）</h4><div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">原始文档（PDF/Word/Markdown/HTML/...）</span><br><span class="line">  ↓ 文档解析</span><br><span class="line">纯文本</span><br><span class="line">  ↓ 分块（Chunking）</span><br><span class="line">文本块 1, 文本块 2, ..., 文本块 N</span><br><span class="line">  ↓ 向量化（Embedding）</span><br><span class="line">向量 1, 向量 2, ..., 向量 N</span><br><span class="line">  ↓ 存入向量数据库</span><br><span class="line">向量数据库（每条记录 = 文本块 + 向量 + 元数据）</span><br></pre></td></tr></table></figure></div>
+
+<h4 id="阶段二：查询（在线，每次提问）"><a href="#阶段二：查询（在线，每次提问）" class="headerlink" title="阶段二：查询（在线，每次提问）"></a>阶段二：查询（在线，每次提问）</h4><div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">用户问题</span><br><span class="line">  ↓ 向量化（同一个 Embedding 模型）</span><br><span class="line">问题向量</span><br><span class="line">  ↓ 向量数据库做相似度检索</span><br><span class="line">Top-K 最相关的文本块</span><br><span class="line">  ↓ 拼装成 Prompt</span><br><span class="line">&quot;根据以下参考资料回答问题：</span><br><span class="line"> [文本块1] [文本块3] [文本块7]</span><br><span class="line"> 问题：用户的问题&quot;</span><br><span class="line">  ↓ 大模型生成</span><br><span class="line">回答（附带引用来源）</span><br></pre></td></tr></table></figure></div>
+
+<h4 id="检索的核心：向量相似度"><a href="#检索的核心：向量相似度" class="headerlink" title="检索的核心：向量相似度"></a>检索的核心：向量相似度</h4><p>文本被 Embedding 模型转成高维向量（比如 1024 维浮点数）。语义相近的文本，向量距离也近。检索时计算问题向量和所有文档向量的距离，取最近的 K 个。</p>
+<p>常用的距离度量：</p>
+<ul>
+<li><strong>余弦相似度（Cosine Similarity）</strong>：最常用，衡量方向一致性，不关心向量长度</li>
+<li><strong>内积（Inner Product）</strong>：归一化后等价于余弦相似度</li>
+<li><strong>L2 距离（欧氏距离）</strong>：衡量绝对位置差异</li>
+</ul>
+<h3 id="1-4-RAG-的效率"><a href="#1-4-RAG-的效率" class="headerlink" title="1.4 RAG 的效率"></a>1.4 RAG 的效率</h3><h4 id="检索效率"><a href="#检索效率" class="headerlink" title="检索效率"></a>检索效率</h4><p>向量数据库的检索复杂度是 <strong>O(log N)</strong>（近似最近邻搜索，ANN），不是 O(N) 线性扫描。实际体验：</p>
+<table>
+<thead>
+<tr>
+<th>文档量</th>
+<th>建库时间</th>
+<th>单次检索延迟</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>100 个文本块</td>
+<td>&lt; 1 秒</td>
+<td>&lt; 10ms</td>
+</tr>
+<tr>
+<td>10,000 个文本块</td>
+<td>几十秒</td>
+<td>&lt; 20ms</td>
+</tr>
+<tr>
+<td>1,000,000 个文本块</td>
+<td>数十分钟</td>
+<td>&lt; 50ms</td>
+</tr>
+</tbody></table>
+<p>对比全文检索（如 Elasticsearch），向量检索在语义匹配上有质的优势——“怎么部署模型”能匹配到”安装步骤”，关键词搜索做不到。</p>
+<h4 id="生成效率"><a href="#生成效率" class="headerlink" title="生成效率"></a>生成效率</h4><p>RAG 的端到端延迟 &#x3D; 检索延迟 + 模型推理延迟。检索只占很小一部分（约 5-15%），主要瓶颈在模型生成。</p>
+<p>用 MiniCPM5-1B（1B 参数）的推理速度：</p>
+<table>
+<thead>
+<tr>
+<th>硬件</th>
+<th>速度（Q4 量化）</th>
+<th>端到端延迟（检索+生成 200 token）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CPU（8核 M-series）</td>
+<td>~30 tok&#x2F;s</td>
+<td>~7 秒</td>
+</tr>
+<tr>
+<td>GPU（RTX 3060 12GB）</td>
+<td>~120 tok&#x2F;s</td>
+<td>~2 秒</td>
+</tr>
+<tr>
+<td>GPU（RTX 4090 24GB）</td>
+<td>~300 tok&#x2F;s</td>
+<td>&lt; 1 秒</td>
+</tr>
+</tbody></table>
+<p>1B 模型小，推理快，适合做 RAG 的生成端。检索几乎不花时间，体验瓶颈在模型生成速度。</p>
+<h4 id="准确率"><a href="#准确率" class="headerlink" title="准确率"></a>准确率</h4><p>RAG 的准确率取决于四个因素：</p>
+<ol>
+<li><strong>文档质量</strong>——垃圾进垃圾出，OCR 错误&#x2F;格式混乱会严重影响效果</li>
+<li><strong>分块策略</strong>——chunk 太大召回率低，太小丢失上下文（后面详讲）</li>
+<li><strong>Embedding 模型</strong>——好模型语义理解更准，推荐 mxbai-embed-large 或 bge-m3</li>
+<li><strong>Top-K 选择</strong>——K 太少漏掉相关内容，太多噪声干扰（通常 K&#x3D;3~5）</li>
+</ol>
+<p>工业实践里，好的 RAG 系统在文档问答任务上能达到 <strong>85-95%</strong> 的准确率（答案能从检索到的文档中找到依据），远高于纯大模型的 40-60%（全靠模型自己编）。</p>
+<h3 id="1-5-RAG-的进阶：不是简单拼接"><a href="#1-5-RAG-的进阶：不是简单拼接" class="headerlink" title="1.5 RAG 的进阶：不是简单拼接"></a>1.5 RAG 的进阶：不是简单拼接</h3><p>基础 RAG 就是”检索+拼接+生成”，但生产级 RAG 还需要：</p>
+<ul>
+<li><strong>重排（Reranking）</strong>：先用向量检索召回 Top-20，再用 Cross-Encoder 精排到 Top-5，准确率显著提升</li>
+<li><strong>混合检索</strong>：向量检索（语义） + 关键词检索（BM25），取并集，覆盖不同查询类型</li>
+<li><strong>查询改写</strong>：把用户问题改写成更适合检索的形式（”去年的营收” → “2025年 营业收入 财报”）</li>
+<li><strong>多跳检索</strong>：复杂问题拆成子问题，分别检索再合并</li>
+</ul>
+<p>这篇文章聚焦基础 RAG，把基础跑通再考虑进阶。</p>
+<hr>
+<h2 id="二、如何将文档变成-RAG-数据库"><a href="#二、如何将文档变成-RAG-数据库" class="headerlink" title="二、如何将文档变成 RAG 数据库"></a>二、如何将文档变成 RAG 数据库</h2><h3 id="2-1-技术选型"><a href="#2-1-技术选型" class="headerlink" title="2.1 技术选型"></a>2.1 技术选型</h3><table>
+<thead>
+<tr>
+<th>组件</th>
+<th>推荐选择</th>
+<th>理由</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Embedding 模型</strong></td>
+<td>mxbai-embed-large-v1</td>
+<td>开源、支持 llama.cpp 原生推理</td>
+</tr>
+<tr>
+<td><strong>向量数据库</strong></td>
+<td>ChromaDB</td>
+<td>轻量、纯 Python、零配置，适合中小规模</td>
+</tr>
+<tr>
+<td><strong>文档解析</strong></td>
+<td>LangChain TextLoader 系列</td>
+<td>覆盖 PDF&#x2F;Word&#x2F;Markdown&#x2F;HTML 等主流格式</td>
+</tr>
+<tr>
+<td><strong>分块工具</strong></td>
+<td>RecursiveCharacterTextSplitter</td>
+<td>按语义边界递归切分，优于固定长度</td>
+</tr>
+</tbody></table>
+<p>如果你追求极致性能或百万级文档，可以换 Qdrant 或 Milvus。但 99% 的个人项目，ChromaDB 够了。</p>
+<h3 id="2-2-环境准备"><a href="#2-2-环境准备" class="headerlink" title="2.2 环境准备"></a>2.2 环境准备</h3><div class="code-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Python 环境（3.10+）</span></span><br><span class="line">pip install langchain langchain-community chromadb sentence-transformers</span><br><span class="line"></span><br><span class="line"><span class="comment"># 文档解析依赖（按需安装）</span></span><br><span class="line">pip install pypdf          <span class="comment"># PDF</span></span><br><span class="line">pip install python-docx    <span class="comment"># Word</span></span><br><span class="line">pip install markdown       <span class="comment"># Markdown</span></span><br><span class="line">pip install beautifulsoup4 <span class="comment"># HTML</span></span><br></pre></td></tr></table></figure></div>
+
+<h3 id="2-3-第一步：文档解析——把各种格式变成纯文本"><a href="#2-3-第一步：文档解析——把各种格式变成纯文本" class="headerlink" title="2.3 第一步：文档解析——把各种格式变成纯文本"></a>2.3 第一步：文档解析——把各种格式变成纯文本</h3><div class="code-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> langchain_community.document_loaders <span class="keyword">import</span> (</span><br><span class="line">    PyPDFLoader,</span><br><span class="line">    Docx2txtLoader,</span><br><span class="line">    TextLoader,</span><br><span class="line">    UnstructuredMarkdownLoader,</span><br><span class="line">    DirectoryLoader,</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 单个文件</span></span><br><span class="line">loader = PyPDFLoader(<span class="string">&quot;docs/manual.pdf&quot;</span>)</span><br><span class="line">pages = loader.load()  <span class="comment"># 每页一个 Document 对象</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 整个目录（自动按文件类型匹配）</span></span><br><span class="line">loader = DirectoryLoader(</span><br><span class="line">    <span class="string">&quot;docs/&quot;</span>,</span><br><span class="line">    glob=<span class="string">&quot;**/*.&#123;pdf,docx,md,txt&#125;&quot;</span>,</span><br><span class="line">    loader_kwargs=&#123;<span class="string">&quot;show_progress&quot;</span>: <span class="literal">True</span>&#125;,</span><br><span class="line">)</span><br><span class="line">documents = loader.load()</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;加载了 <span class="subst">&#123;<span class="built_in">len</span>(documents)&#125;</span> 个文档段&quot;</span>)</span><br><span class="line"><span class="comment"># 每个文档段包含 page_content（文本）和 metadata（来源、页码等）</span></span><br></pre></td></tr></table></figure></div>
+
+<p><strong>关键点</strong>：metadata 一定要保留。RAG 系统回答时引用来源全靠它。<code>PyPDFLoader</code> 会自动记录页码，<code>DirectoryLoader</code> 会记录文件路径。</p>
+<h3 id="2-4-第二步：分块（Chunking）——最影响效果的环节"><a href="#2-4-第二步：分块（Chunking）——最影响效果的环节" class="headerlink" title="2.4 第二步：分块（Chunking）——最影响效果的环节"></a>2.4 第二步：分块（Chunking）——最影响效果的环节</h3><p>分块是 RAG 中最容易被忽视、但对效果影响最大的步骤。</p>
+<h4 id="为什么要分块"><a href="#为什么要分块" class="headerlink" title="为什么要分块"></a>为什么要分块</h4><ul>
+<li><strong>模型上下文有限</strong>：不能把整本书塞进去</li>
+<li><strong>检索精度</strong>：小段文本的向量更聚焦，检索更准。整章的向量”什么都像又什么都不像”</li>
+<li><strong>生成质量</strong>：塞太多无关内容，模型容易跑偏</li>
+</ul>
+<h4 id="分块策略"><a href="#分块策略" class="headerlink" title="分块策略"></a>分块策略</h4><div class="code-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> langchain.text_splitter <span class="keyword">import</span> RecursiveCharacterTextSplitter</span><br><span class="line"></span><br><span class="line">splitter = RecursiveCharacterTextSplitter(</span><br><span class="line">    chunk_size=<span class="number">500</span>,        <span class="comment"># 每块约 500 字符</span></span><br><span class="line">    chunk_overlap=<span class="number">50</span>,      <span class="comment"># 相邻块重叠 50 字符，避免切断语义</span></span><br><span class="line">    separators=[<span class="string">&quot;\n\n&quot;</span>, <span class="string">&quot;\n&quot;</span>, <span class="string">&quot;。&quot;</span>, <span class="string">&quot;！&quot;</span>, <span class="string">&quot;？&quot;</span>, <span class="string">&quot;.&quot;</span>, <span class="string">&quot;!&quot;</span>, <span class="string">&quot;?&quot;</span>, <span class="string">&quot; &quot;</span>, <span class="string">&quot;&quot;</span>],</span><br><span class="line">    <span class="comment"># 分隔符优先级：段落 &gt; 换行 &gt; 句号 &gt; 感叹号 &gt; 问号 &gt; 英文句号 &gt; 空格</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">chunks = splitter.split_documents(documents)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;从 <span class="subst">&#123;<span class="built_in">len</span>(documents)&#125;</span> 个文档段切出 <span class="subst">&#123;<span class="built_in">len</span>(chunks)&#125;</span> 个文本块&quot;</span>)</span><br></pre></td></tr></table></figure></div>
+
+<h4 id="chunk-size-怎么选"><a href="#chunk-size-怎么选" class="headerlink" title="chunk_size 怎么选"></a>chunk_size 怎么选</h4><table>
+<thead>
+<tr>
+<th>chunk_size</th>
+<th>适合场景</th>
+<th>优点</th>
+<th>缺点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>200-300</td>
+<td>精确问答（FAQ 式）</td>
+<td>检索精准</td>
+<td>上下文不足，答案可能不完整</td>
+</tr>
+<tr>
+<td>500-800</td>
+<td>通用（推荐默认）</td>
+<td>平衡精度和上下文</td>
+<td>中规中矩</td>
+</tr>
+<tr>
+<td>1000-1500</td>
+<td>长文档总结、报告分析</td>
+<td>上下文完整</td>
+<td>检索噪声多，向量不够聚焦</td>
+</tr>
+</tbody></table>
+<p><strong>经验值</strong>：中文文档用 500 字符 + 50 overlap，英文用 800 字符 + 100 overlap。先跑通再调。</p>
+<h4 id="切了等于没切？检查分块质量"><a href="#切了等于没切？检查分块质量" class="headerlink" title="切了等于没切？检查分块质量"></a>切了等于没切？检查分块质量</h4><div class="code-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 打印前 5 个块看看效果</span></span><br><span class="line"><span class="keyword">for</span> i, chunk <span class="keyword">in</span> <span class="built_in">enumerate</span>(chunks[:<span class="number">5</span>]):</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;--- Chunk <span class="subst">&#123;i&#125;</span> (len=<span class="subst">&#123;<span class="built_in">len</span>(chunk.page_content)&#125;</span>) ---&quot;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;来源: <span class="subst">&#123;chunk.metadata.get(<span class="string">&#x27;source&#x27;</span>, <span class="string">&#x27;unknown&#x27;</span>)&#125;</span>&quot;</span>)</span><br><span class="line">    <span class="built_in">print</span>(chunk.page_content[:<span class="number">200</span>])</span><br><span class="line">    <span class="built_in">print</span>()</span><br></pre></td></tr></table></figure></div>
+
+<p>如果看到一句话被从中间切断，调整 <code>separators</code> 优先级或增大 <code>chunk_overlap</code>。</p>
+<h3 id="2-5-第三步：向量化（Embedding）"><a href="#2-5-第三步：向量化（Embedding）" class="headerlink" title="2.5 第三步：向量化（Embedding）"></a>2.5 第三步：向量化（Embedding）</h3><h4 id="方案-A：用-sentence-transformers（纯本地，推荐）"><a href="#方案-A：用-sentence-transformers（纯本地，推荐）" class="headerlink" title="方案 A：用 sentence-transformers（纯本地，推荐）"></a>方案 A：用 sentence-transformers（纯本地，推荐）</h4><div class="code-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> langchain.embeddings <span class="keyword">import</span> HuggingFaceEmbeddings</span><br><span class="line"></span><br><span class="line">embeddings = HuggingFaceEmbeddings(</span><br><span class="line">    model_name=<span class="string">&quot;mixedbread-ai/mxbai-embed-large-v1&quot;</span>,</span><br><span class="line">    model_kwargs=&#123;<span class="string">&quot;device&quot;</span>: <span class="string">&quot;cpu&quot;</span>&#125;,  <span class="comment"># 有 GPU 改 &quot;cuda&quot;</span></span><br><span class="line">    encode_kwargs=&#123;<span class="string">&quot;normalize_embeddings&quot;</span>: <span class="literal">True</span>&#125;,  <span class="comment"># 归一化后可用内积替代余弦</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 测试一下</span></span><br><span class="line">test_vector = embeddings.embed_query(<span class="string">&quot;如何部署模型&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;向量维度: <span class="subst">&#123;<span class="built_in">len</span>(test_vector)&#125;</span>&quot;</span>)  <span class="comment"># 1024</span></span><br></pre></td></tr></table></figure></div>
+
+<h4 id="方案-B：用-llama-cpp-的-embedding-端点（下一节详讲）"><a href="#方案-B：用-llama-cpp-的-embedding-端点（下一节详讲）" class="headerlink" title="方案 B：用 llama.cpp 的 embedding 端点（下一节详讲）"></a>方案 B：用 llama.cpp 的 embedding 端点（下一节详讲）</h4><div class="code-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> langchain.embeddings <span class="keyword">import</span> OpenAIEmbeddings</span><br><span class="line"></span><br><span class="line"><span class="comment"># 指向本地 llama-server 的 embedding 端点</span></span><br><span class="line">embeddings = OpenAIEmbeddings(</span><br><span class="line">    base_url=<span class="string">&quot;http://127.0.0.1:8080/v1&quot;</span>,</span><br><span class="line">    api_key=<span class="string">&quot;not-needed&quot;</span>,  <span class="comment"># 本地服务不需要 key</span></span><br><span class="line">    model=<span class="string">&quot;mxbai-embed-large&quot;</span>,</span><br><span class="line">)</span><br></pre></td></tr></table></figure></div>
+
+<p>方案 B 的好处是跟生成模型共用一个 llama.cpp 进程，部署更简单（后面细讲）。</p>
+<h3 id="2-6-第四步：存入向量数据库"><a href="#2-6-第四步：存入向量数据库" class="headerlink" title="2.6 第四步：存入向量数据库"></a>2.6 第四步：存入向量数据库</h3><div class="code-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> langchain.vectorstores <span class="keyword">import</span> Chroma</span><br><span class="line"></span><br><span class="line"><span class="comment"># 一次性建库</span></span><br><span class="line">vectorstore = Chroma.from_documents(</span><br><span class="line">    documents=chunks,</span><br><span class="line">    embedding=embeddings,</span><br><span class="line">    persist_directory=<span class="string">&quot;./rag_db&quot;</span>,  <span class="comment"># 持久化到磁盘</span></span><br><span class="line">    collection_name=<span class="string">&quot;my_knowledge&quot;</span>,</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 后续使用时加载（不用重新建库）</span></span><br><span class="line">vectorstore = Chroma(</span><br><span class="line">    persist_directory=<span class="string">&quot;./rag_db&quot;</span>,</span><br><span class="line">    embedding_function=embeddings,</span><br><span class="line">    collection_name=<span class="string">&quot;my_knowledge&quot;</span>,</span><br><span class="line">)</span><br></pre></td></tr></table></figure></div>
+
+<h3 id="2-7-验证检索效果"><a href="#2-7-验证检索效果" class="headerlink" title="2.7 验证检索效果"></a>2.7 验证检索效果</h3><div class="code-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 试几个问题看看检索到了什么</span></span><br><span class="line">test_questions = [</span><br><span class="line">    <span class="string">&quot;如何安装这个软件？&quot;</span>,</span><br><span class="line">    <span class="string">&quot;配置文件在哪里？&quot;</span>,</span><br><span class="line">    <span class="string">&quot;常见的报错怎么解决？&quot;</span>,</span><br><span class="line">]</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> q <span class="keyword">in</span> test_questions:</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;\n问题: <span class="subst">&#123;q&#125;</span>&quot;</span>)</span><br><span class="line">    results = vectorstore.similarity_search(q, k=<span class="number">3</span>)</span><br><span class="line">    <span class="keyword">for</span> i, doc <span class="keyword">in</span> <span class="built_in">enumerate</span>(results):</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;  [<span class="subst">&#123;i+<span class="number">1</span>&#125;</span>] <span class="subst">&#123;doc.page_content[:<span class="number">100</span>]&#125;</span>...&quot;</span>)</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;      来源: <span class="subst">&#123;doc.metadata.get(<span class="string">&#x27;source&#x27;</span>, <span class="string">&#x27;?&#x27;</span>)&#125;</span>&quot;</span>)</span><br></pre></td></tr></table></figure></div>
+
+<p>如果检索结果不相关，回头调 chunk_size 或换 Embedding 模型。<strong>检索质量是 RAG 的地基</strong>，检索不准，模型再好也白搭。</p>
+<h3 id="2-8-建库完整脚本"><a href="#2-8-建库完整脚本" class="headerlink" title="2.8 建库完整脚本"></a>2.8 建库完整脚本</h3><p>把上面所有步骤串起来，一个可复用的建库脚本：</p>
+<div class="code-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/env python3</span></span><br><span class="line"><span class="string">&quot;&quot;&quot;build_rag_db.py — 从文档目录构建 RAG 向量数据库&quot;&quot;&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> argparse</span><br><span class="line"><span class="keyword">from</span> pathlib <span class="keyword">import</span> Path</span><br><span class="line"><span class="keyword">from</span> langchain_community.document_loaders <span class="keyword">import</span> DirectoryLoader</span><br><span class="line"><span class="keyword">from</span> langchain.text_splitter <span class="keyword">import</span> RecursiveCharacterTextSplitter</span><br><span class="line"><span class="keyword">from</span> langchain.embeddings <span class="keyword">import</span> HuggingFaceEmbeddings</span><br><span class="line"><span class="keyword">from</span> langchain.vectorstores <span class="keyword">import</span> Chroma</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">main</span>():</span><br><span class="line">    parser = argparse.ArgumentParser()</span><br><span class="line">    parser.add_argument(<span class="string">&quot;--docs&quot;</span>, default=<span class="string">&quot;./docs&quot;</span>, <span class="built_in">help</span>=<span class="string">&quot;文档目录&quot;</span>)</span><br><span class="line">    parser.add_argument(<span class="string">&quot;--db&quot;</span>, default=<span class="string">&quot;./rag_db&quot;</span>, <span class="built_in">help</span>=<span class="string">&quot;数据库存储路径&quot;</span>)</span><br><span class="line">    parser.add_argument(<span class="string">&quot;--chunk-size&quot;</span>, <span class="built_in">type</span>=<span class="built_in">int</span>, default=<span class="number">500</span>)</span><br><span class="line">    parser.add_argument(<span class="string">&quot;--chunk-overlap&quot;</span>, <span class="built_in">type</span>=<span class="built_in">int</span>, default=<span class="number">50</span>)</span><br><span class="line">    parser.add_argument(<span class="string">&quot;--embed-model&quot;</span>, default=<span class="string">&quot;mixedbread-ai/mxbai-embed-large-v1&quot;</span>)</span><br><span class="line">    args = parser.parse_args()</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 1. 加载文档</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;加载文档: <span class="subst">&#123;args.docs&#125;</span>&quot;</span>)</span><br><span class="line">    loader = DirectoryLoader(</span><br><span class="line">        args.docs,</span><br><span class="line">        glob=<span class="string">&quot;**/*.&#123;pdf,docx,md,txt,html&#125;&quot;</span>,</span><br><span class="line">        show_progress=<span class="literal">True</span>,</span><br><span class="line">    )</span><br><span class="line">    documents = loader.load()</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;  加载了 <span class="subst">&#123;<span class="built_in">len</span>(documents)&#125;</span> 个文档段&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 2. 分块</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;分块: size=<span class="subst">&#123;args.chunk_size&#125;</span>, overlap=<span class="subst">&#123;args.chunk_overlap&#125;</span>&quot;</span>)</span><br><span class="line">    splitter = RecursiveCharacterTextSplitter(</span><br><span class="line">        chunk_size=args.chunk_size,</span><br><span class="line">        chunk_overlap=args.chunk_overlap,</span><br><span class="line">        separators=[<span class="string">&quot;\n\n&quot;</span>, <span class="string">&quot;\n&quot;</span>, <span class="string">&quot;。&quot;</span>, <span class="string">&quot;！&quot;</span>, <span class="string">&quot;？&quot;</span>, <span class="string">&quot;.&quot;</span>, <span class="string">&quot;!&quot;</span>, <span class="string">&quot;?&quot;</span>, <span class="string">&quot; &quot;</span>, <span class="string">&quot;&quot;</span>],</span><br><span class="line">    )</span><br><span class="line">    chunks = splitter.split_documents(documents)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;  切出 <span class="subst">&#123;<span class="built_in">len</span>(chunks)&#125;</span> 个文本块&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 3. 向量化 + 存库</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;向量化并存储到: <span class="subst">&#123;args.db&#125;</span>&quot;</span>)</span><br><span class="line">    embeddings = HuggingFaceEmbeddings(</span><br><span class="line">        model_name=args.embed_model,</span><br><span class="line">        model_kwargs=&#123;<span class="string">&quot;device&quot;</span>: <span class="string">&quot;cpu&quot;</span>&#125;,</span><br><span class="line">        encode_kwargs=&#123;<span class="string">&quot;normalize_embeddings&quot;</span>: <span class="literal">True</span>&#125;,</span><br><span class="line">    )</span><br><span class="line">    vectorstore = Chroma.from_documents(</span><br><span class="line">        documents=chunks,</span><br><span class="line">        embedding=embeddings,</span><br><span class="line">        persist_directory=args.db,</span><br><span class="line">        collection_name=<span class="string">&quot;knowledge_base&quot;</span>,</span><br><span class="line">    )</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;完成! 数据库已保存到 <span class="subst">&#123;args.db&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 4. 验证</span></span><br><span class="line">    test_q = <span class="string">&quot;测试检索&quot;</span></span><br><span class="line">    results = vectorstore.similarity_search(test_q, k=<span class="number">3</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;\n验证检索 &#x27;<span class="subst">&#123;test_q&#125;</span>&#x27;: 返回 <span class="subst">&#123;<span class="built_in">len</span>(results)&#125;</span> 条结果&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    main()</span><br></pre></td></tr></table></figure></div>
+
+<p>运行：</p>
+<div class="code-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python build_rag_db.py --docs ./my-documents --db ./rag_db</span><br></pre></td></tr></table></figure></div>
+
+<hr>
+<h2 id="三、如何快速与-llama-cpp-结合"><a href="#三、如何快速与-llama-cpp-结合" class="headerlink" title="三、如何快速与 llama.cpp 结合"></a>三、如何快速与 llama.cpp 结合</h2><h3 id="3-1-架构总览"><a href="#3-1-架构总览" class="headerlink" title="3.1 架构总览"></a>3.1 架构总览</h3><div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">┌──────────────────────────────────────────────────┐</span><br><span class="line">│                  用户提问                          │</span><br><span class="line">│                      ↓                            │</span><br><span class="line">│          ┌───────────────────────┐                │</span><br><span class="line">│          │  llama-server (端口 8080)              │</span><br><span class="line">│          │  ┌─────────────────┐  │                │</span><br><span class="line">│          │  │ Embedding 端点   │  │ ← 向量化问题   │</span><br><span class="line">│          │  │ /v1/embeddings   │  │               │</span><br><span class="line">│          │  └─────────────────┘  │                │</span><br><span class="line">│          └───────────┬───────────┘                │</span><br><span class="line">│                      ↓                            │</span><br><span class="line">│          ┌───────────────────────┐                │</span><br><span class="line">│          │  ChromaDB 向量检索     │                │</span><br><span class="line">│          │  返回 Top-K 文本块     │                │</span><br><span class="line">│          └───────────┬───────────┘                │</span><br><span class="line">│                      ↓                            │</span><br><span class="line">│          ┌───────────────────────┐                │</span><br><span class="line">│          │  Prompt 拼装           │                │</span><br><span class="line">│          │  &quot;根据以下资料回答:    │                │</span><br><span class="line">│          │   [检索到的文本块]     │                │</span><br><span class="line">│          │   问题: 用户问题&quot;      │                │</span><br><span class="line">│          └───────────┬───────────┘                │</span><br><span class="line">│                      ↓                            │</span><br><span class="line">│          ┌───────────────────────┐                │</span><br><span class="line">│          │  llama-server          │                │</span><br><span class="line">│          │  ┌─────────────────┐  │                │</span><br><span class="line">│          │  │ Chat 端点        │  │ ← MiniCPM5 生成 │</span><br><span class="line">│          │  │ /v1/chat/compl.. │  │               │</span><br><span class="line">│          │  └─────────────────┘  │                │</span><br><span class="line">│          └───────────┬───────────┘                │</span><br><span class="line">│                      ↓                            │</span><br><span class="line">│                  回答 + 引用来源                    │</span><br><span class="line">└──────────────────────────────────────────────────┘</span><br></pre></td></tr></table></figure></div>
+
+<p>llama.cpp 的 <code>llama-server</code> 同时提供 Embedding 和 Chat 两个端点，一个进程搞定两件事。</p>
+<h3 id="3-2-第一步：部署-MiniCPM5"><a href="#3-2-第一步：部署-MiniCPM5" class="headerlink" title="3.2 第一步：部署 MiniCPM5"></a>3.2 第一步：部署 MiniCPM5</h3><h4 id="获取模型"><a href="#获取模型" class="headerlink" title="获取模型"></a>获取模型</h4><p>MiniCPM5-1B 是 OpenBMB 2026 年 5 月发布的 1B 参数模型：</p>
+<ul>
+<li><strong>参数量</strong>：10.8 亿（约 1GB 显存即可跑 Q4 量化）</li>
+<li><strong>上下文</strong>：131,072 tokens（128K，业界同级别最长）</li>
+<li><strong>架构</strong>：标准 LlamaForCausalLM，24 层，GQA（16 Q heads + 2 KV heads）</li>
+<li><strong>特性</strong>：内置 <code>&lt;think&gt;</code> 模板，支持 Think&#x2F;No-Think 双模式</li>
+<li><strong>能力</strong>：在 1B 级别模型中评分第一（Artificial Analysis Intelligence Index 17.9 分）</li>
+</ul>
+<p>为什么选 MiniCPM5 做 RAG：</p>
+<ol>
+<li><strong>小</strong>：Q4 量化仅 688MB，随便一张显卡甚至纯 CPU 都能跑</li>
+<li><strong>长上下文</strong>：128K 上下文意味着检索回来的文档可以塞很多</li>
+<li><strong>够聪明</strong>：1B 里的天花板，RAG 场景下不需要复杂推理，够用</li>
+<li><strong>中英双语</strong>：中文文档 RAG 不费劲</li>
+</ol>
+<h4 id="下载-GGUF"><a href="#下载-GGUF" class="headerlink" title="下载 GGUF"></a>下载 GGUF</h4><div class="code-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 方法 1：用 llama.cpp 直接从 HuggingFace 拉</span></span><br><span class="line">llama serve -hf openbmb/MiniCPM5-1B-GGUF:Q4_K_M</span><br><span class="line"></span><br><span class="line"><span class="comment"># 方法 2：手动下载</span></span><br><span class="line"><span class="comment"># 去 https://huggingface.co/openbmb/MiniCPM5-1B-GGUF</span></span><br><span class="line"><span class="comment"># 下载 MiniCPM5-1B-Q4_K_M.gguf（688MB）</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 方法 3：huggingface-cli</span></span><br><span class="line">pip install huggingface_hub</span><br><span class="line">huggingface-cli download openbmb/MiniCPM5-1B-GGUF --include <span class="string">&quot;*Q4_K_M*&quot;</span> --local-dir ./models</span><br></pre></td></tr></table></figure></div>
+
+<p>量化版本选择：</p>
+<table>
+<thead>
+<tr>
+<th>量化</th>
+<th>文件大小</th>
+<th>质量损失</th>
+<th>推荐</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Q4_K_M</td>
+<td>688 MB</td>
+<td>极小</td>
+<td>⭐ 首选</td>
+</tr>
+<tr>
+<td>Q5_K_M</td>
+<td>~800 MB</td>
+<td>几乎无</td>
+<td>追求质量</td>
+</tr>
+<tr>
+<td>Q8_0</td>
+<td>1.15 GB</td>
+<td>无损</td>
+<td>精度优先</td>
+</tr>
+<tr>
+<td>F16</td>
+<td>2.17 GB</td>
+<td>无损</td>
+<td>调试用</td>
+</tr>
+</tbody></table>
+<p>日常用 Q4_K_M，688MB 跟一张手机照片差不多大。</p>
+<h3 id="3-3-第二步：启动-llama-server"><a href="#3-3-第二步：启动-llama-server" class="headerlink" title="3.3 第二步：启动 llama-server"></a>3.3 第二步：启动 llama-server</h3><h4 id="编译-llama-cpp（如果还没装）"><a href="#编译-llama-cpp（如果还没装）" class="headerlink" title="编译 llama.cpp（如果还没装）"></a>编译 llama.cpp（如果还没装）</h4><div class="code-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://github.com/ggerganov/llama.cpp.git</span><br><span class="line"><span class="built_in">cd</span> llama.cpp</span><br><span class="line">cmake -B build</span><br><span class="line">cmake --build build -j --target llama-server llama-cli</span><br></pre></td></tr></table></figure></div>
+
+<p>或者直接下载预编译二进制：<a class="link"   target="_blank" rel="noopener" href="https://github.com/ggerganov/llama.cpp/releases" >https://github.com/ggerganov/llama.cpp/releases<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></p>
+<h4 id="启动服务"><a href="#启动服务" class="headerlink" title="启动服务"></a>启动服务</h4><div class="code-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 同时加载生成模型和 Embedding 模型</span></span><br><span class="line">./build/bin/llama-server \</span><br><span class="line">  -m ./models/MiniCPM5-1B-Q4_K_M.gguf \</span><br><span class="line">  --host 127.0.0.1 \</span><br><span class="line">  --port 8080 \</span><br><span class="line">  -c 8192 \</span><br><span class="line">  -fa on \</span><br><span class="line">  --embedding \</span><br><span class="line">  -hm 0</span><br></pre></td></tr></table></figure></div>
+
+<p>参数解释：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>-m</code></td>
+<td>主模型路径（MiniCPM5 用于生成）</td>
+</tr>
+<tr>
+<td><code>-c 8192</code></td>
+<td>上下文窗口 8192（RAG 一般够用，可调到 32768）</td>
+</tr>
+<tr>
+<td><code>-fa on</code></td>
+<td>开启 Flash Attention，加速推理</td>
+</tr>
+<tr>
+<td><code>--embedding</code></td>
+<td>启用 embedding 端点</td>
+</tr>
+<tr>
+<td><code>-hm 0</code></td>
+<td>embedding 模型用第 0 个（即主模型），也可以单独指定</td>
+</tr>
+</tbody></table>
+<p><strong>注意</strong>：MiniCPM5 是生成模型，不是最优的 Embedding 模型。如果追求检索质量，建议单独跑一个 Embedding 模型：</p>
+<div class="code-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 终端 1：Embedding 模型（mxbai-embed-large）</span></span><br><span class="line">./build/bin/llama-server \</span><br><span class="line">  -m ./models/mxbai-embed-large-v1-Q8_0.gguf \</span><br><span class="line">  --port 8081 \</span><br><span class="line">  --embedding \</span><br><span class="line">  -c 512</span><br><span class="line"></span><br><span class="line"><span class="comment"># 终端 2：生成模型（MiniCPM5）</span></span><br><span class="line">./build/bin/llama-server \</span><br><span class="line">  -m ./models/MiniCPM5-1B-Q4_K_M.gguf \</span><br><span class="line">  --port 8080 \</span><br><span class="line">  -c 8192 \</span><br><span class="line">  -fa on</span><br></pre></td></tr></table></figure></div>
+
+<h4 id="验证服务"><a href="#验证服务" class="headerlink" title="验证服务"></a>验证服务</h4><div class="code-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 测试 Chat 端点</span></span><br><span class="line">curl -s http://127.0.0.1:8080/v1/chat/completions \</span><br><span class="line">  -H <span class="string">&quot;Content-Type: application/json&quot;</span> \</span><br><span class="line">  -d <span class="string">&#x27;&#123;</span></span><br><span class="line"><span class="string">    &quot;model&quot;: &quot;minicpm5&quot;,</span></span><br><span class="line"><span class="string">    &quot;messages&quot;: [&#123;&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;你好&quot;&#125;],</span></span><br><span class="line"><span class="string">    &quot;max_tokens&quot;: 100</span></span><br><span class="line"><span class="string">  &#125;&#x27;</span> | python3 -m json.tool</span><br><span class="line"></span><br><span class="line"><span class="comment"># 测试 Embedding 端点</span></span><br><span class="line">curl -s http://127.0.0.1:8080/v1/embeddings \</span><br><span class="line">  -H <span class="string">&quot;Content-Type: application/json&quot;</span> \</span><br><span class="line">  -d <span class="string">&#x27;&#123;</span></span><br><span class="line"><span class="string">    &quot;model&quot;: &quot;minicpm5&quot;,</span></span><br><span class="line"><span class="string">    &quot;input&quot;: &quot;测试向量化&quot;</span></span><br><span class="line"><span class="string">  &#125;&#x27;</span> | python3 -c <span class="string">&quot;import sys,json; d=json.load(sys.stdin); print(f&#x27;维度: &#123;len(d[\&quot;data\&quot;][0][\&quot;embedding\&quot;])&#125;&#x27;)&quot;</span></span><br></pre></td></tr></table></figure></div>
+
+<h3 id="3-4-第三步：构建-RAG-查询脚本"><a href="#3-4-第三步：构建-RAG-查询脚本" class="headerlink" title="3.4 第三步：构建 RAG 查询脚本"></a>3.4 第三步：构建 RAG 查询脚本</h3><div class="code-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/env python3</span></span><br><span class="line"><span class="string">&quot;&quot;&quot;rag_query.py — 连接 llama.cpp + ChromaDB 做 RAG 问答&quot;&quot;&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">from</span> langchain.embeddings <span class="keyword">import</span> OpenAIEmbeddings</span><br><span class="line"><span class="keyword">from</span> langchain.vectorstores <span class="keyword">import</span> Chroma</span><br><span class="line"></span><br><span class="line"><span class="comment"># ============ 配置 ============</span></span><br><span class="line">LLAMA_SERVER_URL = <span class="string">&quot;http://127.0.0.1:8080/v1&quot;</span></span><br><span class="line">DB_PATH = <span class="string">&quot;./rag_db&quot;</span></span><br><span class="line">EMBED_MODEL = <span class="string">&quot;minicpm5&quot;</span>  <span class="comment"># 或 &quot;mxbai-embed-large&quot; 如果单独跑</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># ============ 初始化 ============</span></span><br><span class="line"><span class="comment"># Embedding 客户端（指向 llama-server）</span></span><br><span class="line">embeddings = OpenAIEmbeddings(</span><br><span class="line">    base_url=LLAMA_SERVER_URL,</span><br><span class="line">    api_key=<span class="string">&quot;not-needed&quot;</span>,</span><br><span class="line">    model=EMBED_MODEL,</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 加载向量数据库</span></span><br><span class="line">vectorstore = Chroma(</span><br><span class="line">    persist_directory=DB_PATH,</span><br><span class="line">    embedding_function=embeddings,</span><br><span class="line">    collection_name=<span class="string">&quot;knowledge_base&quot;</span>,</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment"># ============ RAG 查询函数 ============</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">rag_query</span>(<span class="params">question: <span class="built_in">str</span>, k: <span class="built_in">int</span> = <span class="number">3</span></span>) -&gt; <span class="built_in">dict</span>:</span><br><span class="line">    <span class="string">&quot;&quot;&quot;对用户问题做 RAG 问答&quot;&quot;&quot;</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 1. 检索相关文档</span></span><br><span class="line">    docs = vectorstore.similarity_search(question, k=k)</span><br><span class="line">    context = <span class="string">&quot;\n\n&quot;</span>.join([</span><br><span class="line">        <span class="string">f&quot;[来源<span class="subst">&#123;i+<span class="number">1</span>&#125;</span>] <span class="subst">&#123;doc.metadata.get(<span class="string">&#x27;source&#x27;</span>, <span class="string">&#x27;unknown&#x27;</span>)&#125;</span>\n<span class="subst">&#123;doc.page_content&#125;</span>&quot;</span></span><br><span class="line">        <span class="keyword">for</span> i, doc <span class="keyword">in</span> <span class="built_in">enumerate</span>(docs)</span><br><span class="line">    ])</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 2. 拼装 Prompt</span></span><br><span class="line">    system_prompt = (</span><br><span class="line">        <span class="string">&quot;你是一个知识库问答助手。请根据以下参考资料回答用户问题。&quot;</span></span><br><span class="line">        <span class="string">&quot;如果参考资料中没有相关信息，请坦诚说明，不要编造。&quot;</span></span><br><span class="line">        <span class="string">&quot;回答时注明引用了哪些来源。&quot;</span></span><br><span class="line">    )</span><br><span class="line">    user_prompt = <span class="string">f&quot;参考资料：\n<span class="subst">&#123;context&#125;</span>\n\n问题：<span class="subst">&#123;question&#125;</span>&quot;</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 3. 调用 llama-server 生成回答</span></span><br><span class="line">    response = requests.post(</span><br><span class="line">        <span class="string">f&quot;<span class="subst">&#123;LLAMA_SERVER_URL&#125;</span>/chat/completions&quot;</span>,</span><br><span class="line">        json=&#123;</span><br><span class="line">            <span class="string">&quot;model&quot;</span>: <span class="string">&quot;minicpm5&quot;</span>,</span><br><span class="line">            <span class="string">&quot;messages&quot;</span>: [</span><br><span class="line">                &#123;<span class="string">&quot;role&quot;</span>: <span class="string">&quot;system&quot;</span>, <span class="string">&quot;content&quot;</span>: system_prompt&#125;,</span><br><span class="line">                &#123;<span class="string">&quot;role&quot;</span>: <span class="string">&quot;user&quot;</span>, <span class="string">&quot;content&quot;</span>: user_prompt&#125;,</span><br><span class="line">            ],</span><br><span class="line">            <span class="string">&quot;max_tokens&quot;</span>: <span class="number">1024</span>,</span><br><span class="line">            <span class="string">&quot;temperature&quot;</span>: <span class="number">0.3</span>,  <span class="comment"># RAG 场景温度低一点，减少发散</span></span><br><span class="line">            <span class="string">&quot;stream&quot;</span>: <span class="literal">False</span>,</span><br><span class="line">        &#125;,</span><br><span class="line">    )</span><br><span class="line">    </span><br><span class="line">    answer = response.json()[<span class="string">&quot;choices&quot;</span>][<span class="number">0</span>][<span class="string">&quot;message&quot;</span>][<span class="string">&quot;content&quot;</span>]</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> &#123;</span><br><span class="line">        <span class="string">&quot;question&quot;</span>: question,</span><br><span class="line">        <span class="string">&quot;answer&quot;</span>: answer,</span><br><span class="line">        <span class="string">&quot;sources&quot;</span>: [</span><br><span class="line">            &#123;<span class="string">&quot;source&quot;</span>: doc.metadata.get(<span class="string">&quot;source&quot;</span>, <span class="string">&quot;?&quot;</span>), </span><br><span class="line">             <span class="string">&quot;content&quot;</span>: doc.page_content[:<span class="number">200</span>]&#125;</span><br><span class="line">            <span class="keyword">for</span> doc <span class="keyword">in</span> docs</span><br><span class="line">        ],</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># ============ 交互循环 ============</span></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;RAG 问答系统已就绪（输入 quit 退出）&quot;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;知识库: <span class="subst">&#123;DB_PATH&#125;</span>&quot;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;-&quot;</span> * <span class="number">60</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">        question = <span class="built_in">input</span>(<span class="string">&quot;\n问题&gt; &quot;</span>).strip()</span><br><span class="line">        <span class="keyword">if</span> question.lower() <span class="keyword">in</span> (<span class="string">&quot;quit&quot;</span>, <span class="string">&quot;exit&quot;</span>, <span class="string">&quot;q&quot;</span>):</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> question:</span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line">        </span><br><span class="line">        result = rag_query(question)</span><br><span class="line">        </span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;\n回答: <span class="subst">&#123;result[<span class="string">&#x27;answer&#x27;</span>]&#125;</span>&quot;</span>)</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;\n引用来源:&quot;</span>)</span><br><span class="line">        <span class="keyword">for</span> src <span class="keyword">in</span> result[<span class="string">&quot;sources&quot;</span>]:</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">f&quot;  • <span class="subst">&#123;src[<span class="string">&#x27;source&#x27;</span>]&#125;</span>: <span class="subst">&#123;src[<span class="string">&#x27;content&#x27;</span>][:<span class="number">80</span>]&#125;</span>...&quot;</span>)</span><br></pre></td></tr></table></figure></div>
+
+<p>运行：</p>
+<div class="code-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 终端 1：启动 llama-server</span></span><br><span class="line">./llama-server -m ./models/MiniCPM5-1B-Q4_K_M.gguf --port 8080 -c 8192 -fa on --embedding</span><br><span class="line"></span><br><span class="line"><span class="comment"># 终端 2：建库（如果还没建过）</span></span><br><span class="line">python build_rag_db.py --docs ./my-documents --db ./rag_db</span><br><span class="line"></span><br><span class="line"><span class="comment"># 终端 3：RAG 问答</span></span><br><span class="line">python rag_query.py</span><br></pre></td></tr></table></figure></div>
+
+<h3 id="3-5-完整一键启动脚本"><a href="#3-5-完整一键启动脚本" class="headerlink" title="3.5 完整一键启动脚本"></a>3.5 完整一键启动脚本</h3><p>为了方便日常使用，写一个一键启动脚本：</p>
+<div class="code-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"><span class="comment"># start_rag.sh — 一键启动 RAG 系统</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">set</span> -e</span><br><span class="line"></span><br><span class="line">MODEL_PATH=<span class="string">&quot;./models/MiniCPM5-1B-Q4_K_M.gguf&quot;</span></span><br><span class="line">PORT=8080</span><br><span class="line">DB_PATH=<span class="string">&quot;./rag_db&quot;</span></span><br><span class="line">DOCS_PATH=<span class="string">&quot;./docs&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 检查模型</span></span><br><span class="line"><span class="keyword">if</span> [ ! -f <span class="string">&quot;<span class="variable">$MODEL_PATH</span>&quot;</span> ]; <span class="keyword">then</span></span><br><span class="line">    <span class="built_in">echo</span> <span class="string">&quot;下载 MiniCPM5-1B GGUF...&quot;</span></span><br><span class="line">    <span class="built_in">mkdir</span> -p ./models</span><br><span class="line">    wget -O <span class="string">&quot;<span class="variable">$MODEL_PATH</span>&quot;</span> \</span><br><span class="line">      <span class="string">&quot;https://huggingface.co/openbmb/MiniCPM5-1B-GGUF/resolve/main/MiniCPM5-1B-Q4_K_M.gguf&quot;</span></span><br><span class="line"><span class="keyword">fi</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 检查向量数据库</span></span><br><span class="line"><span class="keyword">if</span> [ ! -d <span class="string">&quot;<span class="variable">$DB_PATH</span>&quot;</span> ]; <span class="keyword">then</span></span><br><span class="line">    <span class="built_in">echo</span> <span class="string">&quot;首次运行，构建向量数据库...&quot;</span></span><br><span class="line">    python build_rag_db.py --docs <span class="string">&quot;<span class="variable">$DOCS_PATH</span>&quot;</span> --db <span class="string">&quot;<span class="variable">$DB_PATH</span>&quot;</span></span><br><span class="line"><span class="keyword">fi</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 启动 llama-server（后台）</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">&quot;启动 llama-server...&quot;</span></span><br><span class="line">./build/bin/llama-server \</span><br><span class="line">    -m <span class="string">&quot;<span class="variable">$MODEL_PATH</span>&quot;</span> \</span><br><span class="line">    --port <span class="variable">$PORT</span> \</span><br><span class="line">    -c 8192 \</span><br><span class="line">    -fa on \</span><br><span class="line">    --embedding \</span><br><span class="line">    &amp;</span><br><span class="line"></span><br><span class="line">LLAMA_PID=$!</span><br><span class="line"><span class="built_in">sleep</span> 3  <span class="comment"># 等待服务就绪</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 启动 RAG 查询</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">&quot;启动 RAG 问答...&quot;</span></span><br><span class="line">python rag_query.py</span><br><span class="line"></span><br><span class="line"><span class="comment"># 退出时关闭 llama-server</span></span><br><span class="line"><span class="built_in">kill</span> <span class="variable">$LLAMA_PID</span></span><br></pre></td></tr></table></figure></div>
+
+<h3 id="3-6-性能调优"><a href="#3-6-性能调优" class="headerlink" title="3.6 性能调优"></a>3.6 性能调优</h3><h4 id="检索优化"><a href="#检索优化" class="headerlink" title="检索优化"></a>检索优化</h4><div class="code-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 使用 MMR（最大边际相关性）减少重复内容</span></span><br><span class="line">docs = vectorstore.max_marginal_relevance_search(</span><br><span class="line">    question, k=<span class="number">5</span>, fetch_k=<span class="number">20</span>, lambda_mult=<span class="number">0.5</span></span><br><span class="line">)</span><br><span class="line"><span class="comment"># fetch_k=20 先召回 20 个，再从中选 k=5 个最不重复的</span></span><br></pre></td></tr></table></figure></div>
+
+<h4 id="生成优化"><a href="#生成优化" class="headerlink" title="生成优化"></a>生成优化</h4><div class="code-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 在 Prompt 中加约束，减少幻觉</span></span><br><span class="line">system_prompt = (</span><br><span class="line">    <span class="string">&quot;你是知识库问答助手。规则：\n&quot;</span></span><br><span class="line">    <span class="string">&quot;1. 只根据提供的参考资料回答，不要编造\n&quot;</span></span><br><span class="line">    <span class="string">&quot;2. 如果资料不足，说&#x27;根据现有资料无法回答&#x27;\n&quot;</span></span><br><span class="line">    <span class="string">&quot;3. 回答末尾标注引用了哪些来源编号\n&quot;</span></span><br><span class="line">    <span class="string">&quot;4. 如果问题不明确，请追问&quot;</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure></div>
+
+<h4 id="上下文窗口利用"><a href="#上下文窗口利用" class="headerlink" title="上下文窗口利用"></a>上下文窗口利用</h4><p>MiniCPM5 支持 128K 上下文，但实际使用中不必开那么大（内存开销大）。建议：</p>
+<table>
+<thead>
+<tr>
+<th>文档量</th>
+<th>建议 <code>-c</code> 值</th>
+<th>内存占用（Q4）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>&lt; 50 个 chunk</td>
+<td>4096</td>
+<td>~1.5GB</td>
+</tr>
+<tr>
+<td>50-500 个 chunk</td>
+<td>8192</td>
+<td>~2GB</td>
+</tr>
+<tr>
+<td>500+ 个 chunk</td>
+<td>16384</td>
+<td>~3GB</td>
+</tr>
+</tbody></table>
+<p>RAG 每次只塞 Top-K（3-5 个）chunk 进上下文，每个 chunk 约 500 字符 ≈ 250 tokens，5 个 chunk ≈ 1250 tokens。加上系统提示和用户问题，总共不超过 2000 tokens。所以 <code>-c 4096</code> 其实就够了，留余量用 8192。</p>
+<h3 id="3-7-常见问题排查"><a href="#3-7-常见问题排查" class="headerlink" title="3.7 常见问题排查"></a>3.7 常见问题排查</h3><h4 id="1-检索结果不相关"><a href="#1-检索结果不相关" class="headerlink" title="1. 检索结果不相关"></a>1. 检索结果不相关</h4><div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">检查步骤:</span><br><span class="line">① 打印检索到的 chunk 内容，确认是否真的不相关</span><br><span class="line">② 如果不相关 → 换 Embedding 模型（mxbai-embed-large &gt; bge-small &gt; 默认）</span><br><span class="line">③ 如果相关但模型没用好 → 调 Prompt，加强&quot;根据资料回答&quot;的约束</span><br><span class="line">④ 检查 chunk_size，太大不聚焦，太小缺上下文</span><br></pre></td></tr></table></figure></div>
+
+<h4 id="2-llama-server-的-embedding-端点报错"><a href="#2-llama-server-的-embedding-端点报错" class="headerlink" title="2. llama-server 的 embedding 端点报错"></a>2. llama-server 的 embedding 端点报错</h4><div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">原因：不是所有模型都支持 embedding。MiniCPM5 是生成模型，</span><br><span class="line">embedding 能力不如专用模型。</span><br><span class="line"></span><br><span class="line">解决：</span><br><span class="line">① 下载专用 embedding 模型 GGUF</span><br><span class="line">   huggingface.co/mixedbread-ai/mxbai-embed-large-v1-GGUF</span><br><span class="line">② 单独启动 embedding 服务（端口 8081）</span><br><span class="line">③ rag_query.py 中 embeddings 指向 8081</span><br></pre></td></tr></table></figure></div>
+
+<h4 id="3-中文文档效果差"><a href="#3-中文文档效果差" class="headerlink" title="3. 中文文档效果差"></a>3. 中文文档效果差</h4><div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">检查：</span><br><span class="line">① Embedding 模型是否支持中文（mxbai-embed-large 支持多语言，没问题）</span><br><span class="line">② 分块的 separators 是否包含中文标点（&quot;。&quot; &quot;！&quot; &quot;？&quot;）</span><br><span class="line">③ MiniCPM5 本身中文能力不错，如果中文效果差优先查检索环节</span><br></pre></td></tr></table></figure></div>
+
+<h4 id="4-速度慢"><a href="#4-速度慢" class="headerlink" title="4. 速度慢"></a>4. 速度慢</h4><div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">瓶颈定位：</span><br><span class="line">① 检索慢（&gt;100ms）→ ChromaDB 数据量大，考虑换 Qdrant</span><br><span class="line">② 生成慢 → 模型太大或上下文太长</span><br><span class="line">   - 降上下文（-c 4096）</span><br><span class="line">   - 用更小的量化（Q4_K_M 已经最小了）</span><br><span class="line">   - 开 Flash Attention（-fa on）</span><br><span class="line">   - 用 GPU（-ngl 99，把所有层放 GPU）</span><br></pre></td></tr></table></figure></div>
+
+<h3 id="3-8-完整项目结构"><a href="#3-8-完整项目结构" class="headerlink" title="3.8 完整项目结构"></a>3.8 完整项目结构</h3><div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">my-rag-project/</span><br><span class="line">├── models/</span><br><span class="line">│   ├── MiniCPM5-1B-Q4_K_M.gguf      # 生成模型</span><br><span class="line">│   └── mxbai-embed-large-Q8_0.gguf   # Embedding 模型（可选）</span><br><span class="line">├── docs/                             # 原始文档</span><br><span class="line">│   ├── manual.pdf</span><br><span class="line">│   ├── notes.md</span><br><span class="line">│   └── report.docx</span><br><span class="line">├── rag_db/                           # 向量数据库（自动生成）</span><br><span class="line">├── build_rag_db.py                   # 建库脚本</span><br><span class="line">├── rag_query.py                      # 查询脚本</span><br><span class="line">├── start_rag.sh                      # 一键启动</span><br><span class="line">└── llama.cpp/                        # llama.cpp 编译目录</span><br><span class="line">    └── build/bin/llama-server</span><br></pre></td></tr></table></figure></div>
+
+<hr>
+<h2 id="总结：三步走回顾"><a href="#总结：三步走回顾" class="headerlink" title="总结：三步走回顾"></a>总结：三步走回顾</h2><div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">第一步：建库</span><br><span class="line">  文档 → 解析 → 分块(500字符) → 向量化 → ChromaDB</span><br><span class="line">  </span><br><span class="line">第二步：部署模型</span><br><span class="line">  下载 MiniCPM5 GGUF → 启动 llama-server (--embedding)</span><br><span class="line">  </span><br><span class="line">第三步：RAG 问答</span><br><span class="line">  问题 → Embedding → ChromaDB 检索 Top-K → 拼装 Prompt → MiniCPM5 生成 → 回答</span><br></pre></td></tr></table></figure></div>
+
+<p><strong>核心技术决策三个</strong>：</p>
+<ol>
+<li><strong>模型选 MiniCPM5-1B</strong>——1B 参数、688MB、128K 上下文，本地 RAG 的甜点</li>
+<li><strong>向量库选 ChromaDB</strong>——零配置、纯 Python、10 万级文档够用</li>
+<li><strong>推理用 llama.cpp</strong>——一个进程同时跑生成和 Embedding，部署最简</li>
+</ol>
+<p><strong>最容易踩的坑</strong>：分块。chunk_size 太大检索不聚焦，太小上下文断裂。先 500 字符跑通，再根据效果调。</p>
+<p><strong>最大的误区</strong>：以为 RAG 效果差是模型不行。90% 的情况是检索环节的问题——文档没解析干净、分块不合理、Embedding 模型太弱。先查检索，再查生成。</p>
+<hr>
+<p><strong>相关链接：</strong></p>
+<ul>
+<li>MiniCPM5 GitHub：<a class="link"   target="_blank" rel="noopener" href="https://github.com/openbmb/minicpm" >https://github.com/openbmb/minicpm<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>MiniCPM5-1B GGUF：<a class="link"   target="_blank" rel="noopener" href="https://huggingface.co/openbmb/MiniCPM5-1B-GGUF" >https://huggingface.co/openbmb/MiniCPM5-1B-GGUF<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>llama.cpp GitHub：<a class="link"   target="_blank" rel="noopener" href="https://github.com/ggerganov/llama.cpp" >https://github.com/ggerganov/llama.cpp<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>ChromaDB 官网：<a class="link"   target="_blank" rel="noopener" href="https://www.trychroma.com/" >https://www.trychroma.com<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>mxbai-embed-large：<a class="link"   target="_blank" rel="noopener" href="https://huggingface.co/mixedbread-ai/mxbai-embed-large-v1" >https://huggingface.co/mixedbread-ai/mxbai-embed-large-v1<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+<li>LangChain 文档：<a class="link"   target="_blank" rel="noopener" href="https://python.langchain.com/docs" >https://python.langchain.com/docs<i class="fa-solid fa-arrow-up-right ml-[0.2em] font-light align-text-top text-[0.7em] link-icon"></i></a></li>
+</ul>
+
+		</div>
+
+		
+		<div class="post-copyright-info w-full my-8 px-2 sm:px-6 md:px-8">
+			<div class="article-copyright-info-container">
+    <ul>
+        <li><strong>Titre:</strong> llama.cpp + MiniCPM5 + RAG：从原理到落地的完整指南</li>
+        <li><strong>Auteur:</strong> Chyyl</li>
+        <li><strong>Créé à
+                :</strong> 2026-07-07 00:00:00</li>
+        
+            <li>
+                <strong>Mis à jour à
+                    :</strong> 2026-07-07 14:57:53
+            </li>
+        
+        <li>
+            <strong>Lien:</strong> https://chyyl.netlify.app/2026/07/07/llamacpp-minicpm5-rag-guide/
+        </li>
+        <li>
+            <strong>
+                Licence:
+            </strong>
+            
+
+            
+                Cette œuvre est sous licence <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY-NC-SA 4.0</a>.
+            
+        </li>
+    </ul>
+</div>
+
+		</div>
+		
+
+		
+		<ul class="post-tags-box text-lg mt-1.5 flex-wrap justify-center flex md:hidden">
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/RAG/">#RAG</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/llama-cpp/">#llama.cpp</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/MiniCPM5/">#MiniCPM5</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/%E5%90%91%E9%87%8F%E6%95%B0%E6%8D%AE%E5%BA%93/">#向量数据库</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/%E6%9C%AC%E5%9C%B0%E9%83%A8%E7%BD%B2/">#本地部署</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/%E7%9F%A5%E8%AF%86%E5%BA%93/">#知识库</a>&nbsp;
+			</li>
+			
+		</ul>
+		
+
+		
+
+		
+		<div class="article-nav my-8 flex justify-between items-center px-2 sm:px-6 md:px-8">
+			
+			<div class="article-prev border-border-color shadow-redefine-flat shadow-shadow-color-2 rounded-medium px-4 py-2 hover:shadow-redefine-flat-hover hover:shadow-shadow-color-2">
+				<a class="prev" rel="prev" href="/2026/07/08/vibethinker-3b-llamacpp-guide/">
+					<span class="left arrow-icon flex justify-center items-center">
+						<i class="fa-solid fa-chevron-left"></i>
+					</span>
+					<span class="title flex justify-center items-center">
+						<span class="post-nav-title-item truncate max-w-48">VibeThinker-3B 全方位介绍：3B 参数打赢 671B 巨头，llama.cpp 本地部署指南</span>
+						<span class="post-nav-item">Articles précédents</span>
+					</span>
+				</a>
+			</div>
+			
+			
+			<div class="article-next border-border-color shadow-redefine-flat shadow-shadow-color-2 rounded-medium px-4 py-2 hover:shadow-redefine-flat-hover hover:shadow-shadow-color-2">
+				<a class="next" rel="next" href="/2026/07/04/agent-loop-design/">
+					<span class="title flex justify-center items-center">
+						<span class="post-nav-title-item truncate max-w-48">Agent 循环设计：消息到工具执行的全链路拆解</span>
+						<span class="post-nav-item">Articles suivants</span>
+					</span>
+					<span class="right arrow-icon flex justify-center items-center">
+						<i class="fa-solid fa-chevron-right"></i>
+					</span>
+				</a>
+			</div>
+			
+		</div>
+		
+
+
+		
+		<div class="comment-container px-2 sm:px-6 md:px-8 pb-8">
+			<div class="comments-container mt-10 w-full ">
+    <div id="comment-anchor" class="w-full h-2.5"></div>
+    <div class="comment-area-title w-full my-1.5 md:my-2.5 text-xl md:text-3xl font-bold">
+        Commentaires
+    </div>
+    
+
+        
+            
+    <div id="waline"></div>
+    <script type="module" data-swup-reload-script>
+      import { init } from '/js/libs/waline.js';
+
+      (function() {
+        const startPath = location.pathname;
+        const startTime = Date.now();
+        const retryDelay = 200;
+        const retryLimit = 5000;
+
+        const runWaline = () => {
+          if (location.pathname !== startPath) {
+            return;
+          }
+
+          const container = document.getElementById('waline');
+          if (!container) {
+            if (Date.now() - startTime < retryLimit) {
+              setTimeout(runWaline, retryDelay);
+            }
+            return;
+          }
+
+          if (window.redefineWalineInstance?.destroy) {
+            window.redefineWalineInstance.destroy();
+          }
+
+          container.innerHTML = '';
+          window.redefineWalineInstance = init({
+            el: '#waline',
+            serverURL: 'https://example.example.com',
+            path: location.pathname,
+            dark: 'body[class~="dark-mode"]',
+            reaction: false,
+            requiredMeta: ['nick', 'mail'],
+            emoji: [],
+                      lang: 'zh-CN',
+          });
+        };
+
+        runWaline();
+      })();
+    </script>
+
+
+
+        
+    
+</div>
+
+		</div>
+		
+	</div>
+
+	
+	<div class="toc-content-container">
+		<div class="post-toc-wrap">
+	<div class="post-toc">
+		<div class="toc-title">Sur cette page</div>
+		<div class="page-title">llama.cpp + MiniCPM5 + RAG：从原理到落地的完整指南</div>
+		<ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E4%BB%80%E4%B9%88%E6%98%AF-RAG%EF%BC%9A%E5%8E%9F%E7%90%86%E4%B8%8E%E6%95%88%E7%8E%87"><span class="nav-text">一、什么是 RAG：原理与效率</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-%E4%B8%80%E5%8F%A5%E8%AF%9D%E8%AF%B4%E6%B8%85%E6%A5%9A"><span class="nav-text">1.1 一句话说清楚</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81-RAG"><span class="nav-text">1.2 为什么需要 RAG</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-RAG-%E7%9A%84%E5%AE%8C%E6%95%B4%E5%8E%9F%E7%90%86"><span class="nav-text">1.3 RAG 的完整原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-4-RAG-%E7%9A%84%E6%95%88%E7%8E%87"><span class="nav-text">1.4 RAG 的效率</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-5-RAG-%E7%9A%84%E8%BF%9B%E9%98%B6%EF%BC%9A%E4%B8%8D%E6%98%AF%E7%AE%80%E5%8D%95%E6%8B%BC%E6%8E%A5"><span class="nav-text">1.5 RAG 的进阶：不是简单拼接</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E5%A6%82%E4%BD%95%E5%B0%86%E6%96%87%E6%A1%A3%E5%8F%98%E6%88%90-RAG-%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="nav-text">二、如何将文档变成 RAG 数据库</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B"><span class="nav-text">2.1 技术选型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-%E7%8E%AF%E5%A2%83%E5%87%86%E5%A4%87"><span class="nav-text">2.2 环境准备</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%9A%E6%96%87%E6%A1%A3%E8%A7%A3%E6%9E%90%E2%80%94%E2%80%94%E6%8A%8A%E5%90%84%E7%A7%8D%E6%A0%BC%E5%BC%8F%E5%8F%98%E6%88%90%E7%BA%AF%E6%96%87%E6%9C%AC"><span class="nav-text">2.3 第一步：文档解析——把各种格式变成纯文本</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-4-%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%9A%E5%88%86%E5%9D%97%EF%BC%88Chunking%EF%BC%89%E2%80%94%E2%80%94%E6%9C%80%E5%BD%B1%E5%93%8D%E6%95%88%E6%9E%9C%E7%9A%84%E7%8E%AF%E8%8A%82"><span class="nav-text">2.4 第二步：分块（Chunking）——最影响效果的环节</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-5-%E7%AC%AC%E4%B8%89%E6%AD%A5%EF%BC%9A%E5%90%91%E9%87%8F%E5%8C%96%EF%BC%88Embedding%EF%BC%89"><span class="nav-text">2.5 第三步：向量化（Embedding）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-6-%E7%AC%AC%E5%9B%9B%E6%AD%A5%EF%BC%9A%E5%AD%98%E5%85%A5%E5%90%91%E9%87%8F%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="nav-text">2.6 第四步：存入向量数据库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-7-%E9%AA%8C%E8%AF%81%E6%A3%80%E7%B4%A2%E6%95%88%E6%9E%9C"><span class="nav-text">2.7 验证检索效果</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-8-%E5%BB%BA%E5%BA%93%E5%AE%8C%E6%95%B4%E8%84%9A%E6%9C%AC"><span class="nav-text">2.8 建库完整脚本</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E5%A6%82%E4%BD%95%E5%BF%AB%E9%80%9F%E4%B8%8E-llama-cpp-%E7%BB%93%E5%90%88"><span class="nav-text">三、如何快速与 llama.cpp 结合</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-%E6%9E%B6%E6%9E%84%E6%80%BB%E8%A7%88"><span class="nav-text">3.1 架构总览</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%9A%E9%83%A8%E7%BD%B2-MiniCPM5"><span class="nav-text">3.2 第一步：部署 MiniCPM5</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%9A%E5%90%AF%E5%8A%A8-llama-server"><span class="nav-text">3.3 第二步：启动 llama-server</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-%E7%AC%AC%E4%B8%89%E6%AD%A5%EF%BC%9A%E6%9E%84%E5%BB%BA-RAG-%E6%9F%A5%E8%AF%A2%E8%84%9A%E6%9C%AC"><span class="nav-text">3.4 第三步：构建 RAG 查询脚本</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-5-%E5%AE%8C%E6%95%B4%E4%B8%80%E9%94%AE%E5%90%AF%E5%8A%A8%E8%84%9A%E6%9C%AC"><span class="nav-text">3.5 完整一键启动脚本</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-6-%E6%80%A7%E8%83%BD%E8%B0%83%E4%BC%98"><span class="nav-text">3.6 性能调优</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-7-%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5"><span class="nav-text">3.7 常见问题排查</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-8-%E5%AE%8C%E6%95%B4%E9%A1%B9%E7%9B%AE%E7%BB%93%E6%9E%84"><span class="nav-text">3.8 完整项目结构</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%EF%BC%9A%E4%B8%89%E6%AD%A5%E8%B5%B0%E5%9B%9E%E9%A1%BE"><span class="nav-text">总结：三步走回顾</span></a></li></ol>
+
+	</div>
+</div>
+	</div>
+	
+</div>
+
+			</div>
+
+			
+		</div>
+
+		<div class="main-content-footer">
+			<footer class="footer mt-5 py-5 h-auto text-base text-third-text-color relative border-t-2 border-t-border-color">
+    <div class="info-container py-3 text-center">
+        
+        <div class="text-center">
+            &copy;
+            
+              <span>2024</span>
+              -
+            
+            2026&nbsp;&nbsp;<i class="fa-solid fa-heart fa-beat" style="--fa-animation-duration: 0.5s; color: #f54545"></i>&nbsp;&nbsp;<a href="/">Chyyl</a>
+            
+                
+                <p class="post-count space-x-0.5">
+                    <span>
+                        15  posts au total
+                    </span>
+                    
+                </p>
+            
+        </div>
+        
+            <script data-swup-reload-script src="https://cn.vercount.one/js"></script>
+            <div class="relative text-center lg:absolute lg:right-[20px] lg:top-1/2 lg:-translate-y-1/2 lg:text-right">
+                
+                    <span id="busuanzi_container_site_uv" class="lg:!block">
+                        <span class="text-sm">VISITEURS</span>
+                        <span id="busuanzi_value_site_uv"></span>
+                    </span>
+                
+                
+                    <span id="busuanzi_container_site_pv" class="lg:!block">
+                        <span class="text-sm">NOMBRE TOTAL DE PAGES VUES</span>
+                        <span id="busuanzi_value_site_pv"></span>
+                    </span>
+                
+            </div>
+        
+        <div class="relative text-center lg:absolute lg:left-[20px] lg:top-1/2 lg:-translate-y-1/2 lg:text-left">
+            <span class="lg:block text-sm">POWERED BY <?xml version="1.0" encoding="utf-8"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg class="relative top-[2px] inline-block align-baseline" version="1.1" id="圖層_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="1rem" height="1rem" viewBox="0 0 512 512" enable-background="new 0 0 512 512" xml:space="preserve"><path fill="#0E83CD" d="M256.4,25.8l-200,115.5L56,371.5l199.6,114.7l200-115.5l0.4-230.2L256.4,25.8z M349,354.6l-18.4,10.7l-18.6-11V275H200v79.6l-18.4,10.7l-18.6-11v-197l18.5-10.6l18.5,10.8V237h112v-79.6l18.5-10.6l18.5,10.8V354.6z"/></svg><a target="_blank" class="text-base" href="https://hexo.io">Hexo</a></span>
+            <span class="text-sm lg:block">THEME&nbsp;<a class="text-base" target="_blank" href="https://github.com/EvanNotFound/hexo-theme-redefine">Redefine v2.9.0</a></span>
+        </div>
+        
+        
+            <div>
+                Blog en ligne depuis <span class="odometer" id="runtime_days" ></span> Jours <span class="odometer" id="runtime_hours"></span> Hrs <span class="odometer" id="runtime_minutes"></span> Min <span class="odometer" id="runtime_seconds"></span> Sec
+            </div>
+        
+        
+            <script data-swup-reload-script>
+                try {
+                    function odometer_init() {
+                    const elements = document.querySelectorAll('.odometer');
+                    elements.forEach(el => {
+                        new Odometer({
+                            el,
+                            format: '( ddd).dd',
+                            duration: 200
+                        });
+                    });
+                    }
+                    odometer_init();
+                } catch (error) {}
+            </script>
+        
+        
+        
+    </div>  
+</footer>
+		</div>
+	</div>
+
+	
+	<div class="post-tools">
+		<div class="post-tools-container">
+	<ul class="article-tools-list">
+		<!-- TOC aside toggle -->
+		
+		<li class="right-bottom-tools page-aside-toggle">
+			<i class="fa-regular fa-outdent"></i>
+		</li>
+		
+
+		<!-- go comment -->
+		
+		<li class="go-comment">
+			<i class="fa-regular fa-comments"></i>
+		</li>
+		
+	</ul>
+</div>
+	</div>
+	
+
+	<div class="right-side-tools-container">
+		<div class="side-tools-container">
+	<ul class="hidden-tools-list">
+		<li class="right-bottom-tools tool-font-adjust-plus flex justify-center items-center">
+			<i class="fa-regular fa-magnifying-glass-plus"></i>
+		</li>
+
+		<li class="right-bottom-tools tool-font-adjust-minus flex justify-center items-center">
+			<i class="fa-regular fa-magnifying-glass-minus"></i>
+		</li>
+
+		<li class="right-bottom-tools tool-dark-light-toggle flex justify-center items-center">
+			<i class="fa-regular fa-moon"></i>
+		</li>
+
+		<!-- rss -->
+		
+		<li class="right-bottom-tools rss flex justify-center items-center">
+			<a class="flex justify-center items-center" href="/atom.xml" target="_blank">
+				<i class="fa-regular fa-rss"></i>
+			</a>
+		</li>
+		
+
+		
+
+		<li class="right-bottom-tools tool-scroll-to-bottom flex justify-center items-center">
+			<i class="fa-regular fa-arrow-down"></i>
+		</li>
+	</ul>
+
+	<ul class="visible-tools-list">
+		<li class="right-bottom-tools toggle-tools-list flex justify-center items-center">
+			<i class="fa-regular fa-cog fa-spin"></i>
+		</li>
+		
+		<li class="right-bottom-tools tool-scroll-to-top flex justify-center items-center">
+			<i class="arrow-up fas fa-arrow-up"></i>
+			<span class="percent"></span>
+		</li>
+		
+		
+	</ul>
+</div>
+	</div>
+
+	<div class="image-viewer-container" role="dialog" aria-modal="true" aria-label="Visionneuse d’images">
+	<button class="image-viewer-close" type="button" aria-label="Fermer">
+		<i class="fa-solid fa-xmark"></i>
+	</button>
+	<button class="image-viewer-prev" type="button" aria-label="Précédent">
+		<i class="fa-solid fa-chevron-left"></i>
+	</button>
+	<div class="image-viewer-frame">
+		<img src="" alt="">
+	</div>
+	<div class="image-viewer-exif-panel hidden absolute left-1/2 bottom-20 -translate-x-1/2 w-[min(92vw,420px)] max-h-[60vh] overflow-hidden rounded-2xl bg-background-color-transparent-80 p-4 text-left shadow-redefine-flat backdrop-blur-md" role="dialog" aria-label="EXIF" aria-hidden="true">
+		<div class="flex items-center justify-between mb-3">
+			<span class="text-sm font-semibold text-first-text-color">EXIF</span>
+			<button class="image-viewer-exif-close flex h-8 w-8 items-center justify-center rounded-full bg-background-color-transparent-80 text-first-text-color transition hover:bg-background-color-transparent-40" type="button" aria-label="Fermer">
+				<i class="fa-solid fa-xmark text-[0.65rem]"></i>
+			</button>
+		</div>
+		<div class="image-viewer-exif-cards grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto pr-1 scrollbar-hide"></div>
+		<template class="image-viewer-exif-card-template">
+			<div class="rounded-lg bg-background-color-transparent-40 px-3 py-2">
+				<div class="image-viewer-exif-card-header flex items-center gap-2 mb-1">
+					<i class="image-viewer-exif-card-icon fa-solid fa-circle-info text-xs text-third-text-color"></i>
+					<div class="image-viewer-exif-card-title text-xs font-semibold text-first-text-color"></div>
+				</div>
+				<div class="image-viewer-exif-card-items flex flex-col gap-1"></div>
+			</div>
+		</template>
+	</div>
+	<button class="image-viewer-exif-toggle flex items-center gap-2 hidden absolute left-1/2 bottom-6 -translate-x-1/2 rounded-full border border-border-color bg-background-color-transparent-80 px-4 py-2 text-first-text-color backdrop-blur-md transition hover:bg-background-color-transparent-40" type="button" aria-label="EXIF" aria-expanded="false">
+		<i class="fa-solid fa-circle-info text-xs"></i>
+		<span class="text-xs font-semibold uppercase tracking-wider">EXIF</span>
+	</button>
+	<button class="image-viewer-next" type="button" aria-label="Suivant">
+		<i class="fa-solid fa-chevron-right"></i>
+	</button>
+</div>
+
+
+	
+	<div class="search-pop-overlay">
+	<div class="popup search-popup">
+		<div class="search-header">
+			<span class="search-input-field-pre">
+				<i class="fa-solid fa-keyboard"></i>
+			</span>
+			<div class="search-input-container">
+				<input autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="recherche..." spellcheck="false" type="search" class="search-input">
+			</div>
+			<span class="popup-btn-close">
+				<i class="fa-solid fa-times"></i>
+			</span>
+		</div>
+		<div id="search-result">
+			<div id="no-result">
+				<i class="fa-solid fa-spinner fa-spin-pulse fa-5x fa-fw"></i>
+			</div>
+		</div>
+	</div>
+</div>
+	
+
+</main>
+
+
+<script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/Swup.min.js" ></script><script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/SwupSlideTheme.min.js" ></script><script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/SwupScriptsPlugin.min.js" ></script><script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/SwupProgressPlugin.min.js" ></script><script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/SwupScrollPlugin.min.js" ></script><script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/SwupPreloadPlugin.min.js" ></script>
+<script>
+    window.swup = new Swup({
+        plugins: [
+            new SwupScriptsPlugin({
+                optin: true,
+            }),
+            new SwupProgressPlugin(),
+            new SwupScrollPlugin({
+                offset: 80,
+            }),
+            new SwupSlideTheme({
+                mainElement: ".main-content-body",
+            }),
+            new SwupPreloadPlugin(),
+        ],
+        containers: ["#swup"],
+    });
+
+    window.dispatchEvent(
+        new CustomEvent("redefine:swup:ready", {
+            detail: {
+                swup: window.swup,
+            },
+        }),
+    );
+</script>
+
+
+
+
+	<script type="module" src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/main.js" ></script>
+
+
+    <script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/odometer.min.js" ></script>
+    <link rel="stylesheet" href="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/assets/odometer-theme-minimal.css">
+
+
+
+
+
+
+  <script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/Typed.min.js" ></script>
+
+
+
+    
+        <script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/mermaid.min.js" ></script>
+    
+
+
+
+
+
+
+<script  src="https://registry.npmmirror.com/hexo-theme-redefine/2.9.0/files/source/js/build/libs/moment-with-locales.min.js" data-swup-reload-script></script>
+
+
+	
+</body>
+
+</html>
